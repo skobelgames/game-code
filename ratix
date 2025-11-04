@@ -1134,6 +1134,8 @@
 
         function ensureAITurnIfNeeded() {
             if (gamePaused || currentPlayer !== 'W' || reinforcementPending || aiPending) return;
+            // Don't end turn if pistolier is in move+shoot mode waiting for shot selection
+            if (pistolierMoveShootMode) return;
             if (movesLeft <= 0) {
                 triggerAiTurn();
                 return;
@@ -2108,22 +2110,34 @@
                 const pieceKey = `${r},${c},${player}`;
                 const shotLastTurn = fusilierShotLastTurn[player].has(pieceKey);
 
-                // 1 point: move 2 squares diagonally (can move through own pieces)
+                // 1 point: move up to 2 squares diagonally (1 or 2 squares)
                 for (let d of [[1,1], [1,-1], [-1,1], [-1,-1]]) {
-                    let intermediateR = r + d[0], intermediateC = c + d[1];
-                    let nr = r + d[0] * 2, nc = c + d[1] * 2;
+                    // 1 square diagonal movement
+                    let nr1 = r + d[0], nc1 = c + d[1];
+                    if (isValid(nr1, nc1)) {
+                        if (!board[nr1][nc1]) {
+                            moves.push({ type: 'move', pos: [nr1, nc1], cost: 1 });
+                        } else if (board[nr1][nc1].player !== player) {
+                            // Capturing by landing requires coin flip
+                            moves.push({ type: 'move', pos: [nr1, nc1], cost: 1, special: 'fusilierCapture' });
+                        }
+                    }
 
-                    if (!isValid(nr, nc)) continue;
+                    // 2 squares diagonal movement (can move through own pieces)
+                    let intermediateR = r + d[0], intermediateC = c + d[1];
+                    let nr2 = r + d[0] * 2, nc2 = c + d[1] * 2;
+
+                    if (!isValid(nr2, nc2)) continue;
 
                     // Can move through own pieces on intermediate square
                     const intermediateBlocked = board[intermediateR] && board[intermediateR][intermediateC] && board[intermediateR][intermediateC].player !== player;
 
                     if (!intermediateBlocked) {
-                        if (!board[nr][nc]) {
-                            moves.push({ type: 'move', pos: [nr, nc], cost: 1 });
-                        } else if (board[nr][nc].player !== player) {
+                        if (!board[nr2][nc2]) {
+                            moves.push({ type: 'move', pos: [nr2, nc2], cost: 1 });
+                        } else if (board[nr2][nc2].player !== player) {
                             // Capturing by landing requires coin flip
-                            moves.push({ type: 'move', pos: [nr, nc], cost: 1, special: 'fusilierCapture' });
+                            moves.push({ type: 'move', pos: [nr2, nc2], cost: 1, special: 'fusilierCapture' });
                         }
                     }
                 }
