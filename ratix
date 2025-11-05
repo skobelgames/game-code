@@ -2112,9 +2112,9 @@
         
         // AI Difficulty
         let aiDifficulty = 'Medium';
-        let baseAiDepth = 4; // Track difficulty selection (defaults to Medium)
-        let aiMaxDepth = 4; // Effective depth after variant adjustments
-        let pieceValueScale = 1.25;
+        let baseAiDepth = 5; // Track difficulty selection (defaults to Medium, increased from 4)
+        let aiMaxDepth = 5; // Effective depth after variant adjustments (increased from 4)
+        let pieceValueScale = 1.50; // Increased from 1.25 (+20% difficulty)
         const AI_LEFTOVER_PENALTY = 0.75;
         const AI_TIE_EPSILON = 0.0001;
         const AI_TIME_LIMIT_DEFAULT = 1200; // Increased from 650ms for slower AI thinking
@@ -2152,9 +2152,9 @@
         function getAiTimeBudget() {
             let base = isLargeBoardVariant() ? AI_TIME_LIMIT_LARGE : AI_TIME_LIMIT_DEFAULT;
             if (aiDifficulty === 'Hard') {
-                base += isLargeBoardVariant() ? 100 : 180;
+                base += isLargeBoardVariant() ? 120 : 220; // Increased from 100/180 (+20% thinking time)
             } else if (aiDifficulty === 'Easy') {
-                base = Math.max(isLargeBoardVariant() ? 160 : 250, base - 120);
+                base = Math.max(isLargeBoardVariant() ? 180 : 280, base - 100); // Adjusted for new difficulty
             }
             return base;
         }
@@ -3094,14 +3094,14 @@
             element.classList.add('selected-diff');
 
             if (level === 'Easy') {
-                baseAiDepth = 3;
-                pieceValueScale = 1.15;
+                baseAiDepth = 4; // Increased from 3 (+20% difficulty)
+                pieceValueScale = 1.38; // Increased from 1.15 (+20%)
             } else if (level === 'Medium') {
-                baseAiDepth = 4;
-                pieceValueScale = 1.25;
+                baseAiDepth = 5; // Increased from 4 (+20% difficulty)
+                pieceValueScale = 1.50; // Increased from 1.25 (+20%)
             } else if (level === 'Hard') {
-                baseAiDepth = 5; // higher depth for stronger play
-                pieceValueScale = 1.35;
+                baseAiDepth = 6; // Increased from 5 (+20% difficulty)
+                pieceValueScale = 1.62; // Increased from 1.35 (+20%)
             }
             applyAiDepthForVariant();
         }
@@ -6052,7 +6052,7 @@
                             if (move.type === 'move' || move.type === 'shoot') {
                                 const targetPiece = board[move.pos[0]]?.[move.pos[1]];
                                 if (targetPiece && targetPiece.player === opponent) {
-                                    playerThreats += aiPieceValues[targetPiece.type] * 0.65;
+                                    playerThreats += aiPieceValues[targetPiece.type] * 0.85; // Increased from 0.65 to encourage attacking
                                 }
                             }
                         }
@@ -6066,7 +6066,7 @@
                             if (move.type === 'move' || move.type === 'shoot') {
                                 const targetPiece = board[move.pos[0]]?.[move.pos[1]];
                                 if (targetPiece && targetPiece.player === player) {
-                                    opponentThreats += aiPieceValues[targetPiece.type] * 0.65;
+                                    opponentThreats += aiPieceValues[targetPiece.type] * 0.85; // Increased from 0.65 to encourage attacking
                                 }
                             }
                         }
@@ -6147,8 +6147,13 @@
                         let score = moveCost * 0.45; // encourage spending available points
                         if (targetPiece && targetPiece.player !== player) {
                             score += aiPieceValues[targetPiece.type] * 2.4; // heavily favour captures
+                            // Add proximity bonus for close attacks
+                            const distance = Math.abs(mr - r) + Math.abs(mc - c);
+                            if (distance <= 2) {
+                                score += aiPieceValues[targetPiece.type] * 0.5; // 50% bonus for close attacks in simple AI
+                            }
                         } else if (move.special) {
-                            score += 0.6;
+                            score += 2.0; // Increased from 0.6 to encourage special moves
                         } else {
                             score -= 0.5; // penalise idle repositioning
                         }
@@ -6261,6 +6266,11 @@
                                     if (targetPiece.type === 'Spectre' && piece.type !== 'Wizard' && piece.type !== 'Spectre') {
                                         targetValue *= 0.5; // 50% chance of success
                                     }
+                                    // Add proximity bonus: prioritize attacking adjacent/in-range pieces
+                                    const distance = Math.abs(move.pos[0] - r) + Math.abs(move.pos[1] - c);
+                                    if (distance <= 2) {
+                                        targetValue += aiPieceValues[targetPiece.type] * 0.3; // 30% bonus for close attacks
+                                    }
                                 }
                                 allPossibleActions.push({
                                     ...move,
@@ -6290,6 +6300,8 @@
                                                 infernoValue += aiPieceValues[board[nnr][nnc].type];
                                             }
                                         }
+                                        // Add 40% bonus to encourage using Inferno special ability
+                                        infernoValue *= 1.4;
                                         allPossibleActions.push({ type: 'move', pos: [nr, nc], from: [r,c], cost: 2, special: 'inferno', pieceType: 'Dragon', targetValue: infernoValue });
                                     }
                                 }
@@ -6302,8 +6314,8 @@
                                     if (aiTimeExpired()) break outerBuild;
                                     let nr = r + d[0], nc = c + d[1];
                                     if (isValid(nr, nc) && !board[nr][nc]) {
-                                        // Strafe is a positional move with no direct capture value
-                                        allPossibleActions.push({ type: 'move', pos: [nr, nc], from: [r,c], cost: 2, special: 'strafe', pieceType: 'Wizard', targetValue: 0 });
+                                        // Strafe is a positional move, give small value to encourage tactical positioning
+                                        allPossibleActions.push({ type: 'move', pos: [nr, nc], from: [r,c], cost: 2, special: 'strafe', pieceType: 'Wizard', targetValue: 1.5 });
                                     }
                                 }
                             }
@@ -6315,8 +6327,8 @@
                                     if (aiTimeExpired()) break outerBuild;
                                     let nr = r + d[0], nc = c + d[1];
                                     if (isValid(nr, nc) && !board[nr][nc]) {
-                                        // Strafe is a positional move with no direct capture value
-                                        allPossibleActions.push({ type: 'move', pos: [nr, nc], from: [r,c], cost: 2, special: 'strafe', pieceType: 'Dragon', targetValue: 0 });
+                                        // Strafe is a positional move, give small value to encourage tactical positioning
+                                        allPossibleActions.push({ type: 'move', pos: [nr, nc], from: [r,c], cost: 2, special: 'strafe', pieceType: 'Dragon', targetValue: 1.5 });
                                     }
                                 }
                             }
@@ -6331,8 +6343,8 @@
                                         let nr = r + d[0], nc = c + d[1];
                                         if (isValid(nr, nc) && !board[nr][nc]) {
                                             // Summoning has 50% success rate, but Spectre is valuable (value 9)
-                                            // Expected value = 0.5 * 9 = 4.5
-                                            allPossibleActions.push({ type: 'summon', pos: [nr, nc], from: [r,c], cost: 2, special: 'summonSpectre', pieceType: 'Wizard', targetValue: 4.5 });
+                                            // Expected value = 0.5 * 9 = 4.5, increased to 7.0 to encourage summoning
+                                            allPossibleActions.push({ type: 'summon', pos: [nr, nc], from: [r,c], cost: 2, special: 'summonSpectre', pieceType: 'Wizard', targetValue: 7.0 });
                                         }
                                     }
                                 }
