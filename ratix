@@ -48,6 +48,79 @@
             color: white;
             border: 2px solid #4CAF50;
         }
+        .variant-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+            max-width: 300px;
+            text-align: center;
+        }
+        .variant-option button.selected-variant {
+            background-color: #4CAF50;
+            color: #fff;
+            border: 2px solid #4CAF50;
+        }
+        .variant-description {
+            margin-top: 6px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #333;
+        }
+        .variant-info {
+            display: none;
+            width: 100%;
+            margin-top: 6px;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: #f7f7f7;
+            text-align: left;
+        }
+        .variant-info.visible {
+            display: block;
+            background-color: #f0f0f0;
+        }
+        .variant-difficulty {
+            margin-top: 6px;
+            font-size: 13px;
+            color: #555;
+        }
+        #landing-header {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        #landing-header h1 {
+            margin: 0;
+            font-size: 48px;
+            letter-spacing: 1px;
+        }
+        #landing-header p {
+            margin: 6px 0 18px;
+            font-size: 16px;
+            color: #cccccc;
+        }
+        #landing-header .how-to-button {
+            margin-bottom: 10px;
+        }
+        #landing-footer {
+            margin-top: 20px;
+            color: #cccccc;
+            font-size: 14px;
+            text-align: center;
+        }
+        .how-to-button {
+            background-color: #fff;
+            color: #000;
+            border: 1px solid #333;
+            border-radius: 5px;
+            transition: background-color 0.2s ease;
+        }
+        .how-to-button:hover {
+            background-color: #e0e0e0;
+            color: #000;
+        }
         #difficulty-selector {
             margin-top: 20px;
             border-top: 1px solid #ccc;
@@ -158,7 +231,7 @@
             font-size: 14px;
             text-align: left;
         }
-        #reinforce-modal, #turn-modal, #turn-move-modal, #turn-shoot-modal, #truce-modal, #coin-toss-modal, #king-summon-modal {
+        #reinforce-modal, #turn-modal, #turn-move-modal, #turn-shoot-modal, #truce-modal, #coin-toss-modal, #king-summon-modal, #champion-summon-modal, #necromancer-summon-modal {
             display: none;
             position: fixed;
             top: 50%;
@@ -230,7 +303,7 @@
             font-size: 18px;
             font-weight: bold;
         }
-        #reinforce-modal select, #reinforce-modal button, #turn-modal select, #turn-modal button, #turn-move-modal select, #turn-move-modal button, #turn-shoot-modal select, #turn-shoot-modal button, #king-summon-modal select, #king-summon-modal button {
+        #reinforce-modal select, #reinforce-modal button, #turn-modal select, #turn-modal button, #turn-move-modal select, #turn-move-modal button, #turn-shoot-modal select, #turn-shoot-modal button, #king-summon-modal select, #king-summon-modal button, #champion-summon-modal select, #champion-summon-modal button, #necromancer-summon-modal select, #necromancer-summon-modal button {
             margin: 10px;
             padding: 5px;
             font-size: 14px;
@@ -415,12 +488,48 @@
     </style>
 </head>
 <body>
+    <div id="landing-header">
+        <h1>Ratix</h1>
+        <p>Created by Craig Skobel</p>
+        <button class="how-to-button" onclick="openHowToPlay()">How to Play</button>
+    </div>
     <div id="start-menu">
         <h2>Select Game Variant</h2>
-        <button onclick="startGame('24s')">24's (Standard)</button>
-        <button onclick="startGame('36s')">36's (Advanced)</button>
-        <button onclick="startGame('36s-expert')">36's (Expert)</button>
-        <button onclick="startGame('ccb')">24's Close-Combat Battle</button>
+        <div class="variant-option">
+            <button id="variant-btn-24s" data-ready="false" onclick="handleVariantClick('24s')">24's (Standard)</button>
+            <div id="variant-info-24s" class="variant-info">
+                <p class="variant-description">Board: 10x14. Layout: single Infantry front rank backing a classic Cavalry, Troll, Dragon, Wizard, Guard, Champion, and King battle line.</p>
+                <p class="variant-difficulty"><strong>Recommended skill:</strong> Beginner-friendly for learning Ratix fundamentals, yet still offers solid tactical depth for any player.</p>
+            </div>
+        </div>
+        <div class="variant-option">
+            <button id="variant-btn-36s" data-ready="false" onclick="handleVariantClick('36s')">36's (Advanced)</button>
+            <div id="variant-info-36s" class="variant-info">
+                <p class="variant-description">Board: 10x14. Layout: Infantry shield, Archer/Troll support row, and heavy back line with Ogres, Ballista units, royal pieces, and additional cavalry.</p>
+                <p class="variant-difficulty"><strong>Recommended skill:</strong> Ideal for intermediate players ready for layered formations and expanded special abilities.</p>
+            </div>
+        </div>
+        <div class="variant-option">
+            <button id="variant-btn-36s-expert" data-ready="false" onclick="handleVariantClick('36s-expert')">36's (Expert)</button>
+            <div id="variant-info-36s-expert" class="variant-info">
+                <p class="variant-description">Board: 10x14. Layout: adds Mercenaries and Elephantry to the forward ranks on top of the Archer support line and elite back row for maximal piece variety.</p>
+                <p class="variant-difficulty"><strong>Recommended skill:</strong> Suited to veteran players comfortable juggling many unit types and long-term tactical planning.</p>
+            </div>
+        </div>
+        <div class="variant-option">
+            <button id="variant-btn-36s-elite" data-ready="false" onclick="handleVariantClick('36s-elite')">36's (Elite)</button>
+            <div id="variant-info-36s-elite" class="variant-info">
+                <p class="variant-description">Board: 10x14. Layout: mirrors the Expert ranks but unlocks Necromancers and relentless Zombie hordes for high-impact summoning play.</p>
+                <p class="variant-difficulty"><strong>Recommended skill:</strong> Designed for expert players ready to manage advanced summoning chains and relentless board pressure.</p>
+            </div>
+        </div>
+        <div class="variant-option">
+            <button id="variant-btn-ccb" data-ready="false" onclick="handleVariantClick('ccb')">24's Close-Combat Battle</button>
+            <div id="variant-info-ccb" class="variant-info">
+                <p class="variant-description">Board: 8x12. Layout: no buffer columns, keeping Infantry and the elite Cavalry/Troll/Dragon/Wizard formation in immediate close-quarters contact.</p>
+                <p class="variant-difficulty"><strong>Recommended skill:</strong> Best for aggressive intermediate-to-advanced players who enjoy fast tactical clashes.</p>
+            </div>
+        </div>
         
         <div id="difficulty-selector">
             <h3>Select AI Difficulty</h3>
@@ -440,6 +549,7 @@
             <button id="turn-timer-standard" onclick="setTurnTimer('standard', this)" class="selected-option">60 secs (Standard)</button>
         </div>
     </div>
+    <footer id="landing-footer">Ratix &copy; 2025 Skobel Games</footer>
     <div id="game-container">
         <h1>Ratix</h1>
         <div id="top-controls">
@@ -488,6 +598,16 @@
         <div class="modal-header"><span>Select Unit to Summon</span><button class="modal-close" onclick="closeKingSummonModal()" aria-label="Close">&times;</button></div>
         <select id="king-summon-select"></select>
         <button onclick="confirmKingSummon()">Summon (2 pts + coin flip)</button>
+    </div>
+    <div id="champion-summon-modal">
+        <div class="modal-header"><span>Summon Necromancer</span><button class="modal-close" onclick="closeChampionSummonModal()" aria-label="Close">&times;</button></div>
+        <select id="champion-summon-select"></select>
+        <button onclick="confirmChampionSummon()">Summon (2 pts + coin flip)</button>
+    </div>
+    <div id="necromancer-summon-modal">
+        <div class="modal-header"><span>Necromancer Summon</span><button class="modal-close" onclick="closeNecromancerSummonModal()" aria-label="Close">&times;</button></div>
+        <select id="necromancer-summon-select"></select>
+        <button onclick="confirmNecromancerSummon()">Summon (2 pts + coin flip)</button>
     </div>
     <div id="turn-modal">
         <div class="modal-header"><span>Select Facing Direction</span><button class="modal-close" onclick="closeTurnModal()" aria-label="Close">&times;</button></div>
@@ -568,12 +688,53 @@
         let elephantryMoveShootPosition = null; // Store the position Elephantry moved to
         let pistolierMoveShootMode = false; // Active when Pistolier has moved and needs to select shoot target
         let pistolierMoveShootPosition = null; // Store the position Pistolier moved to
-        let fusilierCrackShotActive = false; // Active when Fusilier has activated Crack Shot (+1 range)
+        let fusilierCrackShotActive = null; // Holds Fusilier piece currently empowered by Crack Shot
         let fusilierStrafeActive = false; // Active when Fusilier is selecting strafe move
         let initialMovesLeft = 3;
         let aiPending = false; // Prevent duplicate AI scheduling
         let gamePaused = false; // Track if game is paused
         let pausedTimers = { game: null, turn: null, turnPlayer: null }; // Store timer states when paused
+
+        const VARIANT_LABELS = {
+            '24s': "24's (Standard)",
+            '36s': "36's (Advanced)",
+            '36s-expert': "36's (Expert)",
+            '36s-elite': "36's (Elite)",
+            'ccb': "24's Close-Combat Battle"
+        };
+        const VARIANT_KEYS = Object.keys(VARIANT_LABELS);
+
+        function resetVariantSelections() {
+            VARIANT_KEYS.forEach(variant => {
+                const button = document.getElementById(`variant-btn-${variant}`);
+                if (button) {
+                    button.classList.remove('selected-variant');
+                    button.textContent = VARIANT_LABELS[variant];
+                    button.dataset.ready = 'false';
+                }
+                const info = document.getElementById(`variant-info-${variant}`);
+                if (info) {
+                    info.classList.remove('visible');
+                }
+            });
+        }
+
+        function handleVariantClick(variant) {
+            const button = document.getElementById(`variant-btn-${variant}`);
+            const info = document.getElementById(`variant-info-${variant}`);
+            if (!button || !info) return;
+
+            if (button.dataset.ready === 'true') {
+                startGame(variant);
+                return;
+            }
+
+            resetVariantSelections();
+            info.classList.add('visible');
+            button.classList.add('selected-variant');
+            button.dataset.ready = 'true';
+            button.textContent = 'Start Game';
+        }
 
         // Truce/Draw system
         let truceAttempts = 0;
@@ -593,6 +754,11 @@
                 }
                 document.getElementById('game-container').style.display = 'none';
                 document.getElementById('start-menu').style.display = 'flex';
+                const landingHeader = document.getElementById('landing-header');
+                if (landingHeader) landingHeader.style.display = 'block';
+                const landingFooter = document.getElementById('landing-footer');
+                if (landingFooter) landingFooter.style.display = 'block';
+                resetVariantSelections();
             }
         }
 
@@ -1186,7 +1352,7 @@
             archerDiag2ShootMode = false;
             elephantryChargeMode = false;
             elephantryExtendedRangeActive = false;
-            fusilierCrackShotActive = false;
+            fusilierCrackShotActive = null;
             fusilierStrafeActive = false;
             elephantryMoveShootMode = false;
             elephantryMoveShootPosition = null;
@@ -1248,12 +1414,64 @@
             turnLosses[player] = {};
             turnLosses[opponent] = {};
 
-            // Clear Fusilier shot tracking for this player's turn
-            // (they can shoot again next turn)
-            fusilierShotLastTurn[player].clear();
+            // Update Fusilier cooldowns at the end of the player's turn
+            finalizeFusilierShots(player);
 
             if (logUpdated) {
                 updateGameLog();
+            }
+        }
+
+        function finalizeFusilierShots(player) {
+            const lastTurnSet = fusilierShotLastTurn[player];
+            if (!lastTurnSet) return;
+
+            if (fusilierCrackShotActive && fusilierCrackShotActive.player === player) {
+                fusilierCrackShotActive = null;
+            }
+
+            lastTurnSet.clear();
+            fusilierShotThisTurn[player].forEach(piece => {
+                if (piece && piece.player === player && piece.type === 'Fusilier') {
+                    lastTurnSet.add(piece);
+                }
+            });
+            fusilierShotThisTurn[player].clear();
+        }
+
+        function pruneFusilierShotTracking(player) {
+            const activeFusiliers = new Set();
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const piece = board[r][c];
+                    if (piece && piece.player === player && piece.type === 'Fusilier') {
+                        activeFusiliers.add(piece);
+                    }
+                }
+            }
+
+            const lastTurnSet = fusilierShotLastTurn[player];
+            if (lastTurnSet) {
+                const keep = [];
+                lastTurnSet.forEach(piece => {
+                    if (activeFusiliers.has(piece)) {
+                        keep.push(piece);
+                    }
+                });
+                lastTurnSet.clear();
+                keep.forEach(piece => lastTurnSet.add(piece));
+            }
+
+            const thisTurnSet = fusilierShotThisTurn[player];
+            if (thisTurnSet) {
+                const keep = [];
+                thisTurnSet.forEach(piece => {
+                    if (activeFusiliers.has(piece)) {
+                        keep.push(piece);
+                    }
+                });
+                thisTurnSet.clear();
+                keep.forEach(piece => thisTurnSet.add(piece));
             }
         }
 
@@ -1269,6 +1487,7 @@
             if (!skipStopTimer) {
                 stopTurnTimer();
             }
+            pruneFusilierShotTracking(player);
             const opponent = getOpponent(player);
             let modifier = nextTurnModifier[player] || 0;
             let moves = Math.max(0, baseMoves + modifier);
@@ -1289,32 +1508,42 @@
             turnScoreGain[player] = 0;
             turnLosses[player] = turnLosses[player] || {};
             turnLosses[opponent] = {};
-
-            if (moves === 0) {
-                if (player === 'W') {
-                    playerTurnTimeRemaining = 0;
-                } else {
-                    aiTurnTimeRemaining = 0;
+            decrementNecromancerCooldown(player);
+            let turnStartHandled = false;
+            const finalizeTurnStart = () => {
+                if (turnStartHandled) return;
+                turnStartHandled = true;
+                if (moves === 0) {
+                    if (player === 'W') {
+                        playerTurnTimeRemaining = 0;
+                    } else {
+                        aiTurnTimeRemaining = 0;
+                    }
+                    updateTimerDisplay();
+                    gameLog.push(`${player === 'W' ? 'Player' : 'AI'} is immobilized this turn.`);
+                    updateGameLog();
+                    return;
                 }
-                updateTimerDisplay();
-                gameLog.push(`${player === 'W' ? 'Player' : 'AI'} is immobilized this turn.`);
-                updateGameLog();
-                return false;
-            }
 
-            startTurnTimer(player);
+                startTurnTimer(player);
 
-            // Check for truce at start of player's turn
-            if (player === 'W' && truceDeclinedTurns > 0) {
-                truceDeclinedTurns++;
-                if (truceDeclinedTurns <= 3) {
+                // Check for truce at start of player's turn
+                if (player === 'W' && truceDeclinedTurns > 0) {
+                    truceDeclinedTurns++;
+                    if (truceDeclinedTurns <= 3) {
+                        checkForTruce();
+                    }
+                } else if (player === 'W' && truceDeclinedTurns === 0) {
                     checkForTruce();
                 }
-            } else if (player === 'W' && truceDeclinedTurns === 0) {
-                checkForTruce();
+            };
+
+            const zombiesPending = advanceZombiesForPlayer(player, finalizeTurnStart);
+            if (!zombiesPending) {
+                finalizeTurnStart();
             }
 
-            return true;
+            return moves > 0;
         }
         let highlightSquares = [];
         let kingSpecialUsed = { 'W': false, 'B': false };
@@ -1327,6 +1556,20 @@
         let spectresSummoned = { 'W': 0, 'B': 0 }; // Spectre summoning (limit 2 per player)
         let wizardSummonedThisTurn = { 'W': false, 'B': false }; // Track if wizard summoned this turn
         let wizardCannotMoveNextTurn = { 'W': new Set(), 'B': new Set() }; // Wizards that cannot move next turn
+        let necromancersSummoned = { 'W': 0, 'B': 0 }; // Necromancer summoning (limit 2 per player)
+        let necromancerTeleportCounts = new Map(); // Track per-piece teleport usage
+        let necromancerShootCooldown = new Map(); // Track per-piece ranged cooldown
+        let zombiesSummoned = { 'W': 0, 'B': 0 }; // Total Zombies currently controlled (base cap 3)
+        let zombiePendingAdvanceQueue = []; // Pending automatic Zombie advances requests
+        let championSummonSource = null; // Track active champion summon request
+        let necromancerSummonContext = null; // Track active necromancer summon
+        let necromancerSummonType = null;
+        let zombieConversions = { 'W': 0, 'B': 0 }; // Successful zombie conversions (max 2 to raise cap)
+        let zombieCoinQueue = []; // Pending zombie coin flip animations
+        let zombieCoinAnimating = false;
+        let zombieCoinModalTimeouts = [];
+        let zombieAutoAdvanceInProgress = false;
+        let zombieAdvanceTimer = null;
         let coinTossCallback = null; // Callback for coin toss result
         let archerMoveDiagShootUsed = { 'W': 0, 'B': 0 }; // Move then shoot diagonally (limit 2)
         let archerDiag2ShootUsed = { 'W': 0, 'B': 0 }; // Diagonal 2-square shot (limit 2)
@@ -1340,14 +1583,525 @@
         let elephantryExtendedRangeShotsRemaining = {}; // Map of "row,col,player" to remaining shots (starts at 3)
         let elephantryExtendedRangeMode = false; // Active during extended range shooting sequence
         // Fusilier specials
-        let fusilierShotLastTurn = { 'W': new Set(), 'B': new Set() }; // Track which fusiliers shot last turn (can't shoot this turn)
-        let fusilierCrackShotUsed = new Set(); // Track which fusilier pieces have used crack shot (set of "row,col,player", max 2 uses)
-        let fusilierCrackShotCount = {}; // Map of "row,col,player" to remaining uses (starts at 2)
+        let fusilierShotLastTurn = { 'W': new Set(), 'B': new Set() }; // Fusiliers that fired last turn (wait one turn before shooting again)
+        let fusilierShotThisTurn = { 'W': new Set(), 'B': new Set() }; // Fusiliers that have fired during the current turn
+        let fusilierCrackShotUsed = new Set(); // Track which fusilier pieces have used crack shot (set of "row,col,player", max 3 uses)
+        let fusilierCrackShotCount = {}; // Map of "row,col,player" to remaining uses (starts at 3)
         let fusilierStrafeUsed = new Set(); // Track which fusilier pieces have used strafe (set of "row,col,player", max 2 uses)
         let fusilierStrafeCount = {}; // Map of "row,col,player" to remaining uses (starts at 2)
         // King summoning
         let pistoliersSummoned = { 'W': 0, 'B': 0 }; // Track summoned pistoliers (max 2 per player)
         let fusiliersSummoned = { 'W': 0, 'B': 0 }; // Track summoned fusiliers (max 2 per player)
+
+        function getMaxZombies(player) {
+            return 3 + Math.min(zombieConversions[player] || 0, 2);
+        }
+
+        function getNecromancerTeleportCount(piece) {
+            if (!piece) return 0;
+            return necromancerTeleportCounts.get(piece) || 0;
+        }
+
+        function incrementNecromancerTeleportCount(piece) {
+            if (!piece) return;
+            const used = getNecromancerTeleportCount(piece);
+            necromancerTeleportCounts.set(piece, used + 1);
+        }
+
+        function setNecromancerShotCooldown(piece, turns) {
+            if (!piece) return;
+            if (turns > 0) {
+                necromancerShootCooldown.set(piece, turns);
+            } else {
+                necromancerShootCooldown.delete(piece);
+            }
+        }
+
+        function createZombiePiece(player) {
+            return { type: 'Zombie', player, facing: player === 'W' ? 'U' : 'D' };
+        }
+
+        function createSpectrePiece(player) {
+            return { type: 'Spectre', player };
+        }
+
+        function isPieceOnBoard(piece) {
+            if (!piece) return false;
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (board[r] && board[r][c] === piece) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function cleanupNecromancerTracking(piece) {
+            if (!piece) return;
+            necromancerTeleportCounts.delete(piece);
+            necromancerShootCooldown.delete(piece);
+            if (piece.type === 'Necromancer' && necromancersSummoned[piece.player] > 0) {
+                necromancersSummoned[piece.player]--;
+            }
+            if (piece.type === 'Zombie' && zombiesSummoned[piece.player] > 0) {
+                zombiesSummoned[piece.player]--;
+            }
+        }
+
+        function enqueueZombieCoinFlip(result, title, message) {
+            zombieCoinQueue.push({ result, title, message });
+            if (!zombieCoinAnimating) {
+                processZombieCoinFlipQueue();
+            }
+        }
+
+        function processZombieCoinFlipQueue() {
+            if (!zombieCoinQueue.length) {
+                zombieCoinAnimating = false;
+                return;
+            }
+            zombieCoinAnimating = true;
+            const { result, title, message } = zombieCoinQueue.shift();
+            showZombieCoinFlipModal(result, title, message, () => {
+                zombieCoinAnimating = false;
+                processZombieCoinFlipQueue();
+            });
+        }
+
+        function showZombieCoinFlipModal(result, title, message, done) {
+            const modal = document.getElementById('coin-toss-modal');
+            const coinResult = document.getElementById('coin-result');
+            const titleEl = document.getElementById('coin-toss-title');
+            const messageEl = document.getElementById('coin-toss-message');
+            const descriptionEl = document.getElementById('coin-toss-description');
+            const startBtn = document.getElementById('coin-toss-start');
+            const continueBtn = document.getElementById('coin-toss-continue');
+
+            if (!modal || !coinResult || !titleEl || !messageEl || !descriptionEl) {
+                done();
+                return;
+            }
+
+            if (startBtn) startBtn.style.display = 'none';
+            if (continueBtn) continueBtn.style.display = 'none';
+
+            titleEl.textContent = title || 'Coin Toss';
+            messageEl.textContent = message || 'Flipping...';
+            descriptionEl.textContent = 'The coin will flip to determine the outcome. White side means success, black side means failure.';
+
+            coinResult.className = 'coin';
+            coinResult.style.backgroundColor = '#666';
+            coinResult.style.color = 'white';
+            coinResult.textContent = '☠︎︎';
+
+            modal.dataset.zombieFlip = 'true';
+            modal.style.display = 'block';
+
+            void coinResult.offsetWidth;
+            coinResult.classList.add('spinning');
+
+            const revealTimeout = setTimeout(() => {
+                zombieCoinModalTimeouts = zombieCoinModalTimeouts.filter(id => id !== revealTimeout);
+                coinResult.classList.remove('spinning');
+                const outcomeText = result ? 'Success!' : 'Failure!';
+                if (result) {
+                    coinResult.classList.add('white');
+                    coinResult.style.backgroundColor = 'white';
+                    coinResult.style.color = 'black';
+                } else {
+                    coinResult.classList.add('black');
+                    coinResult.style.backgroundColor = 'black';
+                    coinResult.style.color = 'white';
+                }
+                messageEl.textContent = message ? `${message} - ${outcomeText}` : outcomeText;
+
+                const closeTimeout = setTimeout(() => {
+                    zombieCoinModalTimeouts = zombieCoinModalTimeouts.filter(id => id !== closeTimeout);
+                    if (modal.dataset.zombieFlip === 'true') {
+                        modal.style.display = 'none';
+                        delete modal.dataset.zombieFlip;
+                    }
+                    coinResult.className = 'coin';
+                    coinResult.style.backgroundColor = '#666';
+                    coinResult.style.color = 'white';
+                    coinResult.textContent = '☠︎︎';
+                    descriptionEl.textContent = '';
+                    messageEl.textContent = '';
+                    if (startBtn) startBtn.style.display = 'none';
+                    if (continueBtn) continueBtn.style.display = 'none';
+                    done();
+                }, 1600);
+                zombieCoinModalTimeouts.push(closeTimeout);
+            }, 2000);
+            zombieCoinModalTimeouts.push(revealTimeout);
+        }
+
+        function clearZombieCoinAnimations() {
+            zombieCoinQueue = [];
+            zombieCoinAnimating = false;
+            while (zombieCoinModalTimeouts.length) {
+                const timeoutId = zombieCoinModalTimeouts.pop();
+                clearTimeout(timeoutId);
+            }
+            const modal = document.getElementById('coin-toss-modal');
+            const coinResult = document.getElementById('coin-result');
+            const messageEl = document.getElementById('coin-toss-message');
+            const descriptionEl = document.getElementById('coin-toss-description');
+            const startBtn = document.getElementById('coin-toss-start');
+            const continueBtn = document.getElementById('coin-toss-continue');
+            if (modal && modal.dataset.zombieFlip) {
+                modal.style.display = 'none';
+                delete modal.dataset.zombieFlip;
+            }
+            if (coinResult) {
+                coinResult.className = 'coin';
+                coinResult.style.backgroundColor = '#666';
+                coinResult.style.color = 'white';
+                coinResult.textContent = '☠︎︎';
+            }
+            if (descriptionEl) {
+                descriptionEl.textContent = '';
+            }
+            if (messageEl) {
+                messageEl.textContent = '';
+            }
+            if (startBtn) startBtn.style.display = 'none';
+            if (continueBtn) continueBtn.style.display = 'none';
+        }
+
+        function zombieCoinFlip({ title = 'Zombie Coin Flip', message = '' } = {}) {
+            const result = Math.random() < 0.5;
+            enqueueZombieCoinFlip(result, title, message);
+            return result;
+        }
+
+        function randomCoinFlip() {
+            return Math.random() < 0.5;
+        }
+
+        function getBackRow(player) {
+            return player === 'W' ? ROWS - 1 : 0;
+        }
+
+        function getOpponentBackRow(player) {
+            return player === 'W' ? 0 : ROWS - 1;
+        }
+
+        function findBackRowSpawnColumn(player, preferredCol = null) {
+            const backRow = getBackRow(player);
+            const columns = [];
+            if (preferredCol !== null) columns.push(preferredCol);
+            for (let c = 0; c < COLS; c++) {
+                if (c !== preferredCol) columns.push(c);
+            }
+            for (const col of columns) {
+                if (col >= 0 && col < COLS && !board[backRow][col]) {
+                    return col;
+                }
+            }
+            return null;
+        }
+
+        function spawnZombieAtBackRow(player, preferredCol = null) {
+            const spawnCol = findBackRowSpawnColumn(player, preferredCol);
+            if (spawnCol === null) return false;
+            const backRow = getBackRow(player);
+            const zombie = createZombiePiece(player);
+            board[backRow][spawnCol] = zombie;
+            zombiesSummoned[player] = (zombiesSummoned[player] || 0) + 1;
+            gameLog.push(`${player === 'W' ? 'Player' : 'AI'} zombie spawned at (${backRow},${spawnCol}).`);
+            return true;
+        }
+
+        function awardZombieBonus(player, reason) {
+            scores[player] += 3;
+            registerScoreGain(player, 3);
+            gameLog.push(`${player === 'W' ? 'Player' : 'AI'} gained +3 points (${reason}).`);
+        }
+
+        function capturePieceForZombie(player, row, col, targetPiece) {
+            cleanupNecromancerTracking(targetPiece);
+            capturedSquares.push([row, col]);
+            capturedPieces[player].push(targetPiece);
+            const captureValue = pieceValues[targetPiece.type] || 0;
+            scores[player] += captureValue;
+            registerScoreGain(player, captureValue);
+            registerPieceLoss(targetPiece.player, targetPiece.type);
+            if (targetPiece.type === 'Champion') {
+                championCaptured[targetPiece.player] = true;
+            }
+            if (targetPiece.type === 'King') {
+                endGame(player);
+            }
+            board[row][col] = null;
+        }
+
+        function handleZombieReachedOpponentBackRow(player, row, col) {
+            const opponentBackRow = getOpponentBackRow(player);
+            if (row !== opponentBackRow) return false;
+            const zombie = board[row][col];
+            if (!zombie || zombie.type !== 'Zombie') return false;
+            cleanupNecromancerTracking(zombie);
+            board[row][col] = null;
+            awardZombieBonus(player, 'Zombie reached opponent back row');
+            const spawnSuccess = spawnZombieAtBackRow(player, col);
+            if (!spawnSuccess) {
+                gameLog.push(`${player === 'W' ? 'Player' : 'AI'} zombie could not respawn due to lack of space.`);
+            }
+            return true;
+        }
+
+        function moveZombieTo(fromRow, fromCol, toRow, toCol, player) {
+            const zombie = board[fromRow][fromCol];
+            board[toRow][toCol] = zombie;
+            board[fromRow][fromCol] = null;
+            handleZombieReachedOpponentBackRow(player, toRow, toCol);
+        }
+
+        function attemptZombieCapture(fromRow, fromCol, targetRow, targetCol, player) {
+            const zombie = board[fromRow][fromCol];
+            const targetPiece = board[targetRow]?.[targetCol];
+            if (!targetPiece) {
+                moveZombieTo(fromRow, fromCol, targetRow, targetCol, player);
+                return 'moved';
+            }
+            const playerLabel = player === 'W' ? 'Player' : 'AI';
+            if (targetPiece.type === 'Zombie') {
+                const success = zombieCoinFlip({
+                    title: 'Zombie Clash',
+                    message: `${playerLabel} zombie challenges opposing Zombie.`
+                });
+                if (success) {
+                    cleanupNecromancerTracking(targetPiece);
+                    board[targetRow][targetCol] = null;
+                    const spawnSuccess = zombieConversions[player] < 2 && spawnZombieAtBackRow(player);
+                    if (spawnSuccess) {
+                        zombieConversions[player]++;
+                        gameLog.push(`${playerLabel} converted an opposing Zombie into their ranks.`);
+                    } else if (zombieConversions[player] < 2) {
+                        gameLog.push(`${playerLabel} destroyed an opposing Zombie but had no space to convert it.`);
+                    } else {
+                        gameLog.push(`${playerLabel} destroyed an opposing Zombie (conversion limit reached).`);
+                    }
+                    moveZombieTo(fromRow, fromCol, targetRow, targetCol, player);
+                    return 'moved';
+                } else {
+                    cleanupNecromancerTracking(zombie);
+                    board[fromRow][fromCol] = null;
+                    gameLog.push(`${playerLabel} zombie lost the clash against an opposing Zombie at (${targetRow},${targetCol}).`);
+                    return 'removed';
+                }
+            }
+            const success = zombieCoinFlip({
+                title: 'Zombie Capture',
+                message: `${playerLabel} zombie attacks ${targetPiece.type}.`
+            });
+            if (success) {
+                capturePieceForZombie(player, targetRow, targetCol, targetPiece);
+                moveZombieTo(fromRow, fromCol, targetRow, targetCol, player);
+                return 'moved';
+            } else {
+                gameLog.push(`${playerLabel} zombie failed to capture ${targetPiece.type} at (${targetRow},${targetCol}).`);
+                return 'stay';
+            }
+        }
+
+        function handleZombieCaptureAttempt(attackerPiece, fromRow, fromCol, targetRow, targetCol, options = {}) {
+            const targetPiece = board[targetRow]?.[targetCol];
+            if (!targetPiece || targetPiece.type !== 'Zombie') {
+                return { handled: false };
+            }
+            if (attackerPiece.type === 'Elephantry') {
+                gameLog.push(`${attackerPiece.player === 'W' ? 'Player' : 'AI'} Elephantry cannot capture Zombies by landing.`);
+                return { handled: true, success: false, attackerRemoved: false };
+            }
+            const attackerLabel = attackerPiece.player === 'W' ? 'Player' : 'AI';
+            const zombieOwner = targetPiece.player;
+            const viaRanged = options.ranged;
+            const attemptVerb = viaRanged ? 'shoot' : 'capture';
+            const successVerb = viaRanged ? 'shot' : 'captured';
+            const success = zombieCoinFlip({
+                title: 'Zombie Defense',
+                message: `${attackerLabel} ${viaRanged ? 'shoots at' : 'attacks'} Zombie.`
+            });
+            if (success) {
+                cleanupNecromancerTracking(targetPiece);
+                board[targetRow][targetCol] = null;
+                capturedSquares.push([targetRow, targetCol]);
+                capturedPieces[attackerPiece.player].push(targetPiece);
+                const captureValue = pieceValues[targetPiece.type] || 0;
+                scores[attackerPiece.player] += captureValue;
+                registerScoreGain(attackerPiece.player, captureValue);
+                registerPieceLoss(zombieOwner, targetPiece.type);
+                gameLog.push(`${attackerLabel} ${successVerb} Zombie at (${targetRow},${targetCol}) after winning the coin flip.`);
+                return { handled: true, success: true };
+            } else {
+                board[fromRow][fromCol] = null;
+                cleanupNecromancerTracking(attackerPiece);
+                capturedSquares.push([fromRow, fromCol]);
+                capturedPieces[zombieOwner].push(attackerPiece);
+                registerPieceLoss(attackerPiece.player, attackerPiece.type);
+                scores[zombieOwner] += 3;
+                registerScoreGain(zombieOwner, 3);
+                gameLog.push(`${attackerLabel} failed to ${attemptVerb} Zombie at (${targetRow},${targetCol}) and was lost in the attempt. (+3 bonus to ${zombieOwner === 'W' ? 'Player' : 'AI'})`);
+                renderBoard();
+                updateScoreDisplay();
+                updateCapturedPiecesDisplay();
+                updateGameLog();
+                return { handled: true, success: false, attackerRemoved: true };
+            }
+        }
+
+        function advanceZombieFromPosition(row, col, player) {
+            const zombie = board[row][col];
+            if (!zombie || zombie.type !== 'Zombie' || zombie.player !== player) return false;
+            const direction = player === 'W' ? -1 : 1;
+            if (handleZombieReachedOpponentBackRow(player, row, col)) {
+                return true;
+            }
+            const forwardRow = row + direction;
+            if (!isValid(forwardRow, col)) {
+                if (handleZombieReachedOpponentBackRow(player, row, col)) {
+                    return true;
+                }
+                return false;
+            }
+            const forwardPiece = board[forwardRow][col];
+            if (!forwardPiece) {
+                moveZombieTo(row, col, forwardRow, col, player);
+                return true;
+            }
+            if (forwardPiece.player !== player) {
+                const result = attemptZombieCapture(row, col, forwardRow, col, player);
+                return result === 'moved' || result === 'removed';
+            }
+            const diagonals = [col - 1, col + 1];
+            for (const diagCol of diagonals) {
+                if (!isValid(forwardRow, diagCol)) continue;
+                const diagPiece = board[forwardRow][diagCol];
+                if (!diagPiece) {
+                    moveZombieTo(row, col, forwardRow, diagCol, player);
+                    return true;
+                }
+                if (diagPiece.player !== player) {
+                    const result = attemptZombieCapture(row, col, forwardRow, diagCol, player);
+                    if (result === 'moved' || result === 'removed') {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function advanceZombiesForPlayer(player, onComplete = null) {
+            if (gameVariant !== '36s-elite') {
+                if (typeof onComplete === 'function') {
+                    onComplete();
+                }
+                return false;
+            }
+            const positions = [];
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const piece = board[r][c];
+                    if (piece && piece.type === 'Zombie' && piece.player === player) {
+                        positions.push({ row: r, col: c });
+                    }
+                }
+            }
+            if (!positions.length) {
+                if (typeof onComplete === 'function') {
+                    onComplete();
+                }
+                return false;
+            }
+            if (zombieAutoAdvanceInProgress) {
+                zombiePendingAdvanceQueue.push({ player, onComplete });
+                return true;
+            }
+            positions.sort((a, b) => {
+                if (a.col !== b.col) {
+                    return a.col - b.col;
+                }
+                return player === 'W' ? a.row - b.row : b.row - a.row;
+            });
+            if (zombieAdvanceTimer) {
+                clearTimeout(zombieAdvanceTimer);
+                zombieAdvanceTimer = null;
+            }
+            zombieAutoAdvanceInProgress = true;
+            let pendingUpdate = false;
+            const completeAdvance = () => {
+                if (zombieAdvanceTimer) {
+                    clearTimeout(zombieAdvanceTimer);
+                    zombieAdvanceTimer = null;
+                }
+                zombieAutoAdvanceInProgress = false;
+                if (pendingUpdate) {
+                    renderBoard();
+                    updateScoreDisplay();
+                    updateCapturedPiecesDisplay();
+                    updateStatus();
+                    updateEndTurnButton();
+                    updateGameLog();
+                }
+                if (typeof onComplete === 'function') {
+                    onComplete();
+                }
+                if (zombiePendingAdvanceQueue.length) {
+                    const nextRequest = zombiePendingAdvanceQueue.shift();
+                    zombieAdvanceTimer = setTimeout(() => advanceZombiesForPlayer(nextRequest.player, nextRequest.onComplete), 200);
+                }
+            };
+            const processNextZombie = () => {
+                if (!positions.length) {
+                    completeAdvance();
+                    return;
+                }
+                const pos = positions.shift();
+                const piece = board[pos.row]?.[pos.col];
+                if (!piece || piece.type !== 'Zombie' || piece.player !== player) {
+                    processNextZombie();
+                    return;
+                }
+                const moved = advanceZombieFromPosition(pos.row, pos.col, player);
+                if (moved) {
+                    pendingUpdate = true;
+                    renderBoard();
+                    updateScoreDisplay();
+                    updateCapturedPiecesDisplay();
+                    updateStatus();
+                    updateEndTurnButton();
+                    updateGameLog();
+                }
+                zombieAdvanceTimer = setTimeout(processNextZombie, 280);
+            };
+            processNextZombie();
+            return true;
+        }
+
+        function decrementNecromancerCooldown(player) {
+            necromancerShootCooldown.forEach((turns, piece) => {
+                if (!isPieceOnBoard(piece)) {
+                    cleanupNecromancerTracking(piece);
+                    return;
+                }
+                if (piece.player === player && turns > 0) {
+                    const next = turns - 1;
+                    if (next <= 0) {
+                        necromancerShootCooldown.delete(piece);
+                    } else {
+                        necromancerShootCooldown.set(piece, next);
+                    }
+                }
+            });
+            necromancerTeleportCounts.forEach((_, piece) => {
+                if (!isPieceOnBoard(piece)) {
+                    cleanupNecromancerTracking(piece);
+                }
+            });
+        }
         
         // AI Difficulty
         let aiDifficulty = 'Medium';
@@ -1358,7 +2112,7 @@
         const AI_TIE_EPSILON = 0.0001;
         const AI_TIME_LIMIT_DEFAULT = 1200; // Increased from 650ms for slower AI thinking
         const AI_TIME_LIMIT_LARGE = 400; // Increased from 180ms for slower AI thinking
-        const LARGE_BOARD_VARIANTS = ['36s', '36s-expert'];
+        const LARGE_BOARD_VARIANTS = ['36s', '36s-expert', '36s-elite'];
         let aiSearchDeadline = 0;
         function aiTimeExpired() {
             return aiSearchDeadline && Date.now() >= aiSearchDeadline;
@@ -1369,6 +2123,8 @@
             'King': 'K', 'Champion': '✠', 'Infantry': 'I', 'Archer': 'A', 'Ballista': 'B',
             'Elephantry': 'E', 'Mercenary': 'M', 'Ogre': 'O', 'Spectre': 'S', 'Pistolier': 'P', 'Fusilier': 'F'
         };
+        pieceIcons['Necromancer'] = 'N';
+        pieceIcons['Zombie'] = 'Z';
         const facingIcons = {
             'U': '▲', 'D': '▼', 'L': '◀', 'R': '▶'
         };
@@ -1377,6 +2133,8 @@
             'Troll': 6, 'Dragon': 7, 'Ogre': 8, 'Wizard': 9, 'Spectre': 5, 'Mercenary': 10,
             'Elephantry': 11, 'Champion': 12, 'King': 13
         };
+        basePieceValues['Necromancer'] = 10;
+        basePieceValues['Zombie'] = 3;
         const pieceValues = basePieceValues;
         let aiPieceValues = { ...basePieceValues };
 
@@ -1717,7 +2475,7 @@
             },
             'Fusilier': {
                 points: '1 point to move 2 squares diagonally or shoot forward/diagonally up to 3 squares. Cannot move and shoot in same turn.',
-                extra: 'Can move through own pieces. After shooting, cannot shoot next turn (can still move). Capturing by landing requires coin flip (50/50). Special Moves: Crack Shot - increase range by +1 (2 points, 2 uses per piece); Strafe - move 1 square vertically/horizontally without capturing (2 points, 2 uses per piece).'
+                extra: 'Can move through own pieces. After shooting, cannot shoot next turn (can still move). Only captures by shooting. Special Moves: Crack Shot - increase range by +1 for next shot (2 points, 3 uses per piece; success determined by coin flip); Strafe - move 1 square vertically/horizontally without capturing (2 points, 2 uses per piece).'
             },
             'Mercenary': {
                 points: '1 point to move 1 square forward or diagonally forward; 2 points for 2 squares.',
@@ -1726,6 +2484,14 @@
             'Ogre': {
                 points: '1 point to move 1 square vertically/horizontally or jump 2 squares; 2 points for both.',
                 extra: 'Captures by jumping over or landing. Cannot jump over other Ogres.'
+            },
+            'Necromancer': {
+                points: '1 point to move 1 square in any direction. Special actions cost 2 points: summon Zombie or Spectre (coin flip) or channel a 2-range shot.',
+                extra: 'Max 2 per player, arrives via Champion summoning. Shoots require a 1-turn cooldown and always resolve captures with coin flips. Teleport twice per game.'
+            },
+            'Zombie': {
+                points: 'Automatically shambles forward each turn without spending move points.',
+                extra: 'Summoned to the back row. Moves forward, attempting diagonal detours if blocked, and resolves captures (including defending) via coin flip. Converts opposing Zombies on successful clashes.'
             }
         };
         const turnablePieces = ['Archer', 'Ballista', 'Elephantry', 'Fusilier', 'Infantry', 'Mercenary'];
@@ -2016,6 +2782,7 @@
                 for (let d of [[0,1], [0,-1], [1,0], [-1,0], [1,1], [1,-1], [-1,1], [-1,-1]]) {
                     let nr = r + d[0], nc = c + d[1];
                     if (isValid(nr, nc)) {
+                        if (board[nr][nc] && board[nr][nc].type === 'Zombie') continue;
                         moves.push({ type: 'move', pos: [nr, nc], cost: 1 });
                     }
                 }
@@ -2108,7 +2875,12 @@
             'Fusilier': { move: (r, c, board, player, _, facing, movesLeft) => {
                 let moves = [];
                 const pieceKey = `${r},${c},${player}`;
-                const shotLastTurn = fusilierShotLastTurn[player].has(pieceKey);
+                const piece = board[r][c];
+                if (!piece) return moves;
+                if (!(pieceKey in fusilierCrackShotCount)) {
+                    fusilierCrackShotCount[pieceKey] = 3;
+                }
+                const shotBlocked = piece ? (fusilierShotLastTurn[player].has(piece) || fusilierShotThisTurn[player].has(piece)) : false;
 
                 // 1 point: move up to 2 squares diagonally (1 or 2 squares)
                 for (let d of [[1,1], [1,-1], [-1,1], [-1,-1]]) {
@@ -2117,9 +2889,6 @@
                     if (isValid(nr1, nc1)) {
                         if (!board[nr1][nc1]) {
                             moves.push({ type: 'move', pos: [nr1, nc1], cost: 1 });
-                        } else if (board[nr1][nc1].player !== player) {
-                            // Capturing by landing requires coin flip
-                            moves.push({ type: 'move', pos: [nr1, nc1], cost: 1, special: 'fusilierCapture' });
                         }
                     }
 
@@ -2135,16 +2904,13 @@
                     if (!intermediateBlocked) {
                         if (!board[nr2][nc2]) {
                             moves.push({ type: 'move', pos: [nr2, nc2], cost: 1 });
-                        } else if (board[nr2][nc2].player !== player) {
-                            // Capturing by landing requires coin flip
-                            moves.push({ type: 'move', pos: [nr2, nc2], cost: 1, special: 'fusilierCapture' });
                         }
                     }
                 }
 
                 // 1 point: shoot forward and diagonally up to 3 squares (only if didn't shoot last turn)
                 // Crack Shot increases range to 4 squares
-                if (!shotLastTurn) {
+                if (!shotBlocked) {
                     let directions = [];
                     if (facing === 'U') {
                         directions = [[-1,0], [-1,-1], [-1,1]]; // Up, Up-Left, Up-Right
@@ -2156,14 +2922,22 @@
                         directions = [[0,1], [-1,1], [1,1]]; // Right, Up-Right, Down-Right
                     }
 
-                    const maxRange = fusilierCrackShotActive ? 4 : 3;
+                    const crackShotActive = fusilierCrackShotActive === piece;
+                    const crackShotsRemaining = fusilierCrackShotCount[pieceKey] || 0;
+                    const canAutoCrackShot = !crackShotActive && crackShotsRemaining > 0 && movesLeft >= 3;
+
+                    const maxRange = crackShotActive ? 4 : 3;
                     for (let d of directions) {
-                        for (let i = 1; i <= maxRange; i++) {
+                        for (let i = 1; i <= 4; i++) {
                             let shootR = r + d[0] * i, shootC = c + d[1] * i;
                             if (!isValid(shootR, shootC)) break;
                             if (board[shootR][shootC]) {
                                 if (board[shootR][shootC].player !== player) {
-                                    moves.push({ type: 'shoot', pos: [shootR, shootC], cost: 1 });
+                                    if (i <= maxRange) {
+                                        moves.push({ type: 'shoot', pos: [shootR, shootC], cost: 1 });
+                                    } else if (i === 4 && canAutoCrackShot) {
+                                        moves.push({ type: 'shoot', pos: [shootR, shootC], cost: 3, special: 'fusilierCrackShotAuto' });
+                                    }
                                 }
                                 break;
                             }
@@ -2252,6 +3026,46 @@
             }}
         };
 
+        pieceTypes['Necromancer'] = {
+            move: (r, c, board, player, firstMove, facing, movesLeft = 0) => {
+                let moves = [];
+                const piece = board[r][c];
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        if (dr === 0 && dc === 0) continue;
+                        const nr = r + dr;
+                        const nc = c + dc;
+                        if (!isValid(nr, nc)) continue;
+                        if (!board[nr][nc] || board[nr][nc].player !== player) {
+                            moves.push({ type: 'move', pos: [nr, nc], cost: 1 });
+                        }
+                    }
+                }
+                const cooldown = necromancerShootCooldown.get(piece) || 0;
+                if (movesLeft >= 2 && cooldown === 0) {
+                    const directions = [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1], [-1,1], [-1,-1]];
+                    for (const [dr, dc] of directions) {
+                        for (let dist = 1; dist <= 2; dist++) {
+                            const nr = r + dr * dist;
+                            const nc = c + dc * dist;
+                            if (!isValid(nr, nc)) break;
+                            if (board[nr][nc]) {
+                                if (board[nr][nc].player !== player) {
+                                    moves.push({ type: 'shoot', pos: [nr, nc], cost: 2, special: 'necromancerShoot' });
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                return moves;
+            }
+        };
+
+        pieceTypes['Zombie'] = {
+            move: () => []
+        };
+
         let board = [];
         let currentPlayer = 'W';
         let selectedPiece = null;
@@ -2308,12 +3122,19 @@
             } else if (variant === '36s-expert') {
                 ROWS = 10;
                 COLS = 14;
+            } else if (variant === '36s-elite') {
+                ROWS = 10;
+                COLS = 14;
             } else if (variant === 'ccb') {
                 ROWS = 8;
                 COLS = 12;
             }
             applyAiDepthForVariant();
             document.getElementById('start-menu').style.display = 'none';
+            const landingHeader = document.getElementById('landing-header');
+            if (landingHeader) landingHeader.style.display = 'none';
+            const landingFooter = document.getElementById('landing-footer');
+            if (landingFooter) landingFooter.style.display = 'none';
             document.getElementById('game-container').style.display = 'flex';
             const boardDiv = document.getElementById('board');
             boardDiv.style.gridTemplateColumns = `repeat(${COLS}, 50px)`;
@@ -2386,6 +3207,24 @@
                 // Place pieces in columns 1-12, leaving columns 0 and 13 empty
                 for (let c = 1; c <= 12; c++) {
                     const idx = c - 1; // Index into the piece arrays (0-11)
+                    board[7][c] = { type: infantryRow[idx], player: 'W', facing: turnablePieces.includes(infantryRow[idx]) ? 'U' : null };
+                    board[8][c] = { type: secondRow[idx], player: 'W', facing: turnablePieces.includes(secondRow[idx]) ? 'U' : null };
+                    board[9][c] = { type: backRowW[idx], player: 'W', facing: turnablePieces.includes(backRowW[idx]) ? 'U' : null };
+                    board[0][c] = { type: backRowB[idx], player: 'B', facing: turnablePieces.includes(backRowB[idx]) ? 'D' : null };
+                    board[1][c] = { type: secondRow[idx], player: 'B', facing: turnablePieces.includes(secondRow[idx]) ? 'D' : null };
+                    board[2][c] = { type: infantryRow[idx], player: 'B', facing: turnablePieces.includes(infantryRow[idx]) ? 'D' : null };
+                    if (secondRow[idx] === 'Troll') {
+                        firstMoves.add(`8,${c},W`);
+                        firstMoves.add(`1,${c},B`);
+                    }
+                }
+            } else if (gameVariant === '36s-elite') {
+                const backRowW = ['Cavalry', 'Ogre', 'Ballista', 'Wizard', 'Guard', 'Champion', 'King', 'Guard', 'Wizard', 'Ballista', 'Ogre', 'Cavalry'];
+                const backRowB = ['Cavalry', 'Ogre', 'Ballista', 'Wizard', 'Guard', 'King', 'Champion', 'Guard', 'Wizard', 'Ballista', 'Ogre', 'Cavalry']; // King and Champion swapped for AI
+                const secondRow = ['Cavalry', 'Troll', 'Dragon', 'Archer', 'Archer', 'Guard', 'Guard', 'Archer', 'Archer', 'Dragon', 'Troll', 'Cavalry'];
+                const infantryRow = ['Infantry', 'Infantry', 'Mercenary', 'Infantry', 'Elephantry', 'Infantry', 'Infantry', 'Elephantry', 'Infantry', 'Mercenary', 'Infantry', 'Infantry'];
+                for (let c = 1; c <= 12; c++) {
+                    const idx = c - 1;
                     board[7][c] = { type: infantryRow[idx], player: 'W', facing: turnablePieces.includes(infantryRow[idx]) ? 'U' : null };
                     board[8][c] = { type: secondRow[idx], player: 'W', facing: turnablePieces.includes(secondRow[idx]) ? 'U' : null };
                     board[9][c] = { type: backRowW[idx], player: 'W', facing: turnablePieces.includes(backRowW[idx]) ? 'U' : null };
@@ -2569,6 +3408,42 @@
                 kingSummonButton.onclick = openKingSummonModal;
                 document.getElementById('controls').insertBefore(kingSummonButton, document.getElementById('guard-honour-button'));
             }
+            let necromancerZombieButton = document.getElementById('necromancer-summon-zombie-button');
+            if (!necromancerZombieButton) {
+                necromancerZombieButton = document.createElement('button');
+                necromancerZombieButton.id = 'necromancer-summon-zombie-button';
+                necromancerZombieButton.textContent = 'Summon Zombie';
+                necromancerZombieButton.style.display = 'none';
+                necromancerZombieButton.onclick = () => openNecromancerSummonModal('zombie');
+                document.getElementById('controls').insertBefore(necromancerZombieButton, document.getElementById('guard-honour-button'));
+            }
+            let necromancerSpectreButton = document.getElementById('necromancer-summon-spectre-button');
+            if (!necromancerSpectreButton) {
+                necromancerSpectreButton = document.createElement('button');
+                necromancerSpectreButton.id = 'necromancer-summon-spectre-button';
+                necromancerSpectreButton.textContent = 'Summon Spectre';
+                necromancerSpectreButton.style.display = 'none';
+                necromancerSpectreButton.onclick = () => openNecromancerSummonModal('spectre');
+                document.getElementById('controls').insertBefore(necromancerSpectreButton, document.getElementById('guard-honour-button'));
+            }
+            let necromancerTeleportButton = document.getElementById('necromancer-teleport-button');
+            if (!necromancerTeleportButton) {
+                necromancerTeleportButton = document.createElement('button');
+                necromancerTeleportButton.id = 'necromancer-teleport-button';
+                necromancerTeleportButton.textContent = 'Necro Teleport';
+                necromancerTeleportButton.style.display = 'none';
+                necromancerTeleportButton.onclick = activateTeleport;
+                document.getElementById('controls').insertBefore(necromancerTeleportButton, document.getElementById('guard-honour-button'));
+            }
+            let championSummonButton = document.getElementById('champion-summon-button');
+            if (!championSummonButton) {
+                championSummonButton = document.createElement('button');
+                championSummonButton.id = 'champion-summon-button';
+                championSummonButton.textContent = 'Summon Necromancer';
+                championSummonButton.style.display = 'none';
+                championSummonButton.onclick = openChampionSummonModal;
+                document.getElementById('controls').insertBefore(championSummonButton, document.getElementById('guard-honour-button'));
+            }
 
             turnButton.style.display = 'none';
             turnMoveButton.style.display = 'none';
@@ -2591,6 +3466,10 @@
             if (fusilierCrackShotButton) fusilierCrackShotButton.style.display = 'none';
             if (fusilierStrafeButton) fusilierStrafeButton.style.display = 'none';
             if (kingSummonButton) kingSummonButton.style.display = 'none';
+            if (necromancerZombieButton) necromancerZombieButton.style.display = 'none';
+            if (necromancerSpectreButton) necromancerSpectreButton.style.display = 'none';
+            if (necromancerTeleportButton) necromancerTeleportButton.style.display = 'none';
+            if (championSummonButton) championSummonButton.style.display = 'none';
 
             if (selectedPiece) {
                 const piece = board[selectedPiece.row][selectedPiece.col];
@@ -2621,13 +3500,41 @@
                         guardHonourButton.style.display = 'inline';
                         guardHonourButton.disabled = false;
                     }
-                    // Show King summon button in 36s-expert mode only
-                    if (piece.type === 'King' && gameVariant === '36s-expert' && movesLeft >= 2) {
+                    // Show King summon button in Expert-tier modes
+                    if (piece.type === 'King' && (gameVariant === '36s-expert' || gameVariant === '36s-elite') && movesLeft >= 2) {
                         const canSummonPistolier = pistoliersSummoned[currentPlayer] < 2;
                         const canSummonFusilier = fusiliersSummoned[currentPlayer] < 2;
                         if (canSummonPistolier || canSummonFusilier) {
                             kingSummonButton.style.display = 'inline';
                             kingSummonButton.disabled = false;
+                        }
+                    }
+                    if (piece.type === 'Champion' && gameVariant === '36s-elite' && movesLeft >= 2) {
+                        const maxNecromancers = 2;
+                        if (necromancersSummoned[currentPlayer] < maxNecromancers) {
+                            championSummonButton.style.display = 'inline';
+                            championSummonButton.disabled = false;
+                        }
+                    }
+                    if (piece.type === 'Necromancer' && gameVariant === '36s-elite') {
+                        const pieceKey = board[selectedPiece.row][selectedPiece.col];
+                        const teleportsUsed = getNecromancerTeleportCount(pieceKey);
+                        if (movesLeft >= 2) {
+                            const backRow = currentPlayer === 'W' ? ROWS - 1 : 0;
+                            const availableBackRow = Array.from({ length: COLS }, (_, c) => c).some(c => !board[backRow][c]);
+                            const maxZombies = getMaxZombies(currentPlayer);
+                            if (zombiesSummoned[currentPlayer] < maxZombies && availableBackRow) {
+                                necromancerZombieButton.style.display = 'inline';
+                                necromancerZombieButton.disabled = false;
+                            }
+                            if (spectresSummoned[currentPlayer] < 2 && availableBackRow) {
+                                necromancerSpectreButton.style.display = 'inline';
+                                necromancerSpectreButton.disabled = false;
+                            }
+                            if (teleportsUsed < 2) {
+                                necromancerTeleportButton.style.display = 'inline';
+                                necromancerTeleportButton.disabled = false;
+                            }
                         }
                     }
                     if (piece.type === 'Wizard' && wizardTeleportUsed[currentPlayer] < 2 && movesLeft >= 2) {
@@ -2705,16 +3612,21 @@
                         const pieceKey = `${selectedPiece.row},${selectedPiece.col},${currentPlayer}`;
                         // Initialize counts if not set
                         if (!(pieceKey in fusilierCrackShotCount)) {
-                            fusilierCrackShotCount[pieceKey] = 2;
+                            fusilierCrackShotCount[pieceKey] = 3;
                         }
                         if (!(pieceKey in fusilierStrafeCount)) {
                             fusilierStrafeCount[pieceKey] = 2;
                         }
-                        // Show Crack Shot button if uses remaining
-                        if (fusilierCrackShotCount[pieceKey] > 0) {
+                        const fusilierPiece = piece;
+                        const fusilierOnCooldown = fusilierShotLastTurn[currentPlayer].has(fusilierPiece) ||
+                            fusilierShotThisTurn[currentPlayer].has(fusilierPiece);
+                        // Show Crack Shot button if uses remaining and not on cooldown
+                        if (fusilierCrackShotCount[pieceKey] > 0 && !fusilierOnCooldown) {
                             fusilierCrackShotButton.style.display = 'inline';
                             fusilierCrackShotButton.disabled = false;
                             fusilierCrackShotButton.textContent = `Crack Shot (${fusilierCrackShotCount[pieceKey]})`;
+                        } else {
+                            fusilierCrackShotButton.style.display = 'none';
                         }
                         // Show Strafe button if uses remaining
                         if (fusilierStrafeCount[pieceKey] > 0) {
@@ -2777,7 +3689,16 @@
         function activateTeleport() {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
+            if (!piece) return;
+            let canTeleport = false;
             if (piece.type === 'Wizard' && wizardTeleportUsed[currentPlayer] < 2) {
+                canTeleport = true;
+            } else if (piece.type === 'Necromancer' && gameVariant === '36s-elite') {
+                if (getNecromancerTeleportCount(piece) < 2) {
+                    canTeleport = true;
+                }
+            }
+            if (canTeleport) {
                 teleportMode = true;
                 validMoves = getValidMoves(selectedPiece.row, selectedPiece.col);
                 renderBoard();
@@ -2879,7 +3800,7 @@
                 movedPieces.add(pieceKey);
 
                 // Activate extended range shooting (temporarily increase range by +1)
-                fusilierCrackShotActive = true;
+                fusilierCrackShotActive = piece;
                 validMoves = getValidMoves(selectedPiece.row, selectedPiece.col);
 
                 gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Fusilier activated Crack Shot (+1 range)`);
@@ -3007,8 +3928,8 @@
 
                     const target = board[r][c];
                     if (target) {
-                        // Cannot charge through Spectre
-                        if (target.type === 'Spectre') {
+                        // Cannot charge through Spectre or Zombies
+                        if (target.type === 'Spectre' || target.type === 'Zombie') {
                             canCharge = false;
                             break;
                         }
@@ -3082,7 +4003,7 @@
         }
 
         function handleClick(row, col) {
-            if (currentPlayer !== 'W' || reinforcementPending) return;
+            if (currentPlayer !== 'W' || reinforcementPending || zombieAutoAdvanceInProgress) return;
             const piece = board[row][col];
 
             if (isAnySpecialModeActive()) {
@@ -3447,10 +4368,20 @@
             if (teleportMode && selectedPiece) {
                 const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.type === 'teleport');
                 if (move && movesLeft >= move.cost) {
-                    board[move.pos[0]][move.pos[1]] = board[selectedPiece.row][selectedPiece.col];
-                    board[selectedPiece.row][selectedPiece.col] = null;
-                    wizardTeleportUsed[currentPlayer]++;
-                    gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported Wizard from (${selectedPiece.row},${selectedPiece.col}) to (${move.pos[0]},${move.pos[1]})`);
+                    const fromRow = selectedPiece.row;
+                    const fromCol = selectedPiece.col;
+                    const teleportPiece = board[fromRow][fromCol];
+                    board[move.pos[0]][move.pos[1]] = teleportPiece;
+                    board[fromRow][fromCol] = null;
+                    if (teleportPiece.type === 'Wizard') {
+                        wizardTeleportUsed[currentPlayer]++;
+                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported Wizard from (${fromRow},${fromCol}) to (${move.pos[0]},${move.pos[1]})`);
+                    } else if (teleportPiece.type === 'Necromancer') {
+                        incrementNecromancerTeleportCount(teleportPiece);
+                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported Necromancer from (${fromRow},${fromCol}) to (${move.pos[0]},${move.pos[1]})`);
+                    } else {
+                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported ${teleportPiece.type} from (${fromRow},${fromCol}) to (${move.pos[0]},${move.pos[1]})`);
+                    }
                     movesLeft -= move.cost;
                     lastAction = { move: true };
                     movedPieces.add(`${move.pos[0]},${move.pos[1]}`);
@@ -3777,51 +4708,6 @@
                             return;
                         }
 
-                        // Handle Fusilier capturing by landing - requires coin flip
-                        if (move.special === 'fusilierCapture') {
-                            const fromRow = selectedPiece.row;
-                            const fromCol = selectedPiece.col;
-                            const toRow = row;
-                            const toCol = col;
-
-                            // Deduct points immediately
-                            movesLeft -= move.cost;
-
-                            // Trigger coin toss for capture
-                            performCoinToss(
-                                'Fusilier Capture',
-                                `Attempting to capture at (${toRow},${toCol})...`,
-                                (success) => {
-                                    if (success) {
-                                        // Successfully captured
-                                        movePiece(fromRow, fromCol, toRow, toCol, null);
-                                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Fusilier successfully captured by landing!`);
-                                    } else {
-                                        // Failed to capture - move blocked
-                                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Fusilier failed to capture - move blocked.`);
-                                    }
-
-                                    lastAction = { move: true };
-                                    movedPieces.add(`${fromRow},${fromCol}`);
-                                    if (success) {
-                                        movedPieces.add(`${toRow},${toCol}`);
-                                    }
-                                    selectedPiece = null;
-                                    validMoves = [];
-                                    showPieceInfo(null);
-                                    renderBoard();
-                                    updateStatus();
-                                    updateEndTurnButton();
-                                    updateGameLog();
-                                    checkGameOver();
-                                    if (movesLeft === 0 && !reinforcementPending) {
-                                        triggerAiTurn();
-                                    }
-                                }
-                            );
-                            return;
-                        }
-
                         // Handle Pistolier move+shoot combination - enter shoot selection mode
                         if (move.special === 'pistolierMoveShoot') {
                             const fromRow = selectedPiece.row;
@@ -3961,6 +4847,9 @@
                         const attackingPiece = board[selectedPiece.row][selectedPiece.col];
                         const isShootingSpectre = targetPiece && targetPiece.type === 'Spectre' && targetPiece.player !== attackingPiece.player;
                         const captureExempt = attackingPiece.type === 'Wizard' || attackingPiece.type === 'Spectre';
+                        const autoCrackShot = move.special === 'fusilierCrackShotAuto';
+                        const usingCrackShot = attackingPiece && attackingPiece.type === 'Fusilier' && fusilierCrackShotActive === attackingPiece;
+                        const isNecromancerShot = attackingPiece && attackingPiece.type === 'Necromancer' && move.special === 'necromancerShoot';
 
                         if (isShootingSpectre && !captureExempt) {
                             // Store move info for callback
@@ -3984,15 +4873,97 @@
                                         if (special === 'archerDiag2') {
                                             archerDiag2ShootUsed[currentPlayer]++;
                                         }
-                                        // Track Fusilier shooting for cooldown
-                                        if (attackingPiece.type === 'Fusilier') {
-                                            const pieceKey = `${fromRow},${fromCol},${currentPlayer}`;
-                                            fusilierShotLastTurn[currentPlayer].add(pieceKey);
-                                        }
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} successfully shot the Spectre!`);
                                     } else {
                                         // Failed to shoot Spectre
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} failed to shoot the Spectre.`);
+                                    }
+                                    if (isNecromancerShot) {
+                                        setNecromancerShotCooldown(attackingPiece, 2);
+                                    }
+
+                                    lastAction = { move: true };
+                                    movedPieces.add(`${fromRow},${fromCol}`);
+                                    selectedPiece = null;
+                                    validMoves = [];
+                                    showPieceInfo(null);
+                                    renderBoard();
+                                    updateStatus();
+                                    updateEndTurnButton();
+                                    updateGameLog();
+                                    checkGameOver();
+                                    if (movesLeft === 0 && !reinforcementPending) {
+                                        triggerAiTurn();
+                                    }
+                                }
+                            );
+                            return;
+                        } else if (autoCrackShot) {
+                            const fromRow = selectedPiece.row;
+                            const fromCol = selectedPiece.col;
+                            const pieceKey = `${fromRow},${fromCol},${currentPlayer}`;
+
+                            movesLeft -= move.cost;
+
+                            if (!(pieceKey in fusilierCrackShotCount)) {
+                                fusilierCrackShotCount[pieceKey] = 3;
+                            }
+                            if (fusilierCrackShotCount[pieceKey] > 0) {
+                                fusilierCrackShotCount[pieceKey]--;
+                            }
+
+                            performCoinToss(
+                                'Crack Shot',
+                                'Attempting Crack Shot...',
+                                (success) => {
+                                    fusilierShotThisTurn[attackingPiece.player].add(attackingPiece);
+                                    fusilierShotLastTurn[attackingPiece.player].delete(attackingPiece);
+
+                                    if (success) {
+                                        shootPiece(fromRow, fromCol, row, col);
+                                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Fusilier Crack Shot hit!`);
+                                    } else {
+                                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Fusilier Crack Shot missed.`);
+                                    }
+
+                                    lastAction = { move: true };
+                                    movedPieces.add(`${fromRow},${fromCol}`);
+                                    selectedPiece = null;
+                                    validMoves = [];
+                                    showPieceInfo(null);
+                                    renderBoard();
+                                    updateStatus();
+                                    updateEndTurnButton();
+                                    updateGameLog();
+                                    checkGameOver();
+                                    if (movesLeft === 0 && !reinforcementPending) {
+                                        triggerAiTurn();
+                                    }
+                                }
+                            );
+                            return;
+                        } else if (usingCrackShot) {
+                            const fromRow = selectedPiece.row;
+                            const fromCol = selectedPiece.col;
+
+                            // Deduct points immediately
+                            movesLeft -= move.cost;
+
+                            performCoinToss(
+                                'Crack Shot',
+                                'Attempting Crack Shot...',
+                                (success) => {
+                                    // Mark the shot attempt for cooldown regardless of outcome
+                                    fusilierShotThisTurn[attackingPiece.player].add(attackingPiece);
+                                    fusilierShotLastTurn[attackingPiece.player].delete(attackingPiece);
+
+                                    fusilierCrackShotActive = null;
+
+                                    if (success) {
+                                        shootPiece(fromRow, fromCol, row, col);
+                                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Fusilier Crack Shot hit!`);
+                                    } else {
+                                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Fusilier Crack Shot missed.`);
                                     }
 
                                     lastAction = { move: true };
@@ -4017,10 +4988,8 @@
                             if (move.special === 'archerDiag2') {
                                 archerDiag2ShootUsed[currentPlayer]++;
                             }
-                            // Track Fusilier shooting for cooldown
-                            if (attackingPiece.type === 'Fusilier') {
-                                const pieceKey = `${selectedPiece.row},${selectedPiece.col},${currentPlayer}`;
-                                fusilierShotLastTurn[currentPlayer].add(pieceKey);
+                            if (isNecromancerShot) {
+                                setNecromancerShotCooldown(attackingPiece, 2);
                             }
                         }
                     } else if (move.type === 'swap') {
@@ -4035,10 +5004,18 @@
                         movedPieces.add(`${guardRow},${guardCol}`);
                         movedPieces.add(`${selectedPiece.row},${selectedPiece.col}`);
                     } else if (move.type === 'teleport') {
-                        board[move.pos[0]][move.pos[1]] = board[selectedPiece.row][selectedPiece.col];
+                        const teleportPiece = board[selectedPiece.row][selectedPiece.col];
+                        board[move.pos[0]][move.pos[1]] = teleportPiece;
                         board[selectedPiece.row][selectedPiece.col] = null;
-                        wizardTeleportUsed[currentPlayer]++;
-                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported Wizard from (${selectedPiece.row},${selectedPiece.col}) to (${move.pos[0]},${move.pos[1]})`);
+                        if (teleportPiece.type === 'Wizard') {
+                            wizardTeleportUsed[currentPlayer]++;
+                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported Wizard from (${selectedPiece.row},${selectedPiece.col}) to (${move.pos[0]},${move.pos[1]})`);
+                        } else if (teleportPiece.type === 'Necromancer') {
+                            incrementNecromancerTeleportCount(teleportPiece);
+                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported Necromancer from (${selectedPiece.row},${selectedPiece.col}) to (${move.pos[0]},${move.pos[1]})`);
+                        } else {
+                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported ${teleportPiece.type} from (${selectedPiece.row},${selectedPiece.col}) to (${move.pos[0]},${move.pos[1]})`);
+                        }
                         movedPieces.add(`${move.pos[0]},${move.pos[1]}`);
                     } else if (move.type === 'teleportSwap') {
                         const opponentWizardRow = row;
@@ -4280,7 +5257,7 @@
         function openKingSummonModal() {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
-            if (piece.type === 'King' && gameVariant === '36s-expert') {
+            if (piece.type === 'King' && (gameVariant === '36s-expert' || gameVariant === '36s-elite')) {
                 const select = document.getElementById('king-summon-select');
                 select.innerHTML = '';
 
@@ -4363,6 +5340,237 @@
 
                     lastAction = { move: true };
                     movedPieces.add(`${selectedPiece.row},${selectedPiece.col}`);
+                    selectedPiece = null;
+                    validMoves = [];
+                    showPieceInfo(null);
+                    renderBoard();
+                    updateStatus();
+                    updateEndTurnButton();
+                    updateGameLog();
+                    checkGameOver();
+                    if (movesLeft === 0 && !reinforcementPending) {
+                        triggerAiTurn();
+                    }
+                }
+            );
+        }
+
+        function openChampionSummonModal() {
+            if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
+            const piece = board[selectedPiece.row][selectedPiece.col];
+            if (!piece || piece.type !== 'Champion' || gameVariant !== '36s-elite') return;
+            if (necromancersSummoned[currentPlayer] >= 2) return;
+
+            const backRow = currentPlayer === 'W' ? ROWS - 1 : 0;
+            const select = document.getElementById('champion-summon-select');
+            if (!select) return;
+            const availableCols = [];
+            for (let c = 0; c < COLS; c++) {
+                if (!board[backRow][c]) {
+                    availableCols.push(c);
+                }
+            }
+
+            if (availableCols.length === 0) {
+                gameLog.push('No open squares on the back row to summon a Necromancer.');
+                updateGameLog();
+                return;
+            }
+
+            select.innerHTML = availableCols.map(c => `<option value="${c}">Column ${c + 1}</option>`).join('');
+            championSummonSource = { row: selectedPiece.row, col: selectedPiece.col, player: currentPlayer };
+            const modal = document.getElementById('champion-summon-modal');
+            if (modal) {
+                modal.style.display = 'block';
+            }
+        }
+
+        function closeChampionSummonModal() {
+            const modal = document.getElementById('champion-summon-modal');
+            if (modal) modal.style.display = 'none';
+            championSummonSource = null;
+        }
+
+        function confirmChampionSummon() {
+            if (!championSummonSource) return;
+            const { row, col, player } = championSummonSource;
+            const piece = board[row]?.[col];
+            if (!piece || piece.type !== 'Champion' || player !== currentPlayer) {
+                closeChampionSummonModal();
+                return;
+            }
+            if (movesLeft < 2) {
+                closeChampionSummonModal();
+                return;
+            }
+
+            const select = document.getElementById('champion-summon-select');
+            if (!select || select.value === '') {
+                return;
+            }
+            const targetCol = parseInt(select.value, 10);
+            if (Number.isNaN(targetCol)) return;
+
+            closeChampionSummonModal();
+
+            movesLeft = Math.max(0, movesLeft - 2);
+
+            const backRow = player === 'W' ? ROWS - 1 : 0;
+            const summonMessage = `Attempting to summon a Necromancer to column ${targetCol + 1}.`;
+            performCoinToss(
+                'Summon Necromancer',
+                summonMessage,
+                (success) => {
+                    if (success) {
+                        if (!board[backRow][targetCol]) {
+                            const necromancerPiece = { type: 'Necromancer', player, facing: null };
+                            board[backRow][targetCol] = necromancerPiece;
+                            necromancersSummoned[player] = (necromancersSummoned[player] || 0) + 1;
+                            necromancerTeleportCounts.set(necromancerPiece, 0);
+                            setNecromancerShotCooldown(necromancerPiece, 0);
+                            gameLog.push(`${player === 'W' ? 'Player' : 'AI'} summoned a Necromancer at (${backRow},${targetCol}).`);
+                        } else {
+                            gameLog.push('Necromancer summon succeeded but the chosen square was no longer available.');
+                        }
+                    } else {
+                        gameLog.push(`${player === 'W' ? 'Player' : 'AI'} failed to summon a Necromancer.`);
+                    }
+
+                    lastAction = { move: true };
+                    movedPieces.add(`${row},${col}`);
+                    selectedPiece = null;
+                    validMoves = [];
+                    showPieceInfo(null);
+                    renderBoard();
+                    updateStatus();
+                    updateEndTurnButton();
+                    updateGameLog();
+                    checkGameOver();
+                    if (movesLeft === 0 && !reinforcementPending) {
+                        triggerAiTurn();
+                    }
+                }
+            );
+        }
+
+        function openNecromancerSummonModal(type) {
+            if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
+            const piece = board[selectedPiece.row][selectedPiece.col];
+            if (!piece || piece.type !== 'Necromancer' || gameVariant !== '36s-elite') return;
+
+            if (type === 'zombie') {
+                const maxZombies = getMaxZombies(currentPlayer);
+                if (zombiesSummoned[currentPlayer] >= maxZombies) {
+                    gameLog.push('Zombie limit reached. Cannot summon more.');
+                    updateGameLog();
+                    return;
+                }
+            } else if (type === 'spectre') {
+                if (spectresSummoned[currentPlayer] >= 2) {
+                    gameLog.push('Spectre limit reached. Cannot summon more.');
+                    updateGameLog();
+                    return;
+                }
+            }
+
+            const backRow = currentPlayer === 'W' ? ROWS - 1 : 0;
+            const select = document.getElementById('necromancer-summon-select');
+            if (!select) return;
+            const availableCols = [];
+            for (let c = 0; c < COLS; c++) {
+                if (!board[backRow][c]) availableCols.push(c);
+            }
+            if (!availableCols.length) {
+                gameLog.push('No open squares on the back row to place a summon.');
+                updateGameLog();
+                return;
+            }
+            select.innerHTML = availableCols.map(c => `<option value="${c}">Column ${c + 1}</option>`).join('');
+            necromancerSummonContext = { row: selectedPiece.row, col: selectedPiece.col, player: currentPlayer };
+            necromancerSummonType = type;
+            const modal = document.getElementById('necromancer-summon-modal');
+            if (modal) modal.style.display = 'block';
+        }
+
+        function closeNecromancerSummonModal() {
+            const modal = document.getElementById('necromancer-summon-modal');
+            if (modal) modal.style.display = 'none';
+            necromancerSummonContext = null;
+            necromancerSummonType = null;
+        }
+
+        function confirmNecromancerSummon() {
+            if (!necromancerSummonContext || !necromancerSummonType) return;
+            const { row, col, player } = necromancerSummonContext;
+            const piece = board[row]?.[col];
+            if (!piece || piece.type !== 'Necromancer' || player !== currentPlayer) {
+                closeNecromancerSummonModal();
+                return;
+            }
+            if (movesLeft < 2) {
+                closeNecromancerSummonModal();
+                return;
+            }
+
+            const select = document.getElementById('necromancer-summon-select');
+            if (!select || select.value === '') return;
+            const targetCol = parseInt(select.value, 10);
+            if (Number.isNaN(targetCol)) return;
+
+            const summonKey = necromancerSummonType;
+
+            if (summonKey === 'zombie') {
+                const maxZombies = getMaxZombies(player);
+                if (zombiesSummoned[player] >= maxZombies) {
+                    gameLog.push('Zombie limit reached. Cannot summon more.');
+                    updateGameLog();
+                    closeNecromancerSummonModal();
+                    return;
+                }
+            } else if (summonKey === 'spectre' && spectresSummoned[player] >= 2) {
+                gameLog.push('Spectre limit reached. Cannot summon more.');
+                updateGameLog();
+                closeNecromancerSummonModal();
+                return;
+            }
+
+            closeNecromancerSummonModal();
+
+            movesLeft = Math.max(0, movesLeft - 2);
+            const backRow = player === 'W' ? ROWS - 1 : 0;
+            const isZombieSummon = summonKey === 'zombie';
+            const summonType = isZombieSummon ? 'Zombie' : 'Spectre';
+            const title = isZombieSummon ? 'Summon Zombie' : 'Summon Spectre';
+            const message = isZombieSummon
+                ? `Attempting to summon a Zombie to column ${targetCol + 1}...`
+                : `Attempting to summon a Spectre to column ${targetCol + 1}...`;
+
+            performCoinToss(
+                title,
+                message,
+                (success) => {
+                    if (success) {
+                        if (!board[backRow][targetCol]) {
+                            if (isZombieSummon) {
+                                const zombiePiece = createZombiePiece(player);
+                                board[backRow][targetCol] = zombiePiece;
+                                zombiesSummoned[player] = (zombiesSummoned[player] || 0) + 1;
+                                gameLog.push(`${player === 'W' ? 'Player' : 'AI'} summoned a Zombie at (${backRow},${targetCol}).`);
+                            } else {
+                                const spectrePiece = createSpectrePiece(player);
+                                board[backRow][targetCol] = spectrePiece;
+                                spectresSummoned[player] = (spectresSummoned[player] || 0) + 1;
+                                gameLog.push(`${player === 'W' ? 'Player' : 'AI'} summoned a Spectre at (${backRow},${targetCol}).`);
+                            }
+                        } else {
+                            gameLog.push('Summon succeeded but the chosen square was occupied.');
+                        }
+                    } else {
+                        gameLog.push(`${player === 'W' ? 'Player' : 'AI'} failed to summon ${summonType}.`);
+                    }
+
+                    lastAction = { move: true };
+                    movedPieces.add(`${row},${col}`);
                     selectedPiece = null;
                     validMoves = [];
                     showPieceInfo(null);
@@ -4484,6 +5692,18 @@
                     }
                 }
             }
+            if (type === 'Necromancer' && gameVariant === '36s-elite' && movesLeft >= 2) {
+                const pieceObj = piece;
+                if (getNecromancerTeleportCount(pieceObj) < 2) {
+                    for (let r = 0; r < ROWS; r++) {
+                        for (let c = 0; c < COLS; c++) {
+                            if (!board[r][c] && (r !== row || c !== col)) {
+                                valid.push({ type: 'teleport', pos: [r, c], cost: 2 });
+                            }
+                        }
+                    }
+                }
+            }
             if (type === 'Wizard' && !wizardTeleportSwapUsed[player] && movesLeft >= 2 && opponentHasWizards(player)) {
                 const color = (row + col) % 2;
                 for (let r = 0; r < ROWS; r++) {
@@ -4562,6 +5782,7 @@
                         if (targetPiece.type === 'King') {
                             endGame(player);
                         }
+                        cleanupNecromancerTracking(targetPiece);
                         board[nr][nc] = null;
                     }
                 }
@@ -4589,15 +5810,24 @@
 
             if (jump && board[jump[0]][jump[1]] && board[jump[0]][jump[1]].player !== piece.player) {
                 const capturedPiece = board[jump[0]][jump[1]];
-                capturedSquares.push([jump[0], jump[1]]);
-                capturedPieces[piece.player].push(capturedPiece);
-                const captureValue = pieceValues[capturedPiece.type];
-                scores[piece.player] += captureValue;
-                registerScoreGain(piece.player, captureValue);
-                registerPieceLoss(opponent, capturedPiece.type);
-                gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} captured ${capturedPiece.type} (+${captureValue} points) with ${piece.type} at (${jump[0]},${jump[1]})`);
-                board[jump[0]][jump[1]] = null;
-                captured = true;
+                if (capturedPiece.type === 'Zombie') {
+                    const result = handleZombieCaptureAttempt(piece, fromRow, fromCol, jump[0], jump[1], { jumpCapture: true });
+                    if (!result.success) {
+                        return;
+                    }
+                    captured = true;
+                } else {
+                    capturedSquares.push([jump[0], jump[1]]);
+                    capturedPieces[piece.player].push(capturedPiece);
+                    const captureValue = pieceValues[capturedPiece.type];
+                    scores[piece.player] += captureValue;
+                    registerScoreGain(piece.player, captureValue);
+                    registerPieceLoss(opponent, capturedPiece.type);
+                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} captured ${capturedPiece.type} (+${captureValue} points) with ${piece.type} at (${jump[0]},${jump[1]})`);
+                    cleanupNecromancerTracking(capturedPiece);
+                    board[jump[0]][jump[1]] = null;
+                    captured = true;
+                }
             }
 
             if (board[toRow][toCol]) {
@@ -4607,20 +5837,29 @@
                     // Don't allow the move - this shouldn't happen but just in case
                 } else {
                     const capturedPiece = board[toRow][toCol];
-                    capturedSquares.push([toRow, toCol]);
-                    capturedPieces[piece.player].push(capturedPiece);
-                    const captureValue = pieceValues[capturedPiece.type];
-                    scores[piece.player] += captureValue;
-                    registerScoreGain(piece.player, captureValue);
-                    registerPieceLoss(opponent, capturedPiece.type);
-                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} captured ${capturedPiece.type} (+${captureValue} points) with ${piece.type} at (${toRow},${toCol})`);
-                    if (capturedPiece.type === 'Champion') {
-                        championCaptured[capturedPiece.player] = true;
+                    if (capturedPiece.type === 'Zombie') {
+                        const result = handleZombieCaptureAttempt(piece, fromRow, fromCol, toRow, toCol);
+                        if (!result.success) {
+                            return;
+                        }
+                        captured = true;
+                    } else {
+                        capturedSquares.push([toRow, toCol]);
+                        capturedPieces[piece.player].push(capturedPiece);
+                        const captureValue = pieceValues[capturedPiece.type];
+                        scores[piece.player] += captureValue;
+                        registerScoreGain(piece.player, captureValue);
+                        registerPieceLoss(opponent, capturedPiece.type);
+                        gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} captured ${capturedPiece.type} (+${captureValue} points) with ${piece.type} at (${toRow},${toCol})`);
+                        if (capturedPiece.type === 'Champion') {
+                            championCaptured[capturedPiece.player] = true;
+                        }
+                        cleanupNecromancerTracking(capturedPiece);
+                        if (capturedPiece.type === 'King') {
+                            endGame(piece.player);
+                        }
+                        captured = true;
                     }
-                    if (capturedPiece.type === 'King') {
-                        endGame(piece.player);
-                    }
-                    captured = true;
                 }
             } else {
                 gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} moved ${piece.type} from (${fromRow},${fromCol}) to (${toRow},${toCol})`);
@@ -4648,19 +5887,40 @@
 
         function shootPiece(fromRow, fromCol, toRow, toCol) {
             const piece = board[fromRow][fromCol];
-            if (board[toRow][toCol]) {
+            if (!piece) return;
+            if (piece.type === 'Fusilier') {
+                fusilierShotThisTurn[piece.player].add(piece);
+                fusilierShotLastTurn[piece.player].delete(piece);
+                if (fusilierCrackShotActive === piece) {
+                    fusilierCrackShotActive = null;
+                }
+            }
+            const targetPiece = board[toRow][toCol];
+            if (targetPiece && targetPiece.type === 'Zombie') {
+                const result = handleZombieCaptureAttempt(piece, fromRow, fromCol, toRow, toCol, { ranged: true });
+                if (result.handled) {
+                    if (result.success) {
+                        renderBoard();
+                        updateScoreDisplay();
+                        updateCapturedPiecesDisplay();
+                        updateGameLog();
+                    }
+                    return;
+                }
+            }
+            if (targetPiece) {
                 capturedSquares.push([toRow, toCol]);
-                const capturedPiece = board[toRow][toCol];
-                capturedPieces[piece.player].push(capturedPiece);
-                const captureValue = pieceValues[capturedPiece.type];
+                capturedPieces[piece.player].push(targetPiece);
+                const captureValue = pieceValues[targetPiece.type];
                 scores[piece.player] += captureValue;
                 registerScoreGain(piece.player, captureValue);
-                registerPieceLoss(getOpponent(piece.player), capturedPiece.type);
-                gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} shot ${capturedPiece.type} (+${captureValue} points) with ${piece.type} at (${toRow},${toCol})`);
-                if (capturedPiece.type === 'Champion') {
-                    championCaptured[capturedPiece.player] = true;
+                registerPieceLoss(getOpponent(piece.player), targetPiece.type);
+                gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} shot ${targetPiece.type} (+${captureValue} points) with ${piece.type} at (${toRow},${toCol})`);
+                if (targetPiece.type === 'Champion') {
+                    championCaptured[targetPiece.player] = true;
                 }
-                if (capturedPiece.type === 'King') {
+                cleanupNecromancerTracking(targetPiece);
+                if (targetPiece.type === 'King') {
                     endGame(piece.player);
                 }
                 board[toRow][toCol] = null;
@@ -4683,7 +5943,7 @@
             let availablePieces = capturedPieces[player].map(p => p.type);
             const piece = board[row][col];
             if (piece.type === 'Champion' || piece.type === 'King') {
-                if (gameVariant === '36s-expert') {
+                if (gameVariant === '36s-expert' || gameVariant === '36s-elite') {
                     availablePieces.push(...Array(2).fill('Ballista'), ...Array(2).fill('Elephantry'), ...Array(2).fill('Mercenary'));
                 }
             }
@@ -5693,14 +6953,17 @@
                             movedPieces.add(`${pos[0]},${pos[1]}`);
                         } else if (action.type === 'shoot') {
                             // Check if shooting a Spectre - requires coin toss
-                            const targetPiece = board[pos[0]][pos[1]];
-                            const attackingPiece = board[from[0]][from[1]];
-                            const isShootingSpectre = targetPiece && targetPiece.type === 'Spectre' && targetPiece.player !== attackingPiece.player;
-                            const captureExempt = attackingPiece.type === 'Wizard' || attackingPiece.type === 'Spectre';
+                        const targetPiece = board[pos[0]][pos[1]];
+                        const attackingPiece = board[from[0]][from[1]];
+                        const isShootingSpectre = targetPiece && targetPiece.type === 'Spectre' && targetPiece.player !== attackingPiece.player;
+                        const captureExempt = attackingPiece.type === 'Wizard' || attackingPiece.type === 'Spectre';
+                        const autoCrackShot = special === 'fusilierCrackShotAuto';
+                        const usingCrackShot = attackingPiece && attackingPiece.type === 'Fusilier' && fusilierCrackShotActive === attackingPiece;
+                        const isNecromancerShot = attackingPiece && attackingPiece.type === 'Necromancer' && special === 'necromancerShoot';
 
-                            if (isShootingSpectre && !captureExempt) {
-                                // Deduct cost before coin toss
-                                movesLeft -= cost;
+                        if (isShootingSpectre && !captureExempt) {
+                            // Deduct cost before coin toss
+                            movesLeft -= cost;
 
                                 // Show automated coin toss popup for AI
                                 performCoinToss(
@@ -5717,6 +6980,9 @@
                                         if (special === 'archerDiag2') {
                                             archerDiag2ShootUsed['B']++;
                                         }
+                                        if (isNecromancerShot) {
+                                            setNecromancerShotCooldown(attackingPiece, 2);
+                                        }
 
                                         renderBoard();
                                         updateGameLog();
@@ -5727,6 +6993,67 @@
                                     true // Automated mode
                                 );
                                 return; // Exit to wait for coin toss callback
+                            } else if (autoCrackShot) {
+                                movesLeft -= cost;
+
+                                const pieceKey = `${from[0]},${from[1]},B`;
+                                if (!(pieceKey in fusilierCrackShotCount)) {
+                                    fusilierCrackShotCount[pieceKey] = 3;
+                                }
+                                if (fusilierCrackShotCount[pieceKey] > 0) {
+                                    fusilierCrackShotCount[pieceKey]--;
+                                }
+
+                                performCoinToss(
+                                    'Crack Shot',
+                                    'AI is attempting a Crack Shot...',
+                                    (success) => {
+                                        fusilierShotThisTurn[attackingPiece.player].add(attackingPiece);
+                                        fusilierShotLastTurn[attackingPiece.player].delete(attackingPiece);
+
+                                        if (success) {
+                                            shootPiece(from[0], from[1], pos[0], pos[1]);
+                                            gameLog.push(`AI Fusilier Crack Shot hit!`);
+                                        } else {
+                                            gameLog.push(`AI Fusilier Crack Shot missed.`);
+                                        }
+
+                                        renderBoard();
+                                        updateGameLog();
+
+                                        // Continue AI turn
+                                        setTimeout(() => makeNextMove(), 500);
+                                    },
+                                    true // Automated mode
+                                );
+                                return;
+                            } else if (usingCrackShot) {
+                                movesLeft -= cost;
+
+                                performCoinToss(
+                                    'Crack Shot',
+                                    'AI is attempting a Crack Shot...',
+                                    (success) => {
+                                        fusilierShotThisTurn[attackingPiece.player].add(attackingPiece);
+                                        fusilierShotLastTurn[attackingPiece.player].delete(attackingPiece);
+                                        fusilierCrackShotActive = null;
+
+                                        if (success) {
+                                            shootPiece(from[0], from[1], pos[0], pos[1]);
+                                            gameLog.push(`AI Fusilier Crack Shot hit!`);
+                                        } else {
+                                            gameLog.push(`AI Fusilier Crack Shot missed.`);
+                                        }
+
+                                        renderBoard();
+                                        updateGameLog();
+
+                                        // Continue AI turn
+                                        setTimeout(() => makeNextMove(), 500);
+                                    },
+                                    true // Automated mode
+                                );
+                                return;
                             } else {
                                 // Normal shoot
                                 shootPiece(from[0], from[1], pos[0], pos[1]);
@@ -5734,6 +7061,9 @@
 
                             if (special === 'archerDiag2') {
                                 archerDiag2ShootUsed['B']++;
+                            }
+                            if (isNecromancerShot) {
+                                setNecromancerShotCooldown(attackingPiece, 2);
                             }
                         } else if (action.type === 'activate' && special === 'ballistaRange') {
                             // Extend range for Ballista this turn
@@ -5754,10 +7084,18 @@
                         } else if (action.type === 'teleport') {
                             const wizardRow = from[0], wizardCol = from[1];
                             const newRow = pos[0], newCol = pos[1];
-                            board[newRow][newCol] = board[wizardRow][wizardCol];
+                            const teleportPiece = board[wizardRow][wizardCol];
+                            board[newRow][newCol] = teleportPiece;
                             board[wizardRow][wizardCol] = null;
-                            wizardTeleportUsed['B']++;
-                            gameLog.push(`AI teleported Wizard from (${wizardRow},${wizardCol}) to (${newRow},${newCol})`);
+                            if (teleportPiece.type === 'Wizard') {
+                                wizardTeleportUsed['B']++;
+                                gameLog.push(`AI teleported Wizard from (${wizardRow},${wizardCol}) to (${newRow},${newCol})`);
+                            } else if (teleportPiece.type === 'Necromancer') {
+                                incrementNecromancerTeleportCount(teleportPiece);
+                                gameLog.push(`AI teleported Necromancer from (${wizardRow},${wizardCol}) to (${newRow},${newCol})`);
+                            } else {
+                                gameLog.push(`AI teleported ${teleportPiece.type} from (${wizardRow},${wizardCol}) to (${newRow},${newCol})`);
+                            }
                             movedPieces.add(`${newRow},${newCol}`);
                         } else if (action.type === 'teleportSwap') {
                             const playerWizardRow = from[0], playerWizardCol = from[1];
@@ -5872,6 +7210,7 @@
             archerDiag2ShootMode = false;
             elephantryChargeMode = false;
             elephantryExtendedRangeActive = false;
+            fusilierCrackShotActive = null;
             elephantryMoveShootMode = false;
             elephantryMoveShootPosition = null;
             pistolierMoveShootMode = false;
@@ -5885,9 +7224,28 @@
             dragonInfernoUsed = { 'W': false, 'B': false };
             wizardStrafeUsed = { 'W': 0, 'B': 0 };
             dragonStrafeUsed = { 'W': 0, 'B': 0 };
+            fusilierShotLastTurn = { 'W': new Set(), 'B': new Set() };
+            fusilierShotThisTurn = { 'W': new Set(), 'B': new Set() };
             spectresSummoned = { 'W': 0, 'B': 0 };
             wizardSummonedThisTurn = { 'W': false, 'B': false };
             wizardCannotMoveNextTurn = { 'W': new Set(), 'B': new Set() };
+            necromancersSummoned = { 'W': 0, 'B': 0 };
+            necromancerTeleportCounts = new Map();
+            necromancerShootCooldown = new Map();
+            zombiesSummoned = { 'W': 0, 'B': 0 };
+            zombiePendingAdvanceQueue = [];
+            zombieAutoAdvanceInProgress = false;
+            clearZombieCoinAnimations();
+            if (zombieAdvanceTimer) {
+                clearTimeout(zombieAdvanceTimer);
+                zombieAdvanceTimer = null;
+            }
+            championSummonSource = null;
+            closeChampionSummonModal();
+            necromancerSummonContext = null;
+            necromancerSummonType = null;
+            closeNecromancerSummonModal();
+            zombieConversions = { 'W': 0, 'B': 0 };
             archerMoveDiagShootUsed = { 'W': 0, 'B': 0 };
             archerDiag2ShootUsed = { 'W': 0, 'B': 0 };
             ballistaRangeBoostActive = { 'W': false, 'B': false };
@@ -6008,6 +7366,11 @@
             updateGameLog();
             document.getElementById('start-menu').style.display = 'flex';
             document.getElementById('game-container').style.display = 'none';
+            const landingHeader = document.getElementById('landing-header');
+            if (landingHeader) landingHeader.style.display = 'block';
+            const landingFooter = document.getElementById('landing-footer');
+            if (landingFooter) landingFooter.style.display = 'block';
+            resetVariantSelections();
         }
 
         function checkGameOver() {
@@ -6089,6 +7452,22 @@
                 }, 1780);
             }
         }
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.variant-option')) {
+                resetVariantSelections();
+            }
+            const howToModal = document.getElementById('how-to-play-modal');
+            if (howToModal && howToModal.style.display === 'block') {
+                const clickedInsideModal = event.target.closest('#how-to-play-modal');
+                const clickedHowToButton = event.target.closest('.how-to-button');
+                if (!clickedInsideModal && !clickedHowToButton) {
+                    closeHowToPlay();
+                }
+            }
+        });
+
+        resetVariantSelections();
     </script>
 </body>
 </html>
