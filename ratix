@@ -1693,7 +1693,7 @@
             coinResult.className = 'coin';
             coinResult.style.backgroundColor = '#666';
             coinResult.style.color = 'white';
-            coinResult.textContent = '☠︎︎';
+            coinResult.textContent = '☠︎';
 
             modal.dataset.zombieFlip = 'true';
             modal.style.display = 'block';
@@ -1725,7 +1725,7 @@
                     coinResult.className = 'coin';
                     coinResult.style.backgroundColor = '#666';
                     coinResult.style.color = 'white';
-                    coinResult.textContent = '☠︎︎';
+                    coinResult.textContent = '☠︎';
                     descriptionEl.textContent = '';
                     messageEl.textContent = '';
                     if (startBtn) startBtn.style.display = 'none';
@@ -1758,7 +1758,7 @@
                 coinResult.className = 'coin';
                 coinResult.style.backgroundColor = '#666';
                 coinResult.style.color = 'white';
-                coinResult.textContent = '☠︎︎';
+                coinResult.textContent = '☠︎';
             }
             if (descriptionEl) {
                 descriptionEl.textContent = '';
@@ -1937,19 +1937,26 @@
                 gameLog.push(`${attackerLabel} ${successVerb} Zombie at (${targetRow},${targetCol}) after winning the coin flip.`);
                 return { handled: true, success: true };
             } else {
-                board[fromRow][fromCol] = null;
-                cleanupNecromancerTracking(attackerPiece);
-                capturedSquares.push([fromRow, fromCol]);
-                capturedPieces[zombieOwner].push(attackerPiece);
-                registerPieceLoss(attackerPiece.player, attackerPiece.type);
-                scores[zombieOwner] += 3;
-                registerScoreGain(zombieOwner, 3);
-                gameLog.push(`${attackerLabel} failed to ${attemptVerb} Zombie at (${targetRow},${targetCol}) and was lost in the attempt. (+3 bonus to ${zombieOwner === 'W' ? 'Player' : 'AI'})`);
-                renderBoard();
-                updateScoreDisplay();
-                updateCapturedPiecesDisplay();
-                updateGameLog();
-                return { handled: true, success: false, attackerRemoved: true };
+                // For ranged/shooting attacks, the attacker stays on the board
+                if (viaRanged) {
+                    gameLog.push(`${attackerLabel} failed to ${attemptVerb} Zombie at (${targetRow},${targetCol}). The shot missed and the attacker remains safe.`);
+                    return { handled: true, success: false, attackerRemoved: false };
+                } else {
+                    // For landing captures, the attacker is captured by the zombie
+                    board[fromRow][fromCol] = null;
+                    cleanupNecromancerTracking(attackerPiece);
+                    capturedSquares.push([fromRow, fromCol]);
+                    capturedPieces[zombieOwner].push(attackerPiece);
+                    registerPieceLoss(attackerPiece.player, attackerPiece.type);
+                    scores[zombieOwner] += 3;
+                    registerScoreGain(zombieOwner, 3);
+                    gameLog.push(`${attackerLabel} failed to ${attemptVerb} Zombie at (${targetRow},${targetCol}) and was lost in the attempt. (+3 bonus to ${zombieOwner === 'W' ? 'Player' : 'AI'})`);
+                    renderBoard();
+                    updateScoreDisplay();
+                    updateCapturedPiecesDisplay();
+                    updateGameLog();
+                    return { handled: true, success: false, attackerRemoved: true };
+                }
             }
         }
 
@@ -2105,9 +2112,9 @@
         
         // AI Difficulty
         let aiDifficulty = 'Medium';
-        let baseAiDepth = 4; // Track difficulty selection (defaults to Medium)
-        let aiMaxDepth = 4; // Effective depth after variant adjustments
-        let pieceValueScale = 1.25;
+        let baseAiDepth = 6; // Track difficulty selection (defaults to Medium, increased from 4 to 5 to 6)
+        let aiMaxDepth = 6; // Effective depth after variant adjustments (increased from 4 to 5 to 6)
+        let pieceValueScale = 1.65; // Increased from 1.25 to 1.50 to 1.65 (+10% more difficulty)
         const AI_LEFTOVER_PENALTY = 0.75;
         const AI_TIE_EPSILON = 0.0001;
         const AI_TIME_LIMIT_DEFAULT = 1200; // Increased from 650ms for slower AI thinking
@@ -2145,9 +2152,11 @@
         function getAiTimeBudget() {
             let base = isLargeBoardVariant() ? AI_TIME_LIMIT_LARGE : AI_TIME_LIMIT_DEFAULT;
             if (aiDifficulty === 'Hard') {
-                base += isLargeBoardVariant() ? 100 : 180;
+                base += isLargeBoardVariant() ? 140 : 260; // Increased further for +10% more thinking time
+            } else if (aiDifficulty === 'Medium') {
+                base += isLargeBoardVariant() ? 40 : 100; // Medium also gets more time now
             } else if (aiDifficulty === 'Easy') {
-                base = Math.max(isLargeBoardVariant() ? 160 : 250, base - 120);
+                base = Math.max(isLargeBoardVariant() ? 180 : 280, base - 100); // Adjusted for new difficulty
             }
             return base;
         }
@@ -3087,14 +3096,14 @@
             element.classList.add('selected-diff');
 
             if (level === 'Easy') {
-                baseAiDepth = 3;
-                pieceValueScale = 1.15;
+                baseAiDepth = 4; // Increased from 3 (+20% then +10% = +30% total)
+                pieceValueScale = 1.52; // Increased from 1.15 to 1.38 to 1.52 (+10% more)
             } else if (level === 'Medium') {
-                baseAiDepth = 4;
-                pieceValueScale = 1.25;
+                baseAiDepth = 6; // Increased from 4 to 5 to 6 (+10% more difficulty)
+                pieceValueScale = 1.65; // Increased from 1.25 to 1.50 to 1.65 (+10% more)
             } else if (level === 'Hard') {
-                baseAiDepth = 5; // higher depth for stronger play
-                pieceValueScale = 1.35;
+                baseAiDepth = 7; // Increased from 5 to 6 to 7 (+10% more difficulty)
+                pieceValueScale = 1.78; // Increased from 1.35 to 1.62 to 1.78 (+10% more)
             }
             applyAiDepthForVariant();
         }
@@ -5957,7 +5966,12 @@
                 select.innerHTML = availablePieces.map(p => `<option value="${p}">${p}</option>`).join('');
                 modal.style.display = 'block';
             } else {
-                const pieceType = availablePieces[Math.floor(Math.random() * availablePieces.length)];
+                // AI prioritizes high-value pieces for reinforcement
+                const sortedPieces = availablePieces.sort((a, b) => {
+                    return (aiPieceValues[b] || basePieceValues[b] || 0) - (aiPieceValues[a] || basePieceValues[a] || 0);
+                });
+                // Take the highest value piece (or occasionally second-highest for variety)
+                const pieceType = Math.random() < 0.8 ? sortedPieces[0] : (sortedPieces[1] || sortedPieces[0]);
                 confirmReinforcement(pieceType);
             }
         }
@@ -6039,13 +6053,21 @@
                             playerPieceValue += 5; // Promotion/reinforcement bonus
                         }
 
+                        // Add advancement bonus for pieces that can trigger reinforcements
+                        if (piece.type === 'Infantry' || piece.type === 'Champion' || piece.type === 'King') {
+                            const distanceToBackRow = Math.abs(r - opponentBackRow);
+                            const maxDistance = player === 'W' ? ROWS - 1 : (gameVariant === 'ccb' ? 7 : 9);
+                            const advancementBonus = (1 - distanceToBackRow / maxDistance) * 3; // Up to +3 bonus for being close to back row
+                            playerPieceValue += advancementBonus;
+                        }
+
                         const moves = pieceTypes[piece.type].move(r, c, board, player, false, piece.facing, 3) || [];
                         playerMobility += moves.length;
                         for (const move of moves) {
                             if (move.type === 'move' || move.type === 'shoot') {
                                 const targetPiece = board[move.pos[0]]?.[move.pos[1]];
                                 if (targetPiece && targetPiece.player === opponent) {
-                                    playerThreats += aiPieceValues[targetPiece.type] * 0.65;
+                                    playerThreats += aiPieceValues[targetPiece.type] * 0.85; // Increased from 0.65 to encourage attacking
                                 }
                             }
                         }
@@ -6059,7 +6081,7 @@
                             if (move.type === 'move' || move.type === 'shoot') {
                                 const targetPiece = board[move.pos[0]]?.[move.pos[1]];
                                 if (targetPiece && targetPiece.player === player) {
-                                    opponentThreats += aiPieceValues[targetPiece.type] * 0.65;
+                                    opponentThreats += aiPieceValues[targetPiece.type] * 0.85; // Increased from 0.65 to encourage attacking
                                 }
                             }
                         }
@@ -6140,8 +6162,16 @@
                         let score = moveCost * 0.45; // encourage spending available points
                         if (targetPiece && targetPiece.player !== player) {
                             score += aiPieceValues[targetPiece.type] * 2.4; // heavily favour captures
+                            // Add proximity bonus for close attacks
+                            const distance = Math.abs(mr - r) + Math.abs(mc - c);
+                            if (distance <= 2) {
+                                score += aiPieceValues[targetPiece.type] * 0.5; // 50% bonus for close attacks in simple AI
+                            }
                         } else if (move.special) {
-                            score += 0.6;
+                            let specialBonus = 2.0; // Base special move bonus
+                            if (aiDifficulty === 'Hard') specialBonus = 4.5; // Much higher for Hard
+                            else if (aiDifficulty === 'Medium') specialBonus = 3.5; // Higher for Medium
+                            score += specialBonus;
                         } else {
                             score -= 0.5; // penalise idle repositioning
                         }
@@ -6254,6 +6284,11 @@
                                     if (targetPiece.type === 'Spectre' && piece.type !== 'Wizard' && piece.type !== 'Spectre') {
                                         targetValue *= 0.5; // 50% chance of success
                                     }
+                                    // Add proximity bonus: prioritize attacking adjacent/in-range pieces
+                                    const distance = Math.abs(move.pos[0] - r) + Math.abs(move.pos[1] - c);
+                                    if (distance <= 2) {
+                                        targetValue += aiPieceValues[targetPiece.type] * 0.3; // 30% bonus for close attacks
+                                    }
                                 }
                                 allPossibleActions.push({
                                     ...move,
@@ -6283,6 +6318,11 @@
                                                 infernoValue += aiPieceValues[board[nnr][nnc].type];
                                             }
                                         }
+                                        // Add 40% bonus to encourage using Inferno special ability
+                                        infernoValue *= 1.4;
+                                        // Apply difficulty multiplier for special moves: Medium 1.2x, Hard 1.4x
+                                        if (aiDifficulty === 'Hard') infernoValue *= 1.4;
+                                        else if (aiDifficulty === 'Medium') infernoValue *= 1.2;
                                         allPossibleActions.push({ type: 'move', pos: [nr, nc], from: [r,c], cost: 2, special: 'inferno', pieceType: 'Dragon', targetValue: infernoValue });
                                     }
                                 }
@@ -6295,8 +6335,11 @@
                                     if (aiTimeExpired()) break outerBuild;
                                     let nr = r + d[0], nc = c + d[1];
                                     if (isValid(nr, nc) && !board[nr][nc]) {
-                                        // Strafe is a positional move with no direct capture value
-                                        allPossibleActions.push({ type: 'move', pos: [nr, nc], from: [r,c], cost: 2, special: 'strafe', pieceType: 'Wizard', targetValue: 0 });
+                                        // Strafe is a positional move, increased value for tactical positioning
+                                        let strafeValue = 2.5;
+                                        if (aiDifficulty === 'Hard') strafeValue *= 1.3;
+                                        else if (aiDifficulty === 'Medium') strafeValue *= 1.15;
+                                        allPossibleActions.push({ type: 'move', pos: [nr, nc], from: [r,c], cost: 2, special: 'strafe', pieceType: 'Wizard', targetValue: strafeValue });
                                     }
                                 }
                             }
@@ -6308,8 +6351,11 @@
                                     if (aiTimeExpired()) break outerBuild;
                                     let nr = r + d[0], nc = c + d[1];
                                     if (isValid(nr, nc) && !board[nr][nc]) {
-                                        // Strafe is a positional move with no direct capture value
-                                        allPossibleActions.push({ type: 'move', pos: [nr, nc], from: [r,c], cost: 2, special: 'strafe', pieceType: 'Dragon', targetValue: 0 });
+                                        // Strafe is a positional move, increased value for tactical positioning
+                                        let strafeValue = 2.5;
+                                        if (aiDifficulty === 'Hard') strafeValue *= 1.3;
+                                        else if (aiDifficulty === 'Medium') strafeValue *= 1.15;
+                                        allPossibleActions.push({ type: 'move', pos: [nr, nc], from: [r,c], cost: 2, special: 'strafe', pieceType: 'Dragon', targetValue: strafeValue });
                                     }
                                 }
                             }
@@ -6324,8 +6370,104 @@
                                         let nr = r + d[0], nc = c + d[1];
                                         if (isValid(nr, nc) && !board[nr][nc]) {
                                             // Summoning has 50% success rate, but Spectre is valuable (value 9)
-                                            // Expected value = 0.5 * 9 = 4.5
-                                            allPossibleActions.push({ type: 'summon', pos: [nr, nc], from: [r,c], cost: 2, special: 'summonSpectre', pieceType: 'Wizard', targetValue: 4.5 });
+                                            // Base value = 0.5 * 9 = 4.5, increased to 9.0 to heavily encourage summoning
+                                            // Apply difficulty multiplier: Easy 1.0x, Medium 1.3x, Hard 1.5x
+                                            let summonValue = 9.0;
+                                            if (aiDifficulty === 'Hard') summonValue *= 1.5;
+                                            else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                            allPossibleActions.push({ type: 'summon', pos: [nr, nc], from: [r,c], cost: 2, special: 'summonSpectre', pieceType: 'Wizard', targetValue: summonValue });
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Check for Necromancer Zombie Summoning (36s-elite only)
+                            if (piece.type === 'Necromancer' && gameVariant === '36s-elite' && movesLeft >= 2) {
+                                const maxZombies = getMaxZombies(player);
+                                if (zombiesSummoned[player] < maxZombies) {
+                                    const backRow = player === 'W' ? ROWS - 1 : 0;
+                                    for (let col = 0; col < COLS; col++) {
+                                        if (aiTimeExpired()) break outerBuild;
+                                        if (!board[backRow][col]) {
+                                            // Zombie summoning has 50% success rate, Zombie value is 3
+                                            // Expected value = 0.5 * 3 = 1.5, increased to 6.0 to encourage summoning
+                                            // Apply difficulty multiplier: Easy 1.0x, Medium 1.3x, Hard 1.5x
+                                            let summonValue = 6.0;
+                                            if (aiDifficulty === 'Hard') summonValue *= 1.5;
+                                            else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                            allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'summonZombie', pieceType: 'Necromancer', targetValue: summonValue });
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Check for Necromancer Spectre Summoning (36s-elite only)
+                            if (piece.type === 'Necromancer' && gameVariant === '36s-elite' && spectresSummoned[player] < 2 && movesLeft >= 2) {
+                                const backRow = player === 'W' ? ROWS - 1 : 0;
+                                for (let col = 0; col < COLS; col++) {
+                                    if (aiTimeExpired()) break outerBuild;
+                                    if (!board[backRow][col]) {
+                                        // Spectre summoning has 50% success rate, Spectre value is 9
+                                        // Expected value = 0.5 * 9 = 4.5, increased to 10.0 to heavily encourage summoning
+                                        // Apply difficulty multiplier: Easy 1.0x, Medium 1.3x, Hard 1.5x
+                                        let summonValue = 10.0;
+                                        if (aiDifficulty === 'Hard') summonValue *= 1.5;
+                                        else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                        allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'summonNecromancerSpectre', pieceType: 'Necromancer', targetValue: summonValue });
+                                    }
+                                }
+                            }
+
+                            // Check for Elephantry Charge
+                            if (piece.type === 'Elephantry' && movesLeft >= 2) {
+                                const pieceKey = `${r},${c},${player}`;
+                                if (!elephantryChargeUsed.has(pieceKey)) {
+                                    const facing = piece.facing;
+                                    let directions = [];
+                                    if (facing === 'U') directions = [[-1,0], [-1,-1], [-1,1]];
+                                    else if (facing === 'D') directions = [[1,0], [1,-1], [1,1]];
+                                    else if (facing === 'L') directions = [[0,-1], [-1,-1], [1,-1]];
+                                    else if (facing === 'R') directions = [[0,1], [-1,1], [1,1]];
+
+                                    for (let d of directions) {
+                                        if (aiTimeExpired()) break outerBuild;
+                                        let capturesInPath = [];
+                                        let canCharge = true;
+                                        let finalPos = null;
+
+                                        for (let dist = 1; dist <= 3; dist++) {
+                                            let nr = r + d[0] * dist;
+                                            let nc = c + d[1] * dist;
+                                            if (!isValid(nr, nc)) {
+                                                canCharge = false;
+                                                break;
+                                            }
+
+                                            const target = board[nr][nc];
+                                            if (target) {
+                                                if (target.type === 'Spectre' || target.type === 'Zombie') {
+                                                    canCharge = false;
+                                                    break;
+                                                }
+                                                if (target.player !== player) {
+                                                    capturesInPath.push(aiPieceValues[target.type]);
+                                                    if (target.type === 'Elephantry' || target.type === 'Ogre' || target.type === 'Troll' || target.type === 'Dragon') {
+                                                        finalPos = [nr, nc];
+                                                        break;
+                                                    }
+                                                } else {
+                                                    canCharge = false;
+                                                    break;
+                                                }
+                                            }
+                                            if (dist === 3) finalPos = [nr, nc];
+                                        }
+
+                                        if (canCharge && finalPos) {
+                                            let chargeValue = capturesInPath.reduce((sum, val) => sum + val, 0);
+                                            // Encourage charge if it captures multiple pieces
+                                            if (capturesInPath.length > 1) chargeValue *= 1.3;
+                                            allPossibleActions.push({ type: 'move', pos: finalPos, from: [r,c], cost: 2, special: 'elephantryCharge', pieceType: 'Elephantry', targetValue: chargeValue });
                                         }
                                     }
                                 }
@@ -6497,6 +6639,18 @@
                         const mv = simulateMove(board, r, c, action.move[0], action.move[1], null, player, newCapturedPieces, newScores, newChampionsOnBackRow);
                         newBoard = simulateShoot(mv.board, action.move[0], action.move[1], action.shoot[0], action.shoot[1], player, newCapturedPieces, newScores);
                         newMovedPieces.add(`${action.move[0]},${action.move[1]}`);
+                    } else if (type === 'summon') {
+                        // Simulate summoning (has 50% success rate, we evaluate expected value in targetValue)
+                        newBoard = cloneBoard(board);
+                        // Optimistically place the summoned piece for evaluation
+                        if (special === 'summonSpectre') {
+                            newBoard[pos[0]][pos[1]] = { type: 'Spectre', player };
+                            // Note: In real execution, this has 50% success which is factored into targetValue
+                        } else if (special === 'summonZombie') {
+                            newBoard[pos[0]][pos[1]] = { type: 'Zombie', player, facing: player === 'W' ? 'U' : 'D' };
+                        } else if (special === 'summonNecromancerSpectre') {
+                            newBoard[pos[0]][pos[1]] = { type: 'Spectre', player };
+                        }
                     } else {
                         continue; // Should not happen
                     }
@@ -6873,6 +7027,78 @@
                                 true // Automated mode
                             );
                             return; // Exit to wait for coin toss callback
+                        } else if (action.type === 'summon' && special === 'summonZombie') {
+                            // AI attempts to summon Zombie (Necromancer)
+                            const necromancerRow = from[0], necromancerCol = from[1];
+                            const summonRow = pos[0], summonCol = pos[1];
+
+                            // Deduct cost before coin toss
+                            movesLeft -= cost;
+                            movedPieces.add(`${necromancerRow},${necromancerCol}`);
+
+                            // Show automated coin toss popup for AI
+                            performCoinToss(
+                                'Summon Zombie',
+                                'AI is attempting to summon a Zombie...',
+                                (success) => {
+                                    if (success) {
+                                        // Successfully summoned Zombie
+                                        const zombiePiece = createZombiePiece('B');
+                                        board[summonRow][summonCol] = zombiePiece;
+                                        zombiesSummoned['B'] = (zombiesSummoned['B'] || 0) + 1;
+
+                                        gameLog.push(`AI summoned a Zombie at (${summonRow},${summonCol})!`);
+                                    } else {
+                                        // Failed summoning
+                                        gameLog.push(`AI failed to summon a Zombie.`);
+                                    }
+
+                                    renderBoard();
+                                    updateGameLog();
+                                    updateScoreDisplay();
+
+                                    // Continue AI turn
+                                    setTimeout(() => makeNextMove(), 500);
+                                },
+                                true // Automated mode
+                            );
+                            return; // Exit to wait for coin toss callback
+                        } else if (action.type === 'summon' && special === 'summonNecromancerSpectre') {
+                            // AI attempts to summon Spectre (Necromancer)
+                            const necromancerRow = from[0], necromancerCol = from[1];
+                            const summonRow = pos[0], summonCol = pos[1];
+
+                            // Deduct cost before coin toss
+                            movesLeft -= cost;
+                            movedPieces.add(`${necromancerRow},${necromancerCol}`);
+
+                            // Show automated coin toss popup for AI
+                            performCoinToss(
+                                'Summon Spectre',
+                                'AI is attempting to summon a Spectre...',
+                                (success) => {
+                                    if (success) {
+                                        // Successfully summoned Spectre
+                                        const spectrePiece = createSpectrePiece('B');
+                                        board[summonRow][summonCol] = spectrePiece;
+                                        spectresSummoned['B'] = (spectresSummoned['B'] || 0) + 1;
+
+                                        gameLog.push(`AI summoned a Spectre at (${summonRow},${summonCol})!`);
+                                    } else {
+                                        // Failed summoning
+                                        gameLog.push(`AI failed to summon a Spectre.`);
+                                    }
+
+                                    renderBoard();
+                                    updateGameLog();
+                                    updateScoreDisplay();
+
+                                    // Continue AI turn
+                                    setTimeout(() => makeNextMove(), 500);
+                                },
+                                true // Automated mode
+                            );
+                            return; // Exit to wait for coin toss callback
                         } else if (action.type === 'move') {
                             // Check if capturing a Spectre - requires coin toss
                             const targetPiece = board[pos[0]][pos[1]];
@@ -6914,6 +7140,11 @@
                                         if (special === 'ballistaDoubleTime') {
                                             ballistaDoubleTimeUsed['B']++;
                                         }
+                                        if (special === 'elephantryCharge') {
+                                            const pieceKey = `${from[0]},${from[1]},B`;
+                                            elephantryChargeUsed.add(pieceKey);
+                                            gameLog.push(`AI used Elephantry Charge from (${from[0]},${from[1]}) to (${pos[0]},${pos[1]})`);
+                                        }
                                         movedPieces.add(`${pos[0]},${pos[1]}`);
 
                                         renderBoard();
@@ -6949,6 +7180,11 @@
                             }
                             if (special === 'ballistaDoubleTime') {
                                 ballistaDoubleTimeUsed['B']++;
+                            }
+                            if (special === 'elephantryCharge') {
+                                const pieceKey = `${from[0]},${from[1]},B`;
+                                elephantryChargeUsed.add(pieceKey);
+                                gameLog.push(`AI used Elephantry Charge from (${from[0]},${from[1]}) to (${pos[0]},${pos[1]})`);
                             }
                             movedPieces.add(`${pos[0]},${pos[1]}`);
                         } else if (action.type === 'shoot') {
