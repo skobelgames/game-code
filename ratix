@@ -6164,7 +6164,10 @@
                             score += aiPieceValues[targetPiece.type] * 2.4; // heavily favour captures
                             // Add proximity bonus for close attacks
                             const distance = Math.abs(mr - r) + Math.abs(mc - c);
-                            if (distance <= 2) {
+                            if (distance === 1) {
+                                // CRITICAL PRIORITY: Adjacent pieces are immediate threats - heavily prioritize capturing them
+                                score += aiPieceValues[targetPiece.type] * 3.5; // 350% bonus for adjacent captures
+                            } else if (distance <= 2) {
                                 score += aiPieceValues[targetPiece.type] * 0.5; // 50% bonus for close attacks in simple AI
                             }
                         } else if (move.special) {
@@ -6286,7 +6289,10 @@
                                     }
                                     // Add proximity bonus: prioritize attacking adjacent/in-range pieces
                                     const distance = Math.abs(move.pos[0] - r) + Math.abs(move.pos[1] - c);
-                                    if (distance <= 2) {
+                                    if (distance === 1) {
+                                        // CRITICAL PRIORITY: Adjacent pieces are immediate threats - heavily prioritize capturing them
+                                        targetValue += aiPieceValues[targetPiece.type] * 2.0; // 200% bonus for adjacent captures in minimax
+                                    } else if (distance <= 2) {
                                         targetValue += aiPieceValues[targetPiece.type] * 0.3; // 30% bonus for close attacks
                                     }
                                 }
