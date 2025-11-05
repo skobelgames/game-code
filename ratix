@@ -570,6 +570,8 @@
         let pistolierMoveShootPosition = null; // Store the position Pistolier moved to
         let fusilierCrackShotActive = false; // Active when Fusilier has activated Crack Shot (+1 range)
         let fusilierStrafeActive = false; // Active when Fusilier is selecting strafe move
+        let summonPlacementMode = false; // Active when selecting where to place summoned unit
+        let summonUnitType = null; // Type of unit being summoned (Pistolier or Fusilier)
         let initialMovesLeft = 3;
         let aiPending = false; // Prevent duplicate AI scheduling
         let gamePaused = false; // Track if game is paused
@@ -1167,7 +1169,7 @@
         }
 
         function isAnySpecialModeActive() {
-            return turnAndShootMode || turnAndMoveMode || guardOfHonourMode || teleportMode || teleportSwapMode || chargeMode || infernoMode || strafeMode || summonSpectreMode || archerMoveDiagMode || archerDiagShootSelectMode || archerDiag2ShootMode || elephantryChargeMode || elephantryExtendedRangeActive || elephantryMoveShootMode || pistolierMoveShootMode || fusilierCrackShotActive || fusilierStrafeActive;
+            return turnAndShootMode || turnAndMoveMode || guardOfHonourMode || teleportMode || teleportSwapMode || chargeMode || infernoMode || strafeMode || summonSpectreMode || archerMoveDiagMode || archerDiagShootSelectMode || archerDiag2ShootMode || elephantryChargeMode || elephantryExtendedRangeActive || elephantryMoveShootMode || pistolierMoveShootMode || fusilierCrackShotActive || fusilierStrafeActive || summonPlacementMode;
         }
 
         function cancelSpecialModes(options = {}) {
@@ -1188,6 +1190,8 @@
             elephantryExtendedRangeActive = false;
             fusilierCrackShotActive = false;
             fusilierStrafeActive = false;
+            summonPlacementMode = false;
+            summonUnitType = null;
             elephantryMoveShootMode = false;
             elephantryMoveShootPosition = null;
             pistolierMoveShootMode = false;
@@ -1248,8 +1252,9 @@
             turnLosses[player] = {};
             turnLosses[opponent] = {};
 
-            // Clear Fusilier shot tracking for this player's turn
-            // (they can shoot again next turn)
+            // Update Fusilier shot tracking: move current turn to previous turn
+            // Fusiliers that shot last turn cannot shoot this turn (must wait one turn)
+            fusilierShotPreviousTurn[player] = new Set(fusilierShotLastTurn[player]);
             fusilierShotLastTurn[player].clear();
 
             if (logUpdated) {
@@ -1340,7 +1345,8 @@
         let elephantryExtendedRangeShotsRemaining = {}; // Map of "row,col,player" to remaining shots (starts at 3)
         let elephantryExtendedRangeMode = false; // Active during extended range shooting sequence
         // Fusilier specials
-        let fusilierShotLastTurn = { 'W': new Set(), 'B': new Set() }; // Track which fusiliers shot last turn (can't shoot this turn)
+        let fusilierShotLastTurn = { 'W': new Set(), 'B': new Set() }; // Track which fusiliers shot in current turn
+        let fusilierShotPreviousTurn = { 'W': new Set(), 'B': new Set() }; // Track which fusiliers shot previous turn (can't shoot this turn)
         let fusilierCrackShotUsed = new Set(); // Track which fusilier pieces have used crack shot (set of "row,col,player", max 2 uses)
         let fusilierCrackShotCount = {}; // Map of "row,col,player" to remaining uses (starts at 2)
         let fusilierStrafeUsed = new Set(); // Track which fusilier pieces have used strafe (set of "row,col,player", max 2 uses)
@@ -2108,7 +2114,7 @@
             'Fusilier': { move: (r, c, board, player, _, facing, movesLeft) => {
                 let moves = [];
                 const pieceKey = `${r},${c},${player}`;
-                const shotLastTurn = fusilierShotLastTurn[player].has(pieceKey);
+                const shotLastTurn = fusilierShotPreviousTurn[player].has(pieceKey);
 
                 // 1 point: move up to 2 squares diagonally (1 or 2 squares)
                 for (let d of [[1,1], [1,-1], [-1,1], [-1,-1]]) {
@@ -3359,6 +3365,40 @@
                 return;
             }
 
+            // Handle summon placement - player selects where to place summoned unit
+            if (summonPlacementMode) {
+                const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.type === 'summonPlacement');
+                if (move) {
+                    const facing = currentPlayer === 'W' ? 'U' : 'D';
+                    board[row][col] = { type: summonUnitType, player: currentPlayer, facing: facing };
+
+                    // Update summon counter
+                    if (summonUnitType === 'Pistolier') {
+                        pistoliersSummoned[currentPlayer]++;
+                    } else if (summonUnitType === 'Fusilier') {
+                        fusiliersSummoned[currentPlayer]++;
+                    }
+
+                    gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} placed ${summonUnitType} at (${row},${col})!`);
+
+                    summonPlacementMode = false;
+                    summonUnitType = null;
+                    validMoves = [];
+                    renderBoard();
+                    updateStatus();
+                    updateEndTurnButton();
+                    updateGameLog();
+                    checkGameOver();
+                    if (movesLeft === 0 && !reinforcementPending) {
+                        triggerAiTurn();
+                    }
+                } else {
+                    // Clicked invalid square, cancel placement
+                    cancelSpecialModes({ resetSelection: false });
+                }
+                return;
+            }
+
             // Handle Fusilier Strafe special move
             if (fusilierStrafeActive && selectedPiece) {
                 const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.special === 'fusilierStrafe');
@@ -4331,48 +4371,60 @@
                 `Attempting to summon ${unitType}...`,
                 (success) => {
                     if (success) {
-                        // Find empty square in back row
+                        // Find empty squares in back row
                         const backRow = currentPlayer === 'W' ? ROWS - 1 : 0;
                         let emptySquares = [];
                         for (let c = 0; c < COLS; c++) {
                             if (!board[backRow][c]) {
-                                emptySquares.push(c);
+                                emptySquares.push({ type: 'summonPlacement', pos: [backRow, c], cost: 0 });
                             }
                         }
 
                         if (emptySquares.length > 0) {
-                            // Place unit in first available empty square
-                            const col = emptySquares[0];
-                            const facing = currentPlayer === 'W' ? 'U' : 'D';
-                            board[backRow][col] = { type: unitType, player: currentPlayer, facing: facing };
-
-                            // Update summon counter
-                            if (unitType === 'Pistolier') {
-                                pistoliersSummoned[currentPlayer]++;
-                            } else if (unitType === 'Fusilier') {
-                                fusiliersSummoned[currentPlayer]++;
-                            }
-
-                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} successfully summoned ${unitType} at (${backRow},${col})!`);
+                            // Enter summon placement mode - player selects where to place unit
+                            summonPlacementMode = true;
+                            summonUnitType = unitType;
+                            validMoves = emptySquares;
+                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} summon succeeded! Select a back row square to place ${unitType}.`);
+                            lastAction = { move: true };
+                            movedPieces.add(`${selectedPiece.row},${selectedPiece.col}`);
+                            selectedPiece = null;
+                            showPieceInfo(null);
+                            renderBoard();
+                            updateStatus();
+                            updateEndTurnButton();
+                            updateGameLog();
                         } else {
                             gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} succeeded summon but no empty squares in back row!`);
+                            lastAction = { move: true };
+                            movedPieces.add(`${selectedPiece.row},${selectedPiece.col}`);
+                            selectedPiece = null;
+                            validMoves = [];
+                            showPieceInfo(null);
+                            renderBoard();
+                            updateStatus();
+                            updateEndTurnButton();
+                            updateGameLog();
+                            checkGameOver();
+                            if (movesLeft === 0 && !reinforcementPending) {
+                                triggerAiTurn();
+                            }
                         }
                     } else {
                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} failed to summon ${unitType}.`);
-                    }
-
-                    lastAction = { move: true };
-                    movedPieces.add(`${selectedPiece.row},${selectedPiece.col}`);
-                    selectedPiece = null;
-                    validMoves = [];
-                    showPieceInfo(null);
-                    renderBoard();
-                    updateStatus();
-                    updateEndTurnButton();
-                    updateGameLog();
-                    checkGameOver();
-                    if (movesLeft === 0 && !reinforcementPending) {
-                        triggerAiTurn();
+                        lastAction = { move: true };
+                        movedPieces.add(`${selectedPiece.row},${selectedPiece.col}`);
+                        selectedPiece = null;
+                        validMoves = [];
+                        showPieceInfo(null);
+                        renderBoard();
+                        updateStatus();
+                        updateEndTurnButton();
+                        updateGameLog();
+                        checkGameOver();
+                        if (movesLeft === 0 && !reinforcementPending) {
+                            triggerAiTurn();
+                        }
                     }
                 }
             );
