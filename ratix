@@ -1693,7 +1693,7 @@
             coinResult.className = 'coin';
             coinResult.style.backgroundColor = '#666';
             coinResult.style.color = 'white';
-            coinResult.textContent = '☠︎︎';
+            coinResult.textContent = '☠︎';
 
             modal.dataset.zombieFlip = 'true';
             modal.style.display = 'block';
@@ -1725,7 +1725,7 @@
                     coinResult.className = 'coin';
                     coinResult.style.backgroundColor = '#666';
                     coinResult.style.color = 'white';
-                    coinResult.textContent = '☠︎︎';
+                    coinResult.textContent = '☠︎';
                     descriptionEl.textContent = '';
                     messageEl.textContent = '';
                     if (startBtn) startBtn.style.display = 'none';
@@ -1758,7 +1758,7 @@
                 coinResult.className = 'coin';
                 coinResult.style.backgroundColor = '#666';
                 coinResult.style.color = 'white';
-                coinResult.textContent = '☠︎︎';
+                coinResult.textContent = '☠︎';
             }
             if (descriptionEl) {
                 descriptionEl.textContent = '';
@@ -1937,19 +1937,26 @@
                 gameLog.push(`${attackerLabel} ${successVerb} Zombie at (${targetRow},${targetCol}) after winning the coin flip.`);
                 return { handled: true, success: true };
             } else {
-                board[fromRow][fromCol] = null;
-                cleanupNecromancerTracking(attackerPiece);
-                capturedSquares.push([fromRow, fromCol]);
-                capturedPieces[zombieOwner].push(attackerPiece);
-                registerPieceLoss(attackerPiece.player, attackerPiece.type);
-                scores[zombieOwner] += 3;
-                registerScoreGain(zombieOwner, 3);
-                gameLog.push(`${attackerLabel} failed to ${attemptVerb} Zombie at (${targetRow},${targetCol}) and was lost in the attempt. (+3 bonus to ${zombieOwner === 'W' ? 'Player' : 'AI'})`);
-                renderBoard();
-                updateScoreDisplay();
-                updateCapturedPiecesDisplay();
-                updateGameLog();
-                return { handled: true, success: false, attackerRemoved: true };
+                // For ranged/shooting attacks, the attacker stays on the board
+                if (viaRanged) {
+                    gameLog.push(`${attackerLabel} failed to ${attemptVerb} Zombie at (${targetRow},${targetCol}). The shot missed and the attacker remains safe.`);
+                    return { handled: true, success: false, attackerRemoved: false };
+                } else {
+                    // For landing captures, the attacker is captured by the zombie
+                    board[fromRow][fromCol] = null;
+                    cleanupNecromancerTracking(attackerPiece);
+                    capturedSquares.push([fromRow, fromCol]);
+                    capturedPieces[zombieOwner].push(attackerPiece);
+                    registerPieceLoss(attackerPiece.player, attackerPiece.type);
+                    scores[zombieOwner] += 3;
+                    registerScoreGain(zombieOwner, 3);
+                    gameLog.push(`${attackerLabel} failed to ${attemptVerb} Zombie at (${targetRow},${targetCol}) and was lost in the attempt. (+3 bonus to ${zombieOwner === 'W' ? 'Player' : 'AI'})`);
+                    renderBoard();
+                    updateScoreDisplay();
+                    updateCapturedPiecesDisplay();
+                    updateGameLog();
+                    return { handled: true, success: false, attackerRemoved: true };
+                }
             }
         }
 
