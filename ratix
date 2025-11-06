@@ -577,11 +577,11 @@
         <div id="opponent-selector">
             <h3>Select Your Opponent</h3>
             <button id="opp-random" onclick="setOpponent('Random', this)" class="selected-opponent">Random</button>
-            <button id="opp-berserker" onclick="setOpponent('Berserker', this)">Ragnar the Berserker</button>
-            <button id="opp-guardian" onclick="setOpponent('Guardian', this)">Thorne the Guardian</button>
-            <button id="opp-tactician" onclick="setOpponent('Tactician', this)">Astra the Tactician</button>
-            <button id="opp-sorcerer" onclick="setOpponent('Sorcerer', this)">Zephyr the Sorcerer</button>
-            <button id="opp-nomad" onclick="setOpponent('Nomad', this)">Kira the Nomad</button>
+            <button id="opp-berserker" onclick="setOpponent('Berserker', this)">Berserker</button>
+            <button id="opp-guardian" onclick="setOpponent('Guardian', this)">Guardian</button>
+            <button id="opp-tactician" onclick="setOpponent('Tactician', this)">Tactician</button>
+            <button id="opp-sorcerer" onclick="setOpponent('Sorcerer', this)">Sorcerer</button>
+            <button id="opp-nomad" onclick="setOpponent('Nomad', this)">Nomad</button>
         </div>
 
         <div id="hint-selector">
@@ -7906,15 +7906,21 @@
                 return;
             }
 
+            // Extract coordinates from action object
+            const fromRow = action.from[0];
+            const fromCol = action.from[1];
+            const toRow = action.pos[0];
+            const toCol = action.pos[1];
+
             // Clear any existing highlights
             document.querySelectorAll('.hint-highlight').forEach(cell => {
                 cell.classList.remove('hint-highlight');
             });
 
             // Highlight the suggested move
-            const piece = board[action.fromRow][action.fromCol];
-            const fromCell = document.querySelector(`[data-row="${action.fromRow}"][data-col="${action.fromCol}"]`);
-            const toCell = document.querySelector(`[data-row="${action.toRow}"][data-col="${action.toCol}"]`);
+            const piece = board[fromRow][fromCol];
+            const fromCell = document.querySelector(`[data-row="${fromRow}"][data-col="${fromCol}"]`);
+            const toCell = document.querySelector(`[data-row="${toRow}"][data-col="${toCol}"]`);
 
             if (fromCell) {
                 fromCell.classList.add('hint-highlight');
@@ -7924,7 +7930,7 @@
             }
 
             // Create hint message
-            let hintMessage = `Suggestion: Move ${piece.type} from (${action.fromRow}, ${action.fromCol}) to (${action.toRow}, ${action.toCol})`;
+            let hintMessage = `Move ${piece.type} from (${fromRow}, ${fromCol}) to (${toRow}, ${toCol})`;
 
             if (action.turnDirection) {
                 hintMessage += ` and turn ${action.turnDirection}`;
@@ -7932,24 +7938,51 @@
             if (action.shoot) {
                 hintMessage += ` and shoot`;
             }
-            if (action.specialAbility) {
-                hintMessage += ` using ${action.specialAbility}`;
+            if (action.special) {
+                hintMessage += ` using ${action.special}`;
             }
 
-            // Show hint in status
-            const statusDiv = document.getElementById('status');
-            const originalStatus = statusDiv.textContent;
-            statusDiv.textContent = hintMessage;
-            statusDiv.style.backgroundColor = '#ffffcc';
-            statusDiv.style.padding = '10px';
-            statusDiv.style.borderRadius = '5px';
+            // Remove any existing hint popup
+            const existingPopup = document.getElementById('hint-popup');
+            if (existingPopup) {
+                existingPopup.remove();
+            }
+
+            // Create a popup near the hinted piece
+            const popup = document.createElement('div');
+            popup.id = 'hint-popup';
+            popup.textContent = hintMessage;
+            popup.style.position = 'absolute';
+            popup.style.backgroundColor = '#ffffcc';
+            popup.style.border = '2px solid #ffcc00';
+            popup.style.padding = '15px 20px';
+            popup.style.borderRadius = '8px';
+            popup.style.zIndex = '10000';
+            popup.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.3)';
+            popup.style.fontSize = '14px';
+            popup.style.fontWeight = 'bold';
+            popup.style.maxWidth = '300px';
+            popup.style.wordWrap = 'break-word';
+
+            // Position popup above the game board, centered
+            const gameContainer = document.getElementById('game-container');
+            if (gameContainer) {
+                const rect = gameContainer.getBoundingClientRect();
+                popup.style.left = `${rect.left + rect.width / 2}px`;
+                popup.style.top = `${rect.top - 60}px`;
+                popup.style.transform = 'translateX(-50%)';
+            } else {
+                // Fallback to center of screen
+                popup.style.left = '50%';
+                popup.style.top = '20px';
+                popup.style.transform = 'translateX(-50%)';
+            }
+
+            document.body.appendChild(popup);
 
             // Reset after 5 seconds
             setTimeout(() => {
-                statusDiv.textContent = originalStatus;
-                statusDiv.style.backgroundColor = '';
-                statusDiv.style.padding = '';
-                statusDiv.style.borderRadius = '';
+                popup.remove();
                 document.querySelectorAll('.hint-highlight').forEach(cell => {
                     cell.classList.remove('hint-highlight');
                 });
