@@ -2112,13 +2112,70 @@
         
         // AI Difficulty
         let aiDifficulty = 'Medium';
-        let baseAiDepth = 7; // Track difficulty selection (defaults to Medium, +20% difficulty)
-        let aiMaxDepth = 7; // Effective depth after variant adjustments (+20% difficulty)
-        let pieceValueScale = 1.98; // Defaults to Medium (+20% difficulty)
+        let baseAiDepth = 16; // Track difficulty selection (defaults to Medium, increased by 60% from previous: 10 * 1.6)
+        let aiMaxDepth = 16; // Effective depth after variant adjustments (increased by 60% from previous)
+        let pieceValueScale = 4.18176; // Defaults to Medium (increased by 60% from previous: 2.6136 * 1.6)
         const AI_LEFTOVER_PENALTY = 0.75;
         const AI_TIE_EPSILON = 0.0001;
         const AI_TIME_LIMIT_DEFAULT = 1200; // Increased from 650ms for slower AI thinking
         const AI_TIME_LIMIT_LARGE = 400; // Increased from 180ms for slower AI thinking
+
+        // AI Player Profiles - Different strategies and play styles (invisible to player)
+        const AI_PROFILES = {
+            'Berserker': {
+                name: 'Berserker',
+                description: 'Hyper-aggressive attacker, prioritizes captures above all else',
+                threatWeight: 1.8,           // Heavily values threatening enemy pieces
+                mobilityWeight: 0.25,        // Lower mobility concern
+                centerWeight: 0.15,          // Lower center control concern
+                captureBonus: 1.4,           // +40% bonus to capture values
+                specialAbilityBonus: 1.3,    // +30% bonus to special abilities
+                aggressionLevel: 1.5         // Highly aggressive
+            },
+            'Guardian': {
+                name: 'Guardian',
+                description: 'Defensive player, focuses on piece preservation and center control',
+                threatWeight: 0.6,           // Lower threat priority
+                mobilityWeight: 0.7,         // Values having options
+                centerWeight: 0.6,           // Strongly values center control
+                captureBonus: 0.8,           // -20% capture bonus (more cautious)
+                specialAbilityBonus: 0.9,    // -10% special ability usage
+                aggressionLevel: 0.6         // Defensive playstyle
+            },
+            'Tactician': {
+                name: 'Tactician',
+                description: 'Balanced strategist, adapts to board position',
+                threatWeight: 1.0,           // Balanced threat evaluation
+                mobilityWeight: 0.55,        // Moderate mobility value
+                centerWeight: 0.35,          // Moderate center control
+                captureBonus: 1.0,           // Normal capture values
+                specialAbilityBonus: 1.1,    // Slightly favors special abilities
+                aggressionLevel: 1.0         // Balanced approach
+            },
+            'Sorcerer': {
+                name: 'Sorcerer',
+                description: 'Special ability specialist, maximizes use of unique powers',
+                threatWeight: 0.85,          // Moderate threat focus
+                mobilityWeight: 0.6,         // Values positioning for abilities
+                centerWeight: 0.25,          // Lower center concern
+                captureBonus: 0.95,          // Slightly lower capture priority
+                specialAbilityBonus: 1.7,    // +70% bonus to special abilities
+                aggressionLevel: 1.1         // Slightly aggressive
+            },
+            'Nomad': {
+                name: 'Nomad',
+                description: 'Mobility-focused player, constantly repositioning for advantage',
+                threatWeight: 0.75,          // Lower direct threat focus
+                mobilityWeight: 0.85,        // Highly values movement options
+                centerWeight: 0.4,           // Moderate center value
+                captureBonus: 0.9,           // Slightly cautious on captures
+                specialAbilityBonus: 1.0,    // Normal special ability usage
+                aggressionLevel: 0.85        // Moderately cautious, prefers mobility
+            }
+        };
+
+        // Current AI profile (selected randomly at game start)
+        let currentAiProfile = null;
         const LARGE_BOARD_VARIANTS = ['36s', '36s-expert', '36s-elite'];
         let aiSearchDeadline = 0;
         function aiTimeExpired() {
@@ -3096,32 +3153,43 @@
             element.classList.add('selected-diff');
 
             if (level === 'Easy') {
-                baseAiDepth = 5; // Increased by 10% difficulty (4 → 5)
-                pieceValueScale = 1.67; // Increased by 10% difficulty (1.52 → 1.67)
+                baseAiDepth = 10; // Increased by 60% (6 * 1.6 ≈ 10)
+                pieceValueScale = 3.2064; // Increased by 60% (2.004 * 1.6)
             } else if (level === 'Medium') {
-                baseAiDepth = 7; // Increased by 20% difficulty (6 → 7)
-                pieceValueScale = 1.98; // Increased by 20% difficulty (1.65 → 1.98)
+                baseAiDepth = 16; // Increased by 60% (10 * 1.6 = 16)
+                pieceValueScale = 4.18176; // Increased by 60% (2.6136 * 1.6)
             } else if (level === 'Hard') {
-                baseAiDepth = 9; // Increased by 30% difficulty (7 → 9)
-                pieceValueScale = 2.31; // Increased by 30% difficulty (1.78 → 2.31)
+                baseAiDepth = 21; // Increased by 60% (13 * 1.6 ≈ 21)
+                pieceValueScale = 5.32224; // Increased by 60% (3.3264 * 1.6)
             }
             applyAiDepthForVariant();
         }
 
         function applyAiDepthForVariant() {
-            // Larger variants get capped to shallower depth for performance
+            // Apply difficulty-based depth limits that scale with selected difficulty level
+            // Caps are now proportional to allow difficulty settings to apply properly
             if (gameVariant === '24s' || gameVariant === 'ccb') {
-                aiMaxDepth = Math.min(baseAiDepth, 5);
+                // Cap at 70% of base depth for medium-sized variants
+                aiMaxDepth = Math.max(3, Math.min(baseAiDepth, Math.floor(baseAiDepth * 0.7)));
             } else if (isLargeBoardVariant()) {
-                aiMaxDepth = Math.min(baseAiDepth, 2);
+                // Cap at 30% of base depth for large variants (performance consideration)
+                aiMaxDepth = Math.max(2, Math.min(baseAiDepth, Math.floor(baseAiDepth * 0.3)));
             } else {
-                aiMaxDepth = Math.max(2, Math.min(baseAiDepth, 5));
+                // Default variants can use full depth
+                aiMaxDepth = Math.max(2, baseAiDepth);
             }
             updateAiPieceValues();
         }
 
         function startGame(variant) {
             gameVariant = variant;
+
+            // Select random AI profile at game start (invisible to player)
+            const profileNames = Object.keys(AI_PROFILES);
+            const randomIndex = Math.floor(Math.random() * profileNames.length);
+            currentAiProfile = AI_PROFILES[profileNames[randomIndex]];
+            console.log(`AI Profile: ${currentAiProfile.name} - ${currentAiProfile.description}`);
+
             if (variant === '24s') {
                 ROWS = 10;
                 COLS = 14;
@@ -6026,8 +6094,12 @@
             const opponentBackRow = player === 'W' ? 0 : (gameVariant === 'ccb' ? 7 : 9);
             const centerRow = (ROWS - 1) / 2;
             const centerCol = (COLS - 1) / 2;
-            const MOBILITY_WEIGHT = 0.45;
-            const CENTER_WEIGHT = 0.25;
+
+            // Use AI profile weights (if AI is playing, adjust weights based on profile)
+            const profile = (player === 'B' && currentAiProfile) ? currentAiProfile : null;
+            const MOBILITY_WEIGHT = profile ? (0.45 * profile.mobilityWeight) : 0.45;
+            const CENTER_WEIGHT = profile ? (0.25 * profile.centerWeight) : 0.25;
+            const THREAT_MULTIPLIER = profile ? profile.threatWeight : 1.0;
             
             let playerPieceValue = 0;
             let opponentPieceValue = 0;
@@ -6067,7 +6139,7 @@
                             if (move.type === 'move' || move.type === 'shoot') {
                                 const targetPiece = board[move.pos[0]]?.[move.pos[1]];
                                 if (targetPiece && targetPiece.player === opponent) {
-                                    playerThreats += aiPieceValues[targetPiece.type] * 0.85; // Increased from 0.65 to encourage attacking
+                                    playerThreats += aiPieceValues[targetPiece.type] * 0.85 * THREAT_MULTIPLIER;
                                 }
                             }
                         }
@@ -6081,7 +6153,7 @@
                             if (move.type === 'move' || move.type === 'shoot') {
                                 const targetPiece = board[move.pos[0]]?.[move.pos[1]];
                                 if (targetPiece && targetPiece.player === player) {
-                                    opponentThreats += aiPieceValues[targetPiece.type] * 0.85; // Increased from 0.65 to encourage attacking
+                                    opponentThreats += aiPieceValues[targetPiece.type] * 0.85 * THREAT_MULTIPLIER;
                                 }
                             }
                         }
@@ -6144,6 +6216,66 @@
             return newBoard;
         }
 
+        /**
+         * Find moves for low-value pieces (Infantry, Archer, etc.) to use final move point
+         */
+        function findLowValuePieceMove(player, movedPieces) {
+            const LOW_VALUE_PIECES = ['Infantry', 'Archer', 'Zombie', 'Pistolier', 'Cavalry'];
+            const centerRow = (ROWS - 1) / 2;
+            const centerCol = (COLS - 1) / 2;
+            let best = null;
+            let bestScore = -Infinity;
+
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const piece = board[r][c];
+                    if (!piece || piece.player !== player || movedPieces.has(`${r},${c}`)) continue;
+
+                    // Prioritize low-value pieces
+                    if (!LOW_VALUE_PIECES.includes(piece.type)) continue;
+
+                    const moves = pieceTypes[piece.type].move(r, c, board, player, false, piece.facing, 1);
+                    if (!moves) continue;
+
+                    for (const move of moves) {
+                        if (move.cost > 1) continue; // Only 1-cost moves
+                        const [mr, mc] = move.pos;
+                        const targetPiece = board[mr]?.[mc];
+
+                        let score = 0;
+
+                        // Prioritize captures even for low-value pieces
+                        if (targetPiece && targetPiece.player !== player) {
+                            score += aiPieceValues[targetPiece.type] * 10;
+
+                            // Extra bonus for adjacent captures
+                            const distance = Math.abs(mr - r) + Math.abs(mc - c);
+                            if (distance === 1) {
+                                score += 50; // High priority for using last move on adjacent capture
+                            }
+                        } else {
+                            // For non-captures, prefer moving towards center or forward
+                            const distToCenter = Math.hypot(mr - centerRow, mc - centerCol);
+                            score -= distToCenter * 0.1;
+
+                            // Encourage forward movement (towards opponent's side)
+                            if (player === 'B' && mr > r) score += 2; // AI moves down
+                            if (player === 'W' && mr < r) score += 2; // Player moves up
+                        }
+
+                        // Slightly prefer Infantry to use last point
+                        if (piece.type === 'Infantry') score += 1;
+
+                        if (score > bestScore) {
+                            bestScore = score;
+                            best = { ...move, from: [r, c], pieceType: piece.type };
+                        }
+                    }
+                }
+            }
+            return best;
+        }
+
         function findSimpleAIAction(player, movesLeft, movedPieces) {
             let best = null;
             let bestScore = -Infinity;
@@ -6161,12 +6293,16 @@
                         const moveCost = typeof move.cost === 'number' ? move.cost : 1;
                         let score = moveCost * 0.45; // encourage spending available points
                         if (targetPiece && targetPiece.player !== player) {
-                            score += aiPieceValues[targetPiece.type] * 2.4; // heavily favour captures
+                            const captureBonus = currentAiProfile ? currentAiProfile.captureBonus : 1.0;
+                            score += aiPieceValues[targetPiece.type] * 2.4 * captureBonus; // heavily favour captures (adjusted by AI profile)
                             // Add proximity bonus for close attacks
                             const distance = Math.abs(mr - r) + Math.abs(mc - c);
                             if (distance === 1) {
                                 // CRITICAL PRIORITY: Adjacent pieces are immediate threats - heavily prioritize capturing them
-                                score += aiPieceValues[targetPiece.type] * 4.2; // 420% bonus for adjacent captures (increased by 20%)
+                                const captureBonus = currentAiProfile ? currentAiProfile.captureBonus : 1.0;
+                                score += aiPieceValues[targetPiece.type] * 7.56 * captureBonus; // 756% bonus for adjacent captures (increased by 80% from original 4.2, adjusted by AI profile)
+                                // Extra flat bonus for ANY adjacent capture to encourage eliminating all immediate threats
+                                score += 15; // Flat bonus to encourage capturing even low-value adjacent pieces
                             } else if (distance <= 2) {
                                 score += aiPieceValues[targetPiece.type] * 0.5; // 50% bonus for close attacks in simple AI
                             }
@@ -6175,6 +6311,11 @@
                             if (aiDifficulty === 'Hard') specialBonus = 5.85; // +30% difficulty (4.5 → 5.85)
                             else if (aiDifficulty === 'Medium') specialBonus = 4.2; // +20% difficulty (3.5 → 4.2)
                             else if (aiDifficulty === 'Easy') specialBonus = 2.2; // Slightly higher for Easy (+10%)
+
+                            // Apply AI profile modifier to special ability usage
+                            if (currentAiProfile) {
+                                specialBonus *= currentAiProfile.specialAbilityBonus;
+                            }
                             score += specialBonus;
                         } else {
                             score -= 0.5; // penalise idle repositioning
@@ -6283,7 +6424,8 @@
                                 let targetValue = 0;
                                 if ((move.type === 'move' || move.type === 'shoot') && board[move.pos[0]][move.pos[1]]) {
                                     const targetPiece = board[move.pos[0]][move.pos[1]];
-                                    targetValue = aiPieceValues[targetPiece.type];
+                                    const captureBonus = currentAiProfile ? currentAiProfile.captureBonus : 1.0;
+                                    targetValue = aiPieceValues[targetPiece.type] * captureBonus;
                                     // If capturing a Spectre, account for 50% success rate (unless exempt)
                                     if (targetPiece.type === 'Spectre' && piece.type !== 'Wizard' && piece.type !== 'Spectre') {
                                         targetValue *= 0.5; // 50% chance of success
@@ -6292,9 +6434,11 @@
                                     const distance = Math.abs(move.pos[0] - r) + Math.abs(move.pos[1] - c);
                                     if (distance === 1) {
                                         // CRITICAL PRIORITY: Adjacent pieces are immediate threats - heavily prioritize capturing them
-                                        targetValue += aiPieceValues[targetPiece.type] * 2.4; // 240% bonus for adjacent captures in minimax (increased by 20%)
+                                        targetValue += aiPieceValues[targetPiece.type] * 4.32 * captureBonus; // 432% bonus for adjacent captures in minimax (increased by 80% from original 2.4, adjusted by AI profile)
+                                        // Extra flat bonus for ANY adjacent capture to encourage eliminating all immediate threats
+                                        targetValue += 10; // Flat bonus to encourage capturing even low-value adjacent pieces
                                     } else if (distance <= 2) {
-                                        targetValue += aiPieceValues[targetPiece.type] * 0.3; // 30% bonus for close attacks
+                                        targetValue += aiPieceValues[targetPiece.type] * 0.3 * captureBonus; // 30% bonus for close attacks (adjusted by AI profile)
                                     }
                                 }
                                 allPossibleActions.push({
@@ -6560,23 +6704,25 @@
                     }
                 }
 
-                // 2. Sort actions: prioritize captures, then threats, then non-turns, then turns
+                // 2. Sort actions: prioritize captures, then cost (prefer using more move points), then special abilities, then avoid unnecessary turns
                 allPossibleActions.sort((a, b) => {
-                    // Prioritize captures
+                    // Prioritize captures by target value
                     if (a.targetValue > b.targetValue) return -1;
                     if (a.targetValue < b.targetValue) return 1;
 
-                    const aCost = typeof a.cost === 'number' ? a.cost : 0;
-                    const bCost = typeof b.cost === 'number' ? b.cost : 0;
-                    if (aCost !== bCost) return bCost - aCost;
+                    // Strongly prefer actions that use more move points (encourage AI to spend all points)
+                    const aCost = typeof a.cost === 'number' ? a.cost : 1;
+                    const bCost = typeof b.cost === 'number' ? b.cost : 1;
+                    if (aCost !== bCost) return bCost - aCost; // Higher cost = better (spend more points)
 
+                    // Prioritize special abilities
                     if (a.special && !b.special) return -1;
                     if (b.special && !a.special) return 1;
 
                     // Avoid unnecessary turns (don't penalize shooting pieces for turning)
                     if (a.type === 'turn' && !['Archer', 'Ballista'].includes(a.pieceType) && b.type !== 'turn') return 1;
                     if (b.type === 'turn' && !['Archer', 'Ballista'].includes(b.pieceType) && a.type !== 'turn') return -1;
-                    
+
                     return 0; // Keep stable order otherwise
                 });
 
@@ -6983,11 +7129,18 @@
                     }
 
                     if (!action) {
-                        // No more moves found, end turn
-                        highlightSquares = [];
-                        plannedActions = [];
-                        completeAiTurn();
-                        return;
+                        // Special case: if AI has exactly 1 move point left, try to use it on low-value pieces
+                        if (movesLeft === 1) {
+                            action = findLowValuePieceMove('B', movedPieces);
+                        }
+
+                        // If still no action, end turn
+                        if (!action) {
+                            highlightSquares = [];
+                            plannedActions = [];
+                            completeAiTurn();
+                            return;
+                        }
                     }
                     
                     highlightSquares = [];
