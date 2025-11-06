@@ -2604,9 +2604,9 @@
         
         // AI Difficulty
         let aiDifficulty = 'Medium';
-        let baseAiDepth = 16; // Track difficulty selection (defaults to Medium, increased by 60% from previous: 10 * 1.6)
-        let aiMaxDepth = 16; // Effective depth after variant adjustments (increased by 60% from previous)
-        let pieceValueScale = 4.18176; // Defaults to Medium (increased by 60% from previous: 2.6136 * 1.6)
+        let baseAiDepth = 44; // Track difficulty selection (defaults to Medium, increased by 80% intelligence + 30% general difficulty: 19 * 1.8 * 1.3)
+        let aiMaxDepth = 44; // Effective depth after variant adjustments - allows AI to plan 3+ moves ahead
+        let pieceValueScale = 11.74238208; // Defaults to Medium (increased by 80% intelligence + 30% general difficulty: 5.018112 * 1.8 * 1.3)
 
         // Opponent Selection
         let selectedOpponent = 'Random'; // Default to random selection
@@ -2615,8 +2615,8 @@
         let hintModeEnabled = false; // Default to off
         const AI_LEFTOVER_PENALTY = 0.75;
         const AI_TIE_EPSILON = 0.0001;
-        const AI_TIME_LIMIT_DEFAULT = 1200; // Increased from 650ms for slower AI thinking
-        const AI_TIME_LIMIT_LARGE = 400; // Increased from 180ms for slower AI thinking
+        const AI_TIME_LIMIT_DEFAULT = 3600; // Increased to 3600ms to support deeper search and 3+ move planning (tripled from 1200ms)
+        const AI_TIME_LIMIT_LARGE = 1200; // Increased to 1200ms for large boards to support deeper search (tripled from 400ms)
 
         // AI Player Profiles - Different strategies and play styles (invisible to player)
         const AI_PROFILES = {
@@ -2712,11 +2712,11 @@
         function getAiTimeBudget() {
             let base = isLargeBoardVariant() ? AI_TIME_LIMIT_LARGE : AI_TIME_LIMIT_DEFAULT;
             if (aiDifficulty === 'Hard') {
-                base += isLargeBoardVariant() ? 182 : 338; // +30% difficulty: increased thinking time (140→182, 260→338)
+                base += isLargeBoardVariant() ? 600 : 1800; // Increased for depth 65 planning: allows extensive multi-move lookahead
             } else if (aiDifficulty === 'Medium') {
-                base += isLargeBoardVariant() ? 48 : 120; // +20% difficulty: increased thinking time (40→48, 100→120)
+                base += isLargeBoardVariant() ? 400 : 1200; // Increased for depth 44 planning: allows significant multi-move lookahead
             } else if (aiDifficulty === 'Easy') {
-                base += isLargeBoardVariant() ? 20 : 30; // +10% difficulty: give AI more thinking time
+                base += isLargeBoardVariant() ? 200 : 600; // Increased for depth 25 planning: allows 3+ move lookahead
             }
             return base;
         }
@@ -3712,14 +3712,14 @@
             element.classList.add('selected-diff');
 
             if (level === 'Easy') {
-                baseAiDepth = 10; // Increased by 60% (6 * 1.6 ≈ 10)
-                pieceValueScale = 3.2064; // Increased by 60% (2.004 * 1.6)
+                baseAiDepth = 25; // Increased by 60% intelligence + 30% general difficulty (12 * 1.6 * 1.3 ≈ 25) - plans 3+ moves ahead
+                pieceValueScale = 8.0031744; // Increased by 60% intelligence + 30% general difficulty (3.84768 * 1.6 * 1.3)
             } else if (level === 'Medium') {
-                baseAiDepth = 16; // Increased by 60% (10 * 1.6 = 16)
-                pieceValueScale = 4.18176; // Increased by 60% (2.6136 * 1.6)
+                baseAiDepth = 44; // Increased by 80% intelligence + 30% general difficulty (19 * 1.8 * 1.3 ≈ 44) - plans 3+ moves ahead
+                pieceValueScale = 11.74238208; // Increased by 80% intelligence + 30% general difficulty (5.018112 * 1.8 * 1.3)
             } else if (level === 'Hard') {
-                baseAiDepth = 21; // Increased by 60% (13 * 1.6 ≈ 21)
-                pieceValueScale = 5.32224; // Increased by 60% (3.3264 * 1.6)
+                baseAiDepth = 65; // Increased by 100% intelligence + 30% general difficulty (25 * 2.0 * 1.3 = 65) - plans 3+ moves ahead
+                pieceValueScale = 16.6053888; // Increased by 100% intelligence + 30% general difficulty (6.386688 * 2.0 * 1.3)
             }
             applyAiDepthForVariant();
         }
@@ -6758,6 +6758,24 @@
                     gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} captured ${capturedPiece.type} (+${captureValue} points) with ${piece.type} at (${jump[0]},${jump[1]})`);
                     cleanupNecromancerTracking(capturedPiece);
                     board[jump[0]][jump[1]] = null;
+                    if (capturedPiece.type === 'King') {
+                        // Complete the move first
+                        board[toRow][toCol] = piece;
+                        board[fromRow][fromCol] = null;
+                        firstMoves.delete(`${fromRow},${fromCol},${piece.player}`);
+                        renderBoard();
+                        updateScoreDisplay();
+                        updateCapturedPiecesDisplay();
+                        updateGameLog();
+                        // Immediately set gameOver flag to prevent any further actions
+                        gameOver = true;
+                        // Add 3-5 second delay before showing end game popup to allow final move animation to complete
+                        const endGameDelay = 3000 + Math.random() * 2000; // Random delay between 3000-5000ms
+                        setTimeout(() => {
+                            endGame(piece.player);
+                        }, endGameDelay);
+                        return;
+                    }
                     captured = true;
                 }
             }
@@ -6789,7 +6807,21 @@
                         }
                         cleanupNecromancerTracking(capturedPiece);
                         if (capturedPiece.type === 'King') {
-                            endGame(piece.player);
+                            // Complete the move first
+                            board[toRow][toCol] = piece;
+                            board[fromRow][fromCol] = null;
+                            firstMoves.delete(`${fromRow},${fromCol},${piece.player}`);
+                            renderBoard();
+                            updateScoreDisplay();
+                            updateCapturedPiecesDisplay();
+                            updateGameLog();
+                            // Immediately set gameOver flag to prevent any further actions
+                            gameOver = true;
+                            // Add 3-5 second delay before showing end game popup to allow final move animation to complete
+                            const endGameDelay = 3000 + Math.random() * 2000; // Random delay between 3000-5000ms
+                            setTimeout(() => {
+                                endGame(piece.player);
+                            }, endGameDelay);
                             return;
                         }
                         captured = true;
@@ -6903,7 +6935,18 @@
                 }
                 cleanupNecromancerTracking(targetPiece);
                 if (targetPiece.type === 'King') {
-                    endGame(piece.player);
+                    // Immediately set gameOver flag to prevent any further actions
+                    gameOver = true;
+                    board[toRow][toCol] = null;
+                    renderBoard();
+                    updateScoreDisplay();
+                    updateCapturedPiecesDisplay();
+                    updateGameLog();
+                    // Add 3-5 second delay before showing end game popup to allow final move animation to complete
+                    const endGameDelay = 3000 + Math.random() * 2000; // Random delay between 3000-5000ms
+                    setTimeout(() => {
+                        endGame(piece.player);
+                    }, endGameDelay);
                     return;
                 }
                 board[toRow][toCol] = null;
@@ -7045,7 +7088,12 @@
                             if (move.type === 'move' || move.type === 'shoot') {
                                 const targetPiece = board[move.pos[0]]?.[move.pos[1]];
                                 if (targetPiece && targetPiece.player === opponent) {
-                                    playerThreats += aiPieceValues[targetPiece.type] * 0.85 * THREAT_MULTIPLIER;
+                                    // KING TARGETING: Massively increase threat value when threatening the King
+                                    if (targetPiece.type === 'King') {
+                                        playerThreats += aiPieceValues[targetPiece.type] * 50.0 * THREAT_MULTIPLIER; // Huge bonus for threatening King
+                                    } else {
+                                        playerThreats += aiPieceValues[targetPiece.type] * 0.85 * THREAT_MULTIPLIER;
+                                    }
                                 }
                             }
                         }
@@ -7059,7 +7107,12 @@
                             if (move.type === 'move' || move.type === 'shoot') {
                                 const targetPiece = board[move.pos[0]]?.[move.pos[1]];
                                 if (targetPiece && targetPiece.player === player) {
-                                    opponentThreats += aiPieceValues[targetPiece.type] * 0.85 * THREAT_MULTIPLIER;
+                                    // KING TARGETING: Massively penalize if opponent is threatening our King
+                                    if (targetPiece.type === 'King') {
+                                        opponentThreats += aiPieceValues[targetPiece.type] * 50.0 * THREAT_MULTIPLIER; // Huge penalty for opponent threatening our King
+                                    } else {
+                                        opponentThreats += aiPieceValues[targetPiece.type] * 0.85 * THREAT_MULTIPLIER;
+                                    }
                                 }
                             }
                         }
@@ -7332,19 +7385,34 @@
                                     const targetPiece = board[move.pos[0]][move.pos[1]];
                                     const captureBonus = currentAiProfile ? currentAiProfile.captureBonus : 1.0;
                                     targetValue = aiPieceValues[targetPiece.type] * captureBonus;
-                                    // If capturing a Spectre, account for 50% success rate (unless exempt)
-                                    if (targetPiece.type === 'Spectre' && piece.type !== 'Wizard' && piece.type !== 'Spectre') {
-                                        targetValue *= 0.5; // 50% chance of success
-                                    }
-                                    // Add proximity bonus: prioritize attacking adjacent/in-range pieces
-                                    const distance = Math.abs(move.pos[0] - r) + Math.abs(move.pos[1] - c);
-                                    if (distance === 1) {
-                                        // CRITICAL PRIORITY: Adjacent pieces are immediate threats - heavily prioritize capturing them
-                                        targetValue += aiPieceValues[targetPiece.type] * 4.32 * captureBonus; // 432% bonus for adjacent captures in minimax (increased by 80% from original 2.4, adjusted by AI profile)
-                                        // Extra flat bonus for ANY adjacent capture to encourage eliminating all immediate threats
-                                        targetValue += 10; // Flat bonus to encourage capturing even low-value adjacent pieces
-                                    } else if (distance <= 2) {
-                                        targetValue += aiPieceValues[targetPiece.type] * 0.3 * captureBonus; // 30% bonus for close attacks (adjusted by AI profile)
+
+                                    // KING TARGETING: Absolute priority for capturing the King - game-ending move
+                                    if (targetPiece.type === 'King') {
+                                        // Massive bonus for King capture - make it the highest priority target
+                                        targetValue += aiPieceValues[targetPiece.type] * 50.0 * captureBonus; // 5000% bonus for King capture
+                                        const distance = Math.abs(move.pos[0] - r) + Math.abs(move.pos[1] - c);
+                                        if (distance === 1) {
+                                            // Adjacent King - EXTREME PRIORITY
+                                            targetValue += aiPieceValues[targetPiece.type] * 100.0 * captureBonus; // Additional 10000% bonus for adjacent King
+                                        } else if (distance <= 2) {
+                                            // Close to King - very high priority
+                                            targetValue += aiPieceValues[targetPiece.type] * 25.0 * captureBonus; // Additional 2500% bonus for close King
+                                        }
+                                    } else {
+                                        // If capturing a Spectre, account for 50% success rate (unless exempt)
+                                        if (targetPiece.type === 'Spectre' && piece.type !== 'Wizard' && piece.type !== 'Spectre') {
+                                            targetValue *= 0.5; // 50% chance of success
+                                        }
+                                        // Add proximity bonus: prioritize attacking adjacent/in-range pieces
+                                        const distance = Math.abs(move.pos[0] - r) + Math.abs(move.pos[1] - c);
+                                        if (distance === 1) {
+                                            // CRITICAL PRIORITY: Adjacent pieces are immediate threats - heavily prioritize capturing them
+                                            targetValue += aiPieceValues[targetPiece.type] * 4.32 * captureBonus; // 432% bonus for adjacent captures in minimax (increased by 80% from original 2.4, adjusted by AI profile)
+                                            // Extra flat bonus for ANY adjacent capture to encourage eliminating all immediate threats
+                                            targetValue += 10; // Flat bonus to encourage capturing even low-value adjacent pieces
+                                        } else if (distance <= 2) {
+                                            targetValue += aiPieceValues[targetPiece.type] * 0.3 * captureBonus; // 30% bonus for close attacks (adjusted by AI profile)
+                                        }
                                     }
                                 }
                                 allPossibleActions.push({
