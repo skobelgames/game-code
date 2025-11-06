@@ -2112,9 +2112,9 @@
         
         // AI Difficulty
         let aiDifficulty = 'Medium';
-        let baseAiDepth = 8; // Track difficulty selection (defaults to Medium, now +30% harder)
-        let aiMaxDepth = 8; // Effective depth after variant adjustments (now +30% harder)
-        let pieceValueScale = 2.178; // Defaults to Medium (now +30% harder: 1.98 * 1.1)
+        let baseAiDepth = 10; // Track difficulty selection (defaults to Medium, increased by 20% from previous)
+        let aiMaxDepth = 10; // Effective depth after variant adjustments (increased by 20% from previous)
+        let pieceValueScale = 2.6136; // Defaults to Medium (increased by 20% from previous: 2.178 * 1.2)
         const AI_LEFTOVER_PENALTY = 0.75;
         const AI_TIE_EPSILON = 0.0001;
         const AI_TIME_LIMIT_DEFAULT = 1200; // Increased from 650ms for slower AI thinking
@@ -3153,14 +3153,14 @@
             element.classList.add('selected-diff');
 
             if (level === 'Easy') {
-                baseAiDepth = 5; // Baseline difficulty (unchanged)
-                pieceValueScale = 1.67; // Baseline difficulty (unchanged)
+                baseAiDepth = 6; // Increased by 20% (5 * 1.2 = 6)
+                pieceValueScale = 2.004; // Increased by 20% (1.67 * 1.2)
             } else if (level === 'Medium') {
-                baseAiDepth = 8; // Increased by 10% more (7 * 1.1 ≈ 8)
-                pieceValueScale = 2.178; // Increased by 10% more (1.98 * 1.1)
+                baseAiDepth = 10; // Increased by 20% (8 * 1.2 ≈ 10)
+                pieceValueScale = 2.6136; // Increased by 20% (2.178 * 1.2)
             } else if (level === 'Hard') {
-                baseAiDepth = 11; // Increased by 20% more (9 * 1.2 ≈ 11)
-                pieceValueScale = 2.772; // Increased by 20% more (2.31 * 1.2)
+                baseAiDepth = 13; // Increased by 20% (11 * 1.2 ≈ 13)
+                pieceValueScale = 3.3264; // Increased by 20% (2.772 * 1.2)
             }
             applyAiDepthForVariant();
         }
@@ -6236,7 +6236,7 @@
                             if (distance === 1) {
                                 // CRITICAL PRIORITY: Adjacent pieces are immediate threats - heavily prioritize capturing them
                                 const captureBonus = currentAiProfile ? currentAiProfile.captureBonus : 1.0;
-                                score += aiPieceValues[targetPiece.type] * 5.04 * captureBonus; // 504% bonus for adjacent captures (increased by 20% from 4.2, adjusted by AI profile)
+                                score += aiPieceValues[targetPiece.type] * 5.88 * captureBonus; // 588% bonus for adjacent captures (increased by 40% from original 4.2, adjusted by AI profile)
                             } else if (distance <= 2) {
                                 score += aiPieceValues[targetPiece.type] * 0.5; // 50% bonus for close attacks in simple AI
                             }
@@ -6368,7 +6368,7 @@
                                     const distance = Math.abs(move.pos[0] - r) + Math.abs(move.pos[1] - c);
                                     if (distance === 1) {
                                         // CRITICAL PRIORITY: Adjacent pieces are immediate threats - heavily prioritize capturing them
-                                        targetValue += aiPieceValues[targetPiece.type] * 2.88 * captureBonus; // 288% bonus for adjacent captures in minimax (increased by 20% from 2.4, adjusted by AI profile)
+                                        targetValue += aiPieceValues[targetPiece.type] * 3.36 * captureBonus; // 336% bonus for adjacent captures in minimax (increased by 40% from original 2.4, adjusted by AI profile)
                                     } else if (distance <= 2) {
                                         targetValue += aiPieceValues[targetPiece.type] * 0.3 * captureBonus; // 30% bonus for close attacks (adjusted by AI profile)
                                     }
