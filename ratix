@@ -494,13 +494,13 @@
         }
         @keyframes coinFlipFailure {
             0% {
-                background-color: transparent;
+                background-color: #fff !important;
             }
             50% {
-                background-color: #000000;
+                background-color: #000000 !important;
             }
             100% {
-                background-color: transparent;
+                background-color: #fff !important;
             }
         }
         button {
@@ -1270,6 +1270,16 @@
             // Determine result
             const result = Math.random() < 0.5; // true = white (success), false = black (failure)
             window.lastCoinTossResult = result;
+
+            // Apply background flash effects (skip for first turn)
+            const isFirstTurn = window.coinTossContext === 'first-turn';
+            if (!isFirstTurn) {
+                if (result) {
+                    applyCoinFlipSuccessEffect();
+                } else {
+                    applyCoinFlipFailureEffect();
+                }
+            }
 
             // Add spinning animation
             coinResult.classList.add('spinning');
@@ -3523,29 +3533,56 @@
             // Don't render board here - wait until coin toss determines starting player
         }
 
+        let coinFlipEffectPending = null;  // Track pending effect to prevent duplicates
+        let lastCoinFlipEffectTime = 0;  // Track when last effect was triggered
+
         function applyCoinFlipSuccessEffect() {
+            const now = Date.now();
+            // Prevent duplicate effects within 5 seconds
+            if (now - lastCoinFlipEffectTime < 5000) {
+                return;
+            }
+            lastCoinFlipEffectTime = now;
+
+            // Clear any pending failure effect and set success as pending
+            if (coinFlipEffectPending) {
+                clearTimeout(coinFlipEffectPending);
+            }
             const boardDiv = document.getElementById('board');
             if (boardDiv) {
                 // Delay the glow effect by 2 seconds to sync with coin flip reveal
-                setTimeout(() => {
+                coinFlipEffectPending = setTimeout(() => {
                     boardDiv.classList.add('coin-flip-success');
                     // Remove the class after animation completes (1.5s)
                     setTimeout(() => {
                         boardDiv.classList.remove('coin-flip-success');
+                        coinFlipEffectPending = null;
                     }, 1500);
                 }, 2000); // Wait 2 seconds for coin flip animation to complete
             }
         }
 
         function applyCoinFlipFailureEffect() {
+            const now = Date.now();
+            // Prevent duplicate effects within 5 seconds
+            if (now - lastCoinFlipEffectTime < 5000) {
+                return;
+            }
+            lastCoinFlipEffectTime = now;
+
+            // Clear any pending success effect and set failure as pending
+            if (coinFlipEffectPending) {
+                clearTimeout(coinFlipEffectPending);
+            }
             const boardDiv = document.getElementById('board');
             if (boardDiv) {
                 // Delay the effect by 2 seconds to sync with coin flip reveal
-                setTimeout(() => {
+                coinFlipEffectPending = setTimeout(() => {
                     boardDiv.classList.add('coin-flip-failure');
                     // Remove the class after animation completes (1.5s)
                     setTimeout(() => {
                         boardDiv.classList.remove('coin-flip-failure');
+                        coinFlipEffectPending = null;
                     }, 1500);
                 }, 2000); // Wait 2 seconds for coin flip animation to complete
             }
