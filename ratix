@@ -1859,6 +1859,15 @@
             return result;
         }
 
+        function mercenaryCoinFlip(player) {
+            const result = Math.random() < 0.5;
+            const playerLabel = player === 'W' ? 'Player' : 'AI';
+            const title = 'Mercenary Bonus Turn';
+            const message = result ? 'Coin flip won! Bonus turn granted!' : 'Coin flip lost. No bonus turn.';
+            enqueueZombieCoinFlip(result, title, message);
+            return result;
+        }
+
         function randomCoinFlip() {
             return Math.random() < 0.5;
         }
@@ -6013,7 +6022,7 @@
 
                     // Mercenary special move: coin flip for bonus turn after zombie jump capture
                     if (piece.type === 'Mercenary' && piece.player === currentPlayer && !mercenaryBonusTurnUsed[piece.player].has(piece)) {
-                        const coinFlip = Math.random() < 0.5;
+                        const coinFlip = mercenaryCoinFlip(piece.player);
                         if (coinFlip) {
                             // Restore full move points for bonus turn
                             movesLeft = initialMovesLeft;
@@ -6037,7 +6046,7 @@
 
                     // Mercenary special move: coin flip for bonus turn after jump capture
                     if (piece.type === 'Mercenary' && piece.player === currentPlayer && !mercenaryBonusTurnUsed[piece.player].has(piece)) {
-                        const coinFlip = Math.random() < 0.5;
+                        const coinFlip = mercenaryCoinFlip(piece.player);
                         if (coinFlip) {
                             // Restore full move points for bonus turn
                             movesLeft = initialMovesLeft;
@@ -6066,7 +6075,7 @@
 
                         // Mercenary special move: coin flip for bonus turn after zombie capture
                         if (piece.type === 'Mercenary' && piece.player === currentPlayer && !mercenaryBonusTurnUsed[piece.player].has(piece)) {
-                            const coinFlip = Math.random() < 0.5;
+                            const coinFlip = mercenaryCoinFlip(piece.player);
                             if (coinFlip) {
                                 // Restore full move points for bonus turn
                                 movesLeft = initialMovesLeft;
@@ -6116,7 +6125,7 @@
 
             // Mercenary special move: coin flip for bonus turn after capture
             if (captured && piece.type === 'Mercenary' && piece.player === currentPlayer && !mercenaryBonusTurnUsed[piece.player].has(piece)) {
-                const coinFlip = Math.random() < 0.5;
+                const coinFlip = mercenaryCoinFlip(piece.player);
                 if (coinFlip) {
                     // Restore full move points for bonus turn
                     movesLeft = initialMovesLeft;
