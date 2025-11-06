@@ -6321,12 +6321,10 @@
                         gameLog.push(`${playerLabel} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again without cost. (${remaining} bonus turns remaining)`);
 
                         updateGameLog();
-                        renderBoard();
                         callback(true); // Bonus turn granted
                     } else {
                         gameLog.push(`${playerLabel} Mercenary lost the coin flip. No bonus turn.`);
                         updateGameLog();
-                        renderBoard();
                         callback(false); // No bonus turn
                     }
                 },
@@ -7737,12 +7735,7 @@
                                     const mercPiece = moveResult.mercenaryPiece;
                                     const mercPos = moveResult.mercenaryPos;
 
-                                    renderBoard();
-                                    updateGameLog();
-
                                     handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
-                                        highlightSquares = [];
-                                        renderBoard();
                                         // Continue AI turn after coin flip
                                         setTimeout(() => makeNextMove(), 500);
                                     });
@@ -7928,12 +7921,7 @@
                             const mercPiece = moveResult.mercenaryPiece;
                             const mercPos = moveResult.mercenaryPos;
 
-                            renderBoard();
-                            updateGameLog();
-
                             handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
-                                highlightSquares = [];
-                                renderBoard();
                                 // Continue AI turn after coin flip
                                 setTimeout(() => makeNextMove(), 500);
                             });
@@ -7960,19 +7948,14 @@
                             const mercPiece = moveResult.mercenaryPiece;
                             const mercPos = moveResult.mercenaryPos;
 
-                            renderBoard();
-                            updateGameLog();
-
                             handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
-                                highlightSquares = [];
-                                renderBoard();
                                 // Continue AI turn after coin flip
                                 setTimeout(() => makeNextMove(), 500);
                             });
                             return; // Exit to wait for coin flip callback
                         }
                     }
-                    
+
                     renderBoard();
                     updateStatus();
                     updateEndTurnButton();
