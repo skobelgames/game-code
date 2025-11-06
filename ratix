@@ -470,6 +470,25 @@
             border-color: #FFD700 !important;
             box-shadow: 0 0 10px #FFD700;
         }
+        #board.coin-flip-success {
+            border-color: #FFFFFF !important;
+            box-shadow: 0 0 20px #FFFFFF;
+            animation: coinFlipGlow 1.5s ease-in-out;
+        }
+        @keyframes coinFlipGlow {
+            0% {
+                border-color: #000000;
+                box-shadow: 0 0 0px #000000;
+            }
+            50% {
+                border-color: #FFFFFF;
+                box-shadow: 0 0 30px #FFFFFF;
+            }
+            100% {
+                border-color: #000000;
+                box-shadow: 0 0 0px #000000;
+            }
+        }
         button {
             padding: 10px 20px;
             font-size: 16px;
@@ -1695,6 +1714,9 @@
         let fusilierStrafeCount = {}; // Map of "row,col,player" to remaining uses (starts at 2)
         // Mercenary specials
         let mercenaryBonusTurnUsed = { 'W': new Set(), 'B': new Set() }; // Mercenaries that have used their bonus turn this turn
+        let mercenaryBonusTurnCount = { 'W': 0, 'B': 0 }; // Count of bonus turns used per game (max 3 per player)
+        let mercenaryBonusTurnActive = false; // Track if we're in mercenary bonus turn mode
+        let mercenaryBonusTurnPiece = null; // Track which mercenary is in bonus turn (row, col)
         // King summoning
         let pistoliersSummoned = { 'W': 0, 'B': 0 }; // Track summoned pistoliers (max 2 per player)
         let fusiliersSummoned = { 'W': 0, 'B': 0 }; // Track summoned fusiliers (max 2 per player)
@@ -1988,6 +2010,7 @@
                     message: `${playerLabel} zombie challenges opposing Zombie.`
                 });
                 if (success) {
+                    applyCoinFlipSuccessEffect();
                     cleanupNecromancerTracking(targetPiece);
                     board[targetRow][targetCol] = null;
                     const spawnSuccess = zombieConversions[player] < 2 && spawnZombieAtBackRow(player);
@@ -2013,6 +2036,7 @@
                 message: `${playerLabel} zombie attacks ${targetPiece.type}.`
             });
             if (success) {
+                applyCoinFlipSuccessEffect();
                 capturePieceForZombie(player, targetRow, targetCol, targetPiece);
                 moveZombieTo(fromRow, fromCol, targetRow, targetCol, player);
                 return 'moved';
@@ -2041,6 +2065,7 @@
                 message: `${attackerLabel} ${viaRanged ? 'shoots at' : 'attacks'} Zombie.`
             });
             if (success) {
+                applyCoinFlipSuccessEffect();
                 cleanupNecromancerTracking(targetPiece);
                 board[targetRow][targetCol] = null;
                 capturedSquares.push([targetRow, targetCol]);
@@ -3481,6 +3506,17 @@
             // Don't render board here - wait until coin toss determines starting player
         }
 
+        function applyCoinFlipSuccessEffect() {
+            const boardDiv = document.getElementById('board');
+            if (boardDiv) {
+                boardDiv.classList.add('coin-flip-success');
+                // Remove the class after animation completes (1.5s)
+                setTimeout(() => {
+                    boardDiv.classList.remove('coin-flip-success');
+                }, 1500);
+            }
+        }
+
         function renderBoard() {
             const boardDiv = document.getElementById('board');
             boardDiv.innerHTML = '';
@@ -4429,6 +4465,7 @@
                         'Attempting to summon a Spectre...',
                         (success) => {
                             if (success) {
+                                applyCoinFlipSuccessEffect();
                                 // Place Spectre at selected location
                                 board[summonRow][summonCol] = { type: 'Spectre', player: currentPlayer };
                                 spectresSummoned[currentPlayer]++;
@@ -4816,6 +4853,7 @@
                         `Shot ${4 - elephantryExtendedRangeShotsRemaining[pieceKey]}/3: Attempting shot at (${targetRow},${targetCol})...`,
                         (success) => {
                             if (success) {
+                                applyCoinFlipSuccessEffect();
                                 // Successful hit - capture the target
                                 const targetPiece = board[targetRow][targetCol];
                                 if (targetPiece && targetPiece.player !== currentPlayer) {
@@ -4877,6 +4915,12 @@
             }
 
             if (!selectedPiece && piece && piece.player === 'W' && !movedPieces.has(`${row},${col}`)) {
+                // During mercenary bonus turn, only allow selecting the specific mercenary
+                if (mercenaryBonusTurnActive &&
+                    (row !== mercenaryBonusTurnPiece.row || col !== mercenaryBonusTurnPiece.col)) {
+                    // Clicked on wrong piece during mercenary bonus turn
+                    return;
+                }
                 selectedPiece = { row, col };
                 validMoves = getValidMoves(row, col);
                 showPieceInfo(piece, piece.player);
@@ -4902,6 +4946,7 @@
                                 `Attempting to capture at (${toRow},${toCol})...`,
                                 (success) => {
                                     if (success) {
+                                        applyCoinFlipSuccessEffect();
                                         // Successfully captured
                                         movePiece(fromRow, fromCol, toRow, toCol, null);
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Pistolier successfully captured by landing!`);
@@ -5024,6 +5069,7 @@
                                 (success) => {
                                     let moveResult = null;
                                     if (success) {
+                                        applyCoinFlipSuccessEffect();
                                         // Successfully captured Spectre
                                         moveResult = movePiece(fromRow, fromCol, toRow, toCol, jump);
                                         if (special === 'charge') {
@@ -5051,6 +5097,11 @@
                                     // Don't trigger AI turn if mercenary won bonus turn
                                     if (moveResult?.mercenaryBonusTurn) {
                                         return; // Player continues their turn
+                                    }
+                                    // If we were in mercenary bonus turn mode and didn't get another bonus turn, clear the state
+                                    if (mercenaryBonusTurnActive) {
+                                        mercenaryBonusTurnActive = false;
+                                        mercenaryBonusTurnPiece = null;
                                     }
                                     if (movesLeft === 0 && !reinforcementPending) {
                                         triggerAiTurn();
@@ -5081,6 +5132,11 @@
                                 checkGameOver();
                                 return; // Don't trigger AI turn - player continues
                             }
+                            // If we were in mercenary bonus turn mode and didn't get another bonus turn, clear the state
+                            if (mercenaryBonusTurnActive) {
+                                mercenaryBonusTurnActive = false;
+                                mercenaryBonusTurnPiece = null;
+                            }
                         }
                     } else if (move.type === 'shoot') {
                         // Check if shooting a Spectre - requires coin toss (except for Wizards/Spectres)
@@ -5109,6 +5165,7 @@
                                 'Attempting to shoot the Spectre...',
                                 (success) => {
                                     if (success) {
+                                        applyCoinFlipSuccessEffect();
                                         // Successfully shot Spectre
                                         shootPiece(fromRow, fromCol, toRow, toCol);
                                         if (special === 'archerDiag2') {
@@ -5161,6 +5218,7 @@
                                     fusilierShotLastTurn[attackingPiece.player].delete(attackingPiece);
 
                                     if (success) {
+                                        applyCoinFlipSuccessEffect();
                                         shootPiece(fromRow, fromCol, row, col);
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Fusilier Crack Shot hit!`);
                                     } else {
@@ -5201,6 +5259,7 @@
                                     fusilierCrackShotActive = null;
 
                                     if (success) {
+                                        applyCoinFlipSuccessEffect();
                                         shootPiece(fromRow, fromCol, row, col);
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Fusilier Crack Shot hit!`);
                                     } else {
@@ -5549,6 +5608,7 @@
                 `Attempting to summon ${unitType}...`,
                 (success) => {
                     if (success) {
+                        applyCoinFlipSuccessEffect();
                         // Find empty square in back row
                         const backRow = currentPlayer === 'W' ? ROWS - 1 : 0;
                         let emptySquares = [];
@@ -5663,6 +5723,7 @@
                 summonMessage,
                 (success) => {
                     if (success) {
+                        applyCoinFlipSuccessEffect();
                         if (!board[backRow][targetCol]) {
                             const necromancerPiece = { type: 'Necromancer', player, facing: null };
                             board[backRow][targetCol] = necromancerPiece;
@@ -5791,6 +5852,7 @@
                 message,
                 (success) => {
                     if (success) {
+                        applyCoinFlipSuccessEffect();
                         if (!board[backRow][targetCol]) {
                             if (isZombieSummon) {
                                 const zombiePiece = createZombiePiece(player);
@@ -6169,19 +6231,32 @@
 
             // Mercenary special move: coin flip for bonus turn after capture
             let mercenaryBonusTurn = false;
-            if (captured && piece.type === 'Mercenary' && piece.player === currentPlayer && !mercenaryBonusTurnUsed[piece.player].has(piece)) {
+            if (captured && piece.type === 'Mercenary' && piece.player === currentPlayer &&
+                !mercenaryBonusTurnUsed[piece.player].has(piece) &&
+                mercenaryBonusTurnCount[piece.player] < 3) {
                 const coinFlip = mercenaryCoinFlip(piece.player);
                 if (coinFlip) {
                     // Restore full move points for bonus turn
                     movesLeft = initialMovesLeft;
                     mercenaryBonusTurnUsed[piece.player].add(piece);
+                    mercenaryBonusTurnCount[piece.player]++;
                     // Remove the mercenary from movedPieces so it can move again
                     movedPieces.delete(`${toRow},${toCol}`);
-                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again.`);
+                    // Set bonus turn state to restrict selection to this mercenary only
+                    mercenaryBonusTurnActive = true;
+                    mercenaryBonusTurnPiece = { row: toRow, col: toCol };
+                    const remaining = 3 - mercenaryBonusTurnCount[piece.player];
+                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again. (${remaining} bonus turns remaining)`);
                     mercenaryBonusTurn = true;
+
+                    // Apply board glow effect for successful coin flip
+                    applyCoinFlipSuccessEffect();
                 } else {
                     gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
                 }
+            } else if (captured && piece.type === 'Mercenary' && piece.player === currentPlayer &&
+                       mercenaryBonusTurnCount[piece.player] >= 3) {
+                gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary has no bonus turns remaining (3/3 used).`);
             }
 
             updateGameLog();
@@ -7850,6 +7925,9 @@
             fusilierShotLastTurn = { 'W': new Set(), 'B': new Set() };
             fusilierShotThisTurn = { 'W': new Set(), 'B': new Set() };
             mercenaryBonusTurnUsed = { 'W': new Set(), 'B': new Set() };
+            mercenaryBonusTurnCount = { 'W': 0, 'B': 0 };
+            mercenaryBonusTurnActive = false;
+            mercenaryBonusTurnPiece = null;
             spectresSummoned = { 'W': 0, 'B': 0 };
             wizardSummonedThisTurn = { 'W': false, 'B': false };
             wizardCannotMoveNextTurn = { 'W': new Set(), 'B': new Set() };
