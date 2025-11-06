@@ -2590,7 +2590,7 @@
             },
             'Champion': {
                 points: '1 point to move 1 square in any direction; 2 points for 2 squares in any direction.',
-                extra: 'Cannot move through own pieces. Reduces opponent's move points by 1 when on their back row. Can activate reinforcements.'
+                extra: 'Cannot move through own pieces. Reduces opponent’s move points by 1 when on their back row. Can activate reinforcements.'
             },
             'Dragon': {
                 points: '1 point to move 1 square diagonally or jump 2 squares diagonally + 1 square in any diagonal direction. Special Moves: Inferno - once per game, move 1 square in any direction for 2 move points, capturing all adjacent opponent pieces (except Dragons); Strafe - twice per game, move 1 square horizontally or vertically for 2 move points (cannot capture).',
