@@ -860,6 +860,7 @@
                     <li><strong>24's (Standard):</strong> 10x14 board with 24 pieces per side</li>
                     <li><strong>36's (Advanced):</strong> 10x14 board with 36 pieces per side - includes Archers, Ballistas, and Ogres</li>
                     <li><strong>36's (Expert):</strong> 10x14 board with 36 pieces per side - includes all advanced pieces plus Mercenaries and Elephantry</li>
+                    <li><strong>36's (Elite):</strong> 10x14 board with 36 pieces per side - includes all Expert pieces plus Necromancers and Zombies for advanced summoning gameplay</li>
                     <li><strong>24's Close-Combat Battle:</strong> Smaller 8x12 board for faster games</li>
                 </ul>
 
@@ -910,6 +911,29 @@
             }
 
             html += `
+                <h2>Piece Point Values</h2>
+                <p>When you capture an enemy piece, you gain points based on the piece's value:</p>
+                <ul>
+                    <li><strong>Infantry:</strong> 1 point</li>
+                    <li><strong>Archer:</strong> 2 points</li>
+                    <li><strong>Cavalry:</strong> 3 points</li>
+                    <li><strong>Pistolier:</strong> 3 points</li>
+                    <li><strong>Zombie:</strong> 3 points</li>
+                    <li><strong>Fusilier:</strong> 4 points</li>
+                    <li><strong>Guard:</strong> 4 points</li>
+                    <li><strong>Ballista:</strong> 5 points</li>
+                    <li><strong>Spectre:</strong> 5 points</li>
+                    <li><strong>Troll:</strong> 6 points</li>
+                    <li><strong>Dragon:</strong> 7 points</li>
+                    <li><strong>Ogre:</strong> 8 points</li>
+                    <li><strong>Wizard:</strong> 9 points</li>
+                    <li><strong>Mercenary:</strong> 10 points</li>
+                    <li><strong>Necromancer:</strong> 10 points</li>
+                    <li><strong>Elephantry:</strong> 11 points</li>
+                    <li><strong>Champion:</strong> 12 points</li>
+                    <li><strong>King:</strong> 13 points</li>
+                </ul>
+
                 <h2>Special Abilities</h2>
                 <ul>
                     <li><strong>King - Guard of Honour:</strong> Swap with adjacent Guard (2 points, once per game)</li>
@@ -2552,42 +2576,6 @@
         }
 
         const pieceInfo = {
-            'Cavalry': {
-                points: '1 point to move up to 5 squares vertically or horizontally. Special Moves: Charge - once per game, move unlimited squares horizontally or vertically for 2 move points; Diagonal Rush - on your first 2 turns only, move up to 3 squares diagonally for 2 move points.',
-                extra: 'Stops at the first piece in its path.'
-            },
-            'Troll': {
-                points: '1 point to move up to 2 squares vertically/horizontally or 1 square diagonally; +1 point for 1 extra square in same vertical/horizontal direction (total 2 points).',
-                extra: 'On first turn, can move up to 4 squares vertically/horizontally or 2 squares diagonally at normal cost. No extra move on first turn.'
-            },
-            'Dragon': {
-                points: '1 point to move 1 square diagonally or jump 2 squares diagonally + 1 square in any diagonal direction. Special Moves: Inferno - once per game, move 1 square in any direction for 2 move points, capturing all adjacent opponent pieces (except Dragons); Strafe - twice per game, move 1 square horizontally or vertically for 2 move points (cannot capture).',
-                extra: 'Can change diagonal direction after 2-square jump.'
-            },
-            'Wizard': {
-                points: '1 point to move up to 4 squares diagonally; 2 points to move up to 5 squares and/or through own pieces. Special Moves: Teleport - twice per game, move to any unoccupied square of the same color for 2 move points; Teleport Swap - once per game, swap with an opponent Wizard on the same color square for 2 move points; Strafe - twice per game, move 1 square horizontally or vertically for 2 move points (cannot capture); Summon Spectre - twice per game, costs 2 points, requires 5+ captured pieces, 50/50 chance, wizard cannot move next turn.',
-                extra: 'Cannot move through opponent pieces.'
-            },
-            'Spectre': {
-                points: '1 point to move in knight-diagonal pattern (2 diagonal + 1 perpendicular). Summoned by Wizard.',
-                extra: 'Can move through all pieces. Capturing requires 50/50 coin toss (except vs Wizards/Spectres). Cannot trigger reinforcements. Max 2 per player.'
-            },
-            'Guard': {
-                points: '1 point to move 1 square in any direction.',
-                extra: 'Versatile movement in all directions.'
-            },
-            'King': {
-                points: '1 point to move 1 square vertically or horizontally.',
-                extra: 'Cannot move into check. Capture ends the game. Can activate reinforcements. Special Move: Guard of Honour - once per game, swap positions with an adjacent Guard for 2 move points.'
-            },
-            'Champion': {
-                points: '1 point to move 1 square in any direction; 2 points for 2 squares in any direction.',
-                extra: 'Cannot move through own pieces. Reduces opponent’s move points by 1 when on their back row. Can activate reinforcements.'
-            },
-            'Infantry': {
-                points: '1 point to move 1 square forward or diagonally forward; 1 point to turn.',
-                extra: 'First game turn can be up to 3 squares forward. Turn (1 point) or Turn and Move (2 points) via buttons. Both finalize action. Cannot move then turn. Can turn 90° left or right per action.'
-            },
             'Archer': {
                 points: '1 point to move 1 square vertically/horizontally, shoot 2 squares in facing direction, or turn; 2 points to turn+shoot or use a special.',
                 extra: 'Specials: Move then shoot diagonally 1 square (2 uses per game); or shoot diagonally 2 squares without moving (2 uses per game). Can turn 90° left or right per action.'
@@ -2596,29 +2584,65 @@
                 points: '1 point to move 1 square vertically/horizontally or shoot 3 (or 4 with Extend Range) squares based on facing; 2 points to turn or activate specials.',
                 extra: 'Specials: Extend Range (+1 shoot range this turn, 2 points, once per turn); Double Time (move +1 extra square, 2 points, 2 uses per game). Shoots without moving. Can turn 90° left or right per action.'
             },
+            'Cavalry': {
+                points: '1 point to move up to 5 squares vertically or horizontally. Special Moves: Charge - once per game, move unlimited squares horizontally or vertically for 2 move points; Diagonal Rush - on your first 2 turns only, move up to 3 squares diagonally for 2 move points.',
+                extra: 'Stops at the first piece in its path.'
+            },
+            'Champion': {
+                points: '1 point to move 1 square in any direction; 2 points for 2 squares in any direction.',
+                extra: 'Cannot move through own pieces. Reduces opponent’s move points by 1 when on their back row. Can activate reinforcements.'
+            },
+            'Dragon': {
+                points: '1 point to move 1 square diagonally or jump 2 squares diagonally + 1 square in any diagonal direction. Special Moves: Inferno - once per game, move 1 square in any direction for 2 move points, capturing all adjacent opponent pieces (except Dragons); Strafe - twice per game, move 1 square horizontally or vertically for 2 move points (cannot capture).',
+                extra: 'Can change diagonal direction after 2-square jump.'
+            },
             'Elephantry': {
                 points: '1 point to move 1 square any direction, shoot 1 square, or turn; 2 points to move+shoot.',
                 extra: 'Special Moves: Charge - once per piece per game, move forward (straight or diagonal) 3 squares, capturing anything except Spectre; stops on Elephantry/Ogre/Troll/Dragon. Triple Shot - 2 points for 3 shots at 2-square range with coin flip each (stays in position, can retarget). Can turn 90° left or right per action.'
-            },
-            'Pistolier': {
-                points: '1 point to move diagonally up to 3 squares or shoot diagonally up to 2 squares; 2 points to move+shoot (1 square shoot range).',
-                extra: 'Capturing by landing (not shooting) requires coin flip (50/50). Does not turn - shoots and moves diagonally only.'
             },
             'Fusilier': {
                 points: '1 point to move 2 squares diagonally or shoot forward/diagonally up to 3 squares. Cannot move and shoot in same turn.',
                 extra: 'Can move through own pieces. After shooting, cannot shoot next turn (can still move). Only captures by shooting. Special Moves: Crack Shot - increase range by +1 for next shot (2 points, 3 uses per piece; success determined by coin flip); Strafe - move 1 square vertically/horizontally without capturing (2 points, 2 uses per piece).'
             },
+            'Guard': {
+                points: '1 point to move 1 square in any direction.',
+                extra: 'Versatile movement in all directions.'
+            },
+            'Infantry': {
+                points: '1 point to move 1 square forward or diagonally forward; 1 point to turn.',
+                extra: 'First game turn can be up to 3 squares forward. Turn (1 point) or Turn and Move (2 points) via buttons. Both finalize action. Cannot move then turn. Can turn 90° left or right per action.'
+            },
+            'King': {
+                points: '1 point to move 1 square vertically or horizontally.',
+                extra: 'Cannot move into check. Capture ends the game. Can activate reinforcements. Special Move: Guard of Honour - once per game, swap positions with an adjacent Guard for 2 move points.'
+            },
             'Mercenary': {
                 points: '1 point to move 1 square forward or diagonally forward; 2 points for 2 squares.',
                 extra: 'Flexible 2-square path on extended move. Turn (1 point) or Turn and Move (2 points) via buttons. Can turn 90° left or right per action.'
+            },
+            'Necromancer': {
+                points: '1 point to move 1 square in any direction. Special actions cost 2 points: summon Zombie or Spectre (coin flip) or channel a 2-range shot.',
+                extra: 'Max 2 per player, arrives via Champion summoning. Shoots require a 1-turn cooldown and always resolve captures with coin flips. Teleport twice per game.'
             },
             'Ogre': {
                 points: '1 point to move 1 square vertically/horizontally or jump 2 squares; 2 points for both.',
                 extra: 'Captures by jumping over or landing. Cannot jump over other Ogres.'
             },
-            'Necromancer': {
-                points: '1 point to move 1 square in any direction. Special actions cost 2 points: summon Zombie or Spectre (coin flip) or channel a 2-range shot.',
-                extra: 'Max 2 per player, arrives via Champion summoning. Shoots require a 1-turn cooldown and always resolve captures with coin flips. Teleport twice per game.'
+            'Pistolier': {
+                points: '1 point to move diagonally up to 3 squares or shoot diagonally up to 2 squares; 2 points to move+shoot (1 square shoot range).',
+                extra: 'Capturing by landing (not shooting) requires coin flip (50/50). Does not turn - shoots and moves diagonally only.'
+            },
+            'Spectre': {
+                points: '1 point to move in knight-diagonal pattern (2 diagonal + 1 perpendicular). Summoned by Wizard.',
+                extra: 'Can move through all pieces. Capturing requires 50/50 coin toss (except vs Wizards/Spectres). Cannot trigger reinforcements. Max 2 per player.'
+            },
+            'Troll': {
+                points: '1 point to move up to 2 squares vertically/horizontally or 1 square diagonally; +1 point for 1 extra square in same vertical/horizontal direction (total 2 points).',
+                extra: 'On first turn, can move up to 4 squares vertically/horizontally or 2 squares diagonally at normal cost. No extra move on first turn.'
+            },
+            'Wizard': {
+                points: '1 point to move up to 4 squares diagonally; 2 points to move up to 5 squares and/or through own pieces. Special Moves: Teleport - twice per game, move to any unoccupied square of the same color for 2 move points; Teleport Swap - once per game, swap with an opponent Wizard on the same color square for 2 move points; Strafe - twice per game, move 1 square horizontally or vertically for 2 move points (cannot capture); Summon Spectre - twice per game, costs 2 points, requires 5+ captured pieces, 50/50 chance, wizard cannot move next turn.',
+                extra: 'Cannot move through opponent pieces.'
             },
             'Zombie': {
                 points: 'Automatically shambles forward each turn without spending move points.',
