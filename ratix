@@ -4813,7 +4813,7 @@
         }
 
         function handleClick(row, col) {
-            if (gameOver || currentPlayer !== 'W' || reinforcementPending || zombieAutoAdvanceInProgress) return;
+            if (gameOver || gamePaused || currentPlayer !== 'W' || reinforcementPending || zombieAutoAdvanceInProgress) return;
             const piece = board[row][col];
 
             if (isAnySpecialModeActive()) {
@@ -9035,7 +9035,7 @@
         }
 
         function endTurn() {
-            if (gameOver) return;
+            if (gameOver || gamePaused) return;
             if (movesLeft < initialMovesLeft) {
                 // Reset player's per-turn Ballista boost on end turn
                 ballistaRangeBoostActive['W'] = false;
