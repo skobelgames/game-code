@@ -789,12 +789,46 @@
 
         function returnToMainMenu() {
             if (confirm('Return to main menu? Current game will be lost.')) {
+                // Stop all timers and intervals
                 stopGameTimer();
                 stopTurnTimer();
                 if (window.aiTurnWatch) {
                     clearInterval(window.aiTurnWatch);
                     window.aiTurnWatch = null;
                 }
+
+                // Clear zombie advance timer if active
+                if (zombieAdvanceTimer) {
+                    clearTimeout(zombieAdvanceTimer);
+                    zombieAdvanceTimer = null;
+                }
+
+                // Reset all game state variables
+                currentPlayer = 'W';
+                turnCount = 0;
+                playerTurnNumber = 0;
+                selectedPiece = null;
+                validMoves = [];
+                movedPieces.clear();
+                reinforcementPending = null;
+                aiPending = false;
+                aiTurnTimeoutForced = false;
+                movesLeft = 0;
+                initialMovesLeft = 0;
+                capturedPieces = { 'W': [], 'B': [] };
+                scores = { 'W': 0, 'B': 0 };
+                gameLog = [];
+                lastAction = null;
+                zombieAutoAdvanceInProgress = false;
+                clearZombieCoinAnimations();
+
+                // Close any open modals
+                closeChampionSummonModal();
+                closeNecromancerSummonModal();
+                const reinforceModal = document.getElementById('reinforce-modal');
+                if (reinforceModal) reinforceModal.style.display = 'none';
+
+                // Show main menu
                 document.getElementById('game-container').style.display = 'none';
                 document.getElementById('start-menu').style.display = 'flex';
                 const landingHeader = document.getElementById('landing-header');
@@ -4988,9 +5022,10 @@
                                 'Capture Spectre',
                                 'Attempting to capture the Spectre...',
                                 (success) => {
+                                    let moveResult = null;
                                     if (success) {
                                         // Successfully captured Spectre
-                                        movePiece(fromRow, fromCol, toRow, toCol, jump);
+                                        moveResult = movePiece(fromRow, fromCol, toRow, toCol, jump);
                                         if (special === 'charge') {
                                             cavalryChargeUsed[currentPlayer] = true;
                                         }
@@ -5013,6 +5048,10 @@
                                     updateEndTurnButton();
                                     updateGameLog();
                                     checkGameOver();
+                                    // Don't trigger AI turn if mercenary won bonus turn
+                                    if (moveResult?.mercenaryBonusTurn) {
+                                        return; // Player continues their turn
+                                    }
                                     if (movesLeft === 0 && !reinforcementPending) {
                                         triggerAiTurn();
                                     }
@@ -5021,7 +5060,7 @@
                             return;
                         } else {
                             // Normal move/capture
-                            movePiece(selectedPiece.row, selectedPiece.col, row, col, move.jump);
+                            const moveResult = movePiece(selectedPiece.row, selectedPiece.col, row, col, move.jump);
                             if (move.special === 'charge') {
                                 cavalryChargeUsed[currentPlayer] = true;
                             }
@@ -5030,6 +5069,17 @@
                                     // after moving, board[row][col] is the piece moved
                                 }
                                 ballistaDoubleTimeUsed[currentPlayer]++;
+                            }
+                            // If mercenary won coin flip, don't end turn - allow continued movement
+                            if (moveResult?.mercenaryBonusTurn) {
+                                selectedPiece = null;
+                                validMoves = [];
+                                showPieceInfo(null);
+                                renderBoard();
+                                updateStatus();
+                                updateEndTurnButton();
+                                checkGameOver();
+                                return; // Don't trigger AI turn - player continues
                             }
                         }
                     } else if (move.type === 'shoot') {
@@ -6118,6 +6168,7 @@
             checkSupremacy(piece.player);
 
             // Mercenary special move: coin flip for bonus turn after capture
+            let mercenaryBonusTurn = false;
             if (captured && piece.type === 'Mercenary' && piece.player === currentPlayer && !mercenaryBonusTurnUsed[piece.player].has(piece)) {
                 const coinFlip = mercenaryCoinFlip(piece.player);
                 if (coinFlip) {
@@ -6127,6 +6178,7 @@
                     // Remove the mercenary from movedPieces so it can move again
                     movedPieces.delete(`${toRow},${toCol}`);
                     gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again.`);
+                    mercenaryBonusTurn = true;
                 } else {
                     gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
                 }
@@ -6134,6 +6186,7 @@
 
             updateGameLog();
             updateCapturedPiecesDisplay();
+            return { mercenaryBonusTurn };
         }
 
         function shootPiece(fromRow, fromCol, toRow, toCol) {
