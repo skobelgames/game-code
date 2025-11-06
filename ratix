@@ -137,6 +137,23 @@
             padding-top: 15px;
             text-align: center;
         }
+        #opponent-selector {
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            padding-top: 15px;
+            text-align: center;
+        }
+        #opponent-selector button {
+            width: calc(33.33% - 10px);
+            margin: 5px;
+            display: inline-block;
+        }
+        #hint-selector {
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            padding-top: 15px;
+            text-align: center;
+        }
         #game-timer-selector, #turn-timer-selector {
             margin-top: 20px;
             border-top: 1px solid #ccc;
@@ -7881,7 +7898,8 @@
             if (!hintModeEnabled || currentPlayer !== 'W') return;
 
             // Use simplified AI logic to find a good move
-            const action = findSimpleAIAction('W');
+            // Pass current movesLeft and movedPieces to the function
+            const action = findSimpleAIAction('W', movesLeft, movedPieces);
 
             if (!action) {
                 alert('No valid moves available.');
