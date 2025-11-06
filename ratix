@@ -863,6 +863,15 @@
                 zombieAutoAdvanceInProgress = false;
                 clearZombieCoinAnimations();
 
+                // Reset game pause state
+                gamePaused = false;
+
+                // Reset mercenary bonus turn state
+                mercenaryBonusTurnActive = false;
+                mercenaryBonusTurnPiece = null;
+                mercenaryBonusTurnUsed = { 'W': new Set(), 'B': new Set() };
+                mercenaryBonusTurnCount = { 'W': 0, 'B': 0 };
+
                 // Close any open modals
                 closeChampionSummonModal();
                 closeNecromancerSummonModal();
@@ -1563,6 +1572,12 @@
 
             // Clear mercenary bonus turn tracking at the end of the player's turn
             mercenaryBonusTurnUsed[player].clear();
+
+            // Clear mercenary bonus turn state to prevent it from carrying over to next turn
+            if (mercenaryBonusTurnActive && mercenaryBonusTurnPiece) {
+                mercenaryBonusTurnActive = false;
+                mercenaryBonusTurnPiece = null;
+            }
 
             if (logUpdated) {
                 updateGameLog();
@@ -5358,7 +5373,10 @@
                         movedPieces.add(`${selectedPiece.row},${selectedPiece.col}`);
                         movedPieces.add(`${opponentWizardRow},${opponentWizardCol}`);
                     }
-                    movesLeft -= move.cost;
+                    // Only deduct move cost if not in mercenary bonus turn mode
+                    if (!mercenaryBonusTurnActive) {
+                        movesLeft -= move.cost;
+                    }
                     lastAction = { move: true };
                     movedPieces.add(`${selectedPiece.row},${selectedPiece.col}`);
                     if (move.type === 'move' || move.type === 'teleport') {
@@ -5371,6 +5389,11 @@
                     updateStatus();
                     updateEndTurnButton();
                     checkGameOver();
+                    // Clear mercenary bonus turn state after move completes
+                    if (mercenaryBonusTurnActive) {
+                        mercenaryBonusTurnActive = false;
+                        mercenaryBonusTurnPiece = null;
+                    }
                     if (movesLeft === 0 && !reinforcementPending) {
                         triggerAiTurn();
                     }
@@ -6262,8 +6285,7 @@
                 mercenaryBonusTurnCount[piece.player] < 3) {
                 const coinFlip = mercenaryCoinFlip(piece.player);
                 if (coinFlip) {
-                    // Restore full move points for bonus turn
-                    movesLeft = initialMovesLeft;
+                    // Grant bonus turn (move points stay the same, mercenary move won't cost points)
                     mercenaryBonusTurnUsed[piece.player].add(piece);
                     mercenaryBonusTurnCount[piece.player]++;
                     // Remove the mercenary from movedPieces so it can move again
@@ -6272,7 +6294,7 @@
                     mercenaryBonusTurnActive = true;
                     mercenaryBonusTurnPiece = { row: toRow, col: toCol };
                     const remaining = 3 - mercenaryBonusTurnCount[piece.player];
-                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again. (${remaining} bonus turns remaining)`);
+                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again without cost. (${remaining} bonus turns remaining)`);
                     mercenaryBonusTurn = true;
                 } else {
                     gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
@@ -8089,6 +8111,18 @@
             gameLog.push(message);
             alert(message);
             updateGameLog();
+
+            // Reset game pause state
+            gamePaused = false;
+
+            // Reset mercenary bonus turn state
+            mercenaryBonusTurnActive = false;
+            mercenaryBonusTurnPiece = null;
+
+            // Clear AI pending and other active game states
+            aiPending = false;
+            reinforcementPending = null;
+
             document.getElementById('start-menu').style.display = 'flex';
             document.getElementById('game-container').style.display = 'none';
             const landingHeader = document.getElementById('landing-header');
