@@ -863,6 +863,15 @@
                 zombieAutoAdvanceInProgress = false;
                 clearZombieCoinAnimations();
 
+                // Reset game pause state
+                gamePaused = false;
+
+                // Reset mercenary bonus turn state
+                mercenaryBonusTurnActive = false;
+                mercenaryBonusTurnPiece = null;
+                mercenaryBonusTurnUsed = { 'W': new Set(), 'B': new Set() };
+                mercenaryBonusTurnCount = { 'W': 0, 'B': 0 };
+
                 // Close any open modals
                 closeChampionSummonModal();
                 closeNecromancerSummonModal();
@@ -1563,6 +1572,12 @@
 
             // Clear mercenary bonus turn tracking at the end of the player's turn
             mercenaryBonusTurnUsed[player].clear();
+
+            // Clear mercenary bonus turn state to prevent it from carrying over to next turn
+            if (mercenaryBonusTurnActive && mercenaryBonusTurnPiece) {
+                mercenaryBonusTurnActive = false;
+                mercenaryBonusTurnPiece = null;
+            }
 
             if (logUpdated) {
                 updateGameLog();
@@ -8089,6 +8104,18 @@
             gameLog.push(message);
             alert(message);
             updateGameLog();
+
+            // Reset game pause state
+            gamePaused = false;
+
+            // Reset mercenary bonus turn state
+            mercenaryBonusTurnActive = false;
+            mercenaryBonusTurnPiece = null;
+
+            // Clear AI pending and other active game states
+            aiPending = false;
+            reinforcementPending = null;
+
             document.getElementById('start-menu').style.display = 'flex';
             document.getElementById('game-container').style.display = 'none';
             const landingHeader = document.getElementById('landing-header');
