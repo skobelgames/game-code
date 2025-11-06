@@ -48,6 +48,16 @@
             color: white;
             border: 2px solid #4CAF50;
         }
+        #start-menu button.selected-opponent {
+            background-color: #4CAF50;
+            color: white;
+            border: 2px solid #4CAF50;
+        }
+        #start-menu button.selected-hint {
+            background-color: #4CAF50;
+            color: white;
+            border: 2px solid #4CAF50;
+        }
         .variant-option {
             display: flex;
             flex-direction: column;
@@ -176,6 +186,15 @@
         .valid-capture { background-color: #ff2020 !important; }
         .valid-shoot { background-color: #ff2020 !important; }
         .valid-swap { background-color: #99ff99 !important; }
+        .hint-highlight {
+            background-color: #00ffff !important;
+            box-shadow: 0 0 10px 3px #00ffff !important;
+            animation: pulse-hint 1s infinite;
+        }
+        @keyframes pulse-hint {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
         .piece-arrow {
             font-size: 12px;
             position: absolute;
@@ -537,6 +556,23 @@
             <button id="diff-medium" onclick="setDifficulty('Medium', this)" class="selected-diff">Medium</button>
             <button id="diff-hard" onclick="setDifficulty('Hard', this)">Hard</button>
         </div>
+
+        <div id="opponent-selector">
+            <h3>Select Your Opponent</h3>
+            <button id="opp-random" onclick="setOpponent('Random', this)" class="selected-opponent">Random</button>
+            <button id="opp-berserker" onclick="setOpponent('Berserker', this)">Ragnar the Berserker</button>
+            <button id="opp-guardian" onclick="setOpponent('Guardian', this)">Thorne the Guardian</button>
+            <button id="opp-tactician" onclick="setOpponent('Tactician', this)">Astra the Tactician</button>
+            <button id="opp-sorcerer" onclick="setOpponent('Sorcerer', this)">Zephyr the Sorcerer</button>
+            <button id="opp-nomad" onclick="setOpponent('Nomad', this)">Kira the Nomad</button>
+        </div>
+
+        <div id="hint-selector">
+            <h3>Hint System</h3>
+            <button id="hint-on" onclick="setHintMode('On', this)">On</button>
+            <button id="hint-off" onclick="setHintMode('Off', this)" class="selected-hint">Off</button>
+        </div>
+
         <div id="game-timer-selector">
             <h3>Select Game Timer</h3>
             <button id="game-timer-quick" onclick="setGameTimer('quick', this)">10 mins (Quick)</button>
@@ -557,11 +593,11 @@
             <button onclick="resetGame()">Reset Game</button>
             <button onclick="openHowToPlay()">How to Play</button>
         </div>
-        <div id="score-display">Player Score: 0 | AI Score: 0</div>
+        <div id="score-display">Player Score: 0 | Opponent Score: 0</div>
         <div id="timer-display">
             <div class="timer-row player" id="player-timer-row">Player Turn: 00:00</div>
             <div class="timer-row game" id="game-timer-row">Game Time: 00:00</div>
-            <div class="timer-row ai" id="ai-timer-row">AI Turn: 00:00</div>
+            <div class="timer-row ai" id="ai-timer-row">Opponent Turn: 00:00</div>
         </div>
         <div id="board"></div>
         <div id="controls">
@@ -577,6 +613,7 @@
             <button id="inferno-button" onclick="activateInferno()" style="display: none;">Inferno</button>
             <button id="strafe-button" onclick="activateStrafe()" style="display: none;">Strafe</button>
             <button id="summon-spectre-button" onclick="activateSummonSpectre()" style="display: none;">Summon Spectre</button>
+            <button id="hint-button" onclick="showHint()" style="display: none;">Get Hint</button>
             <button id="end-turn-button" onclick="endTurn()" disabled>End Turn</button>
         </div>
         <div id="status">Player's turn: 3 moves remaining</div>
@@ -585,7 +622,7 @@
         <div id="captured-pieces">
             <h3>Player's Captured Pieces</h3>
             <div id="player-captured"></div>
-            <h3>AI's Captured Pieces</h3>
+            <h3>Opponent's Captured Pieces</h3>
             <div id="ai-captured"></div>
         </div>
     </div>
@@ -1164,7 +1201,7 @@
                     coinResult.style.color = 'white';
 
                     if (isFirstTurn) {
-                        document.getElementById('coin-toss-message').textContent = "AI won the coin toss. AI is going first.";
+                        document.getElementById('coin-toss-message').textContent = `${getOpponentDisplayName()} won the coin toss and is going first.`;
                     } else {
                         document.getElementById('coin-toss-message').textContent = "Failure!";
                     }
@@ -2115,6 +2152,12 @@
         let baseAiDepth = 16; // Track difficulty selection (defaults to Medium, increased by 60% from previous: 10 * 1.6)
         let aiMaxDepth = 16; // Effective depth after variant adjustments (increased by 60% from previous)
         let pieceValueScale = 4.18176; // Defaults to Medium (increased by 60% from previous: 2.6136 * 1.6)
+
+        // Opponent Selection
+        let selectedOpponent = 'Random'; // Default to random selection
+
+        // Hint System
+        let hintModeEnabled = false; // Default to off
         const AI_LEFTOVER_PENALTY = 0.75;
         const AI_TIE_EPSILON = 0.0001;
         const AI_TIME_LIMIT_DEFAULT = 1200; // Increased from 650ms for slower AI thinking
@@ -2124,6 +2167,7 @@
         const AI_PROFILES = {
             'Berserker': {
                 name: 'Berserker',
+                displayName: 'Ragnar the Berserker',
                 description: 'Hyper-aggressive attacker, prioritizes captures above all else',
                 threatWeight: 1.8,           // Heavily values threatening enemy pieces
                 mobilityWeight: 0.25,        // Lower mobility concern
@@ -2134,6 +2178,7 @@
             },
             'Guardian': {
                 name: 'Guardian',
+                displayName: 'Thorne the Guardian',
                 description: 'Defensive player, focuses on piece preservation and center control',
                 threatWeight: 0.6,           // Lower threat priority
                 mobilityWeight: 0.7,         // Values having options
@@ -2144,6 +2189,7 @@
             },
             'Tactician': {
                 name: 'Tactician',
+                displayName: 'Astra the Tactician',
                 description: 'Balanced strategist, adapts to board position',
                 threatWeight: 1.0,           // Balanced threat evaluation
                 mobilityWeight: 0.55,        // Moderate mobility value
@@ -2154,6 +2200,7 @@
             },
             'Sorcerer': {
                 name: 'Sorcerer',
+                displayName: 'Zephyr the Sorcerer',
                 description: 'Special ability specialist, maximizes use of unique powers',
                 threatWeight: 0.85,          // Moderate threat focus
                 mobilityWeight: 0.6,         // Values positioning for abilities
@@ -2164,6 +2211,7 @@
             },
             'Nomad': {
                 name: 'Nomad',
+                displayName: 'Kira the Nomad',
                 description: 'Mobility-focused player, constantly repositioning for advantage',
                 threatWeight: 0.75,          // Lower direct threat focus
                 mobilityWeight: 0.85,        // Highly values movement options
@@ -2308,7 +2356,7 @@
 
             // Update AI timer with warning color
             if (aiTimerRow) {
-                aiTimerRow.textContent = `AI Turn: ${formatTime(Math.max(0, aiTurnTimeRemaining))}`;
+                aiTimerRow.textContent = `${getOpponentDisplayName()} Turn: ${formatTime(Math.max(0, aiTurnTimeRemaining))}`;
                 if (aiTurnTimeRemaining <= 10 && aiTurnTimeRemaining > 0 && currentTurnTimerPlayer === 'B') {
                     aiTimerRow.classList.add('low-time');
                 } else {
@@ -3165,6 +3213,24 @@
             applyAiDepthForVariant();
         }
 
+        function setOpponent(opponent, element) {
+            selectedOpponent = opponent;
+            const buttons = document.querySelectorAll('#opponent-selector button');
+            buttons.forEach(btn => btn.classList.remove('selected-opponent'));
+            element.classList.add('selected-opponent');
+        }
+
+        function setHintMode(mode, element) {
+            hintModeEnabled = (mode === 'On');
+            const buttons = document.querySelectorAll('#hint-selector button');
+            buttons.forEach(btn => btn.classList.remove('selected-hint'));
+            element.classList.add('selected-hint');
+        }
+
+        function getOpponentDisplayName() {
+            return currentAiProfile ? currentAiProfile.displayName : 'AI';
+        }
+
         function applyAiDepthForVariant() {
             // Apply difficulty-based depth limits that scale with selected difficulty level
             // Caps are now proportional to allow difficulty settings to apply properly
@@ -3184,10 +3250,14 @@
         function startGame(variant) {
             gameVariant = variant;
 
-            // Select random AI profile at game start (invisible to player)
-            const profileNames = Object.keys(AI_PROFILES);
-            const randomIndex = Math.floor(Math.random() * profileNames.length);
-            currentAiProfile = AI_PROFILES[profileNames[randomIndex]];
+            // Select AI profile based on player's choice
+            if (selectedOpponent === 'Random') {
+                const profileNames = Object.keys(AI_PROFILES);
+                const randomIndex = Math.floor(Math.random() * profileNames.length);
+                currentAiProfile = AI_PROFILES[profileNames[randomIndex]];
+            } else {
+                currentAiProfile = AI_PROFILES[selectedOpponent];
+            }
             console.log(`AI Profile: ${currentAiProfile.name} - ${currentAiProfile.description}`);
 
             if (variant === '24s') {
@@ -3717,7 +3787,7 @@
         }
 
         function updateScoreDisplay() {
-            document.getElementById('score-display').textContent = `Player Score: ${scores['W']} | AI Score: ${scores['B']}`;
+            document.getElementById('score-display').textContent = `Player Score: ${scores['W']} | ${getOpponentDisplayName()} Score: ${scores['B']}`;
         }
 
         function showPieceInfo(piece, player) {
@@ -7709,7 +7779,7 @@
                     } else {
                         // AI (black) goes first
                         currentPlayer = 'B';
-                        gameLog.push('AI won the coin toss and goes first!');
+                        gameLog.push(`${getOpponentDisplayName()} won the coin toss and goes first!`);
 
                         const baseMoves = calculateBaseMoves('B');
                         movesLeft = baseMoves;
@@ -7789,8 +7859,83 @@
         function updateEndTurnButton() {
             const endTurnButton = document.getElementById('end-turn-button');
             endTurnButton.disabled = currentPlayer !== 'W' || movesLeft >= initialMovesLeft;
+            // Update hint button visibility
+            updateHintButton();
             // Safety net
             ensureAITurnIfNeeded();
+        }
+
+        function updateHintButton() {
+            const hintButton = document.getElementById('hint-button');
+            if (hintButton) {
+                // Show hint button only if hint mode is enabled and it's the player's turn
+                if (hintModeEnabled && currentPlayer === 'W' && movesLeft > 0) {
+                    hintButton.style.display = 'inline-block';
+                } else {
+                    hintButton.style.display = 'none';
+                }
+            }
+        }
+
+        function showHint() {
+            if (!hintModeEnabled || currentPlayer !== 'W') return;
+
+            // Use simplified AI logic to find a good move
+            const action = findSimpleAIAction('W');
+
+            if (!action) {
+                alert('No valid moves available.');
+                return;
+            }
+
+            // Clear any existing highlights
+            document.querySelectorAll('.hint-highlight').forEach(cell => {
+                cell.classList.remove('hint-highlight');
+            });
+
+            // Highlight the suggested move
+            const piece = board[action.fromRow][action.fromCol];
+            const fromCell = document.querySelector(`[data-row="${action.fromRow}"][data-col="${action.fromCol}"]`);
+            const toCell = document.querySelector(`[data-row="${action.toRow}"][data-col="${action.toCol}"]`);
+
+            if (fromCell) {
+                fromCell.classList.add('hint-highlight');
+            }
+            if (toCell) {
+                toCell.classList.add('hint-highlight');
+            }
+
+            // Create hint message
+            let hintMessage = `Suggestion: Move ${piece.type} from (${action.fromRow}, ${action.fromCol}) to (${action.toRow}, ${action.toCol})`;
+
+            if (action.turnDirection) {
+                hintMessage += ` and turn ${action.turnDirection}`;
+            }
+            if (action.shoot) {
+                hintMessage += ` and shoot`;
+            }
+            if (action.specialAbility) {
+                hintMessage += ` using ${action.specialAbility}`;
+            }
+
+            // Show hint in status
+            const statusDiv = document.getElementById('status');
+            const originalStatus = statusDiv.textContent;
+            statusDiv.textContent = hintMessage;
+            statusDiv.style.backgroundColor = '#ffffcc';
+            statusDiv.style.padding = '10px';
+            statusDiv.style.borderRadius = '5px';
+
+            // Reset after 5 seconds
+            setTimeout(() => {
+                statusDiv.textContent = originalStatus;
+                statusDiv.style.backgroundColor = '';
+                statusDiv.style.padding = '';
+                statusDiv.style.borderRadius = '';
+                document.querySelectorAll('.hint-highlight').forEach(cell => {
+                    cell.classList.remove('hint-highlight');
+                });
+            }, 5000);
         }
 
         function endTurn() {
