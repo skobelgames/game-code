@@ -2604,9 +2604,9 @@
         
         // AI Difficulty
         let aiDifficulty = 'Medium';
-        let baseAiDepth = 19; // Track difficulty selection (defaults to Medium, increased by 20%: 16 * 1.2)
-        let aiMaxDepth = 19; // Effective depth after variant adjustments (increased by 20%)
-        let pieceValueScale = 5.018112; // Defaults to Medium (increased by 20%: 4.18176 * 1.2)
+        let baseAiDepth = 44; // Track difficulty selection (defaults to Medium, increased by 80% intelligence + 30% general difficulty: 19 * 1.8 * 1.3)
+        let aiMaxDepth = 44; // Effective depth after variant adjustments - allows AI to plan 3+ moves ahead
+        let pieceValueScale = 11.74238208; // Defaults to Medium (increased by 80% intelligence + 30% general difficulty: 5.018112 * 1.8 * 1.3)
 
         // Opponent Selection
         let selectedOpponent = 'Random'; // Default to random selection
@@ -2615,8 +2615,8 @@
         let hintModeEnabled = false; // Default to off
         const AI_LEFTOVER_PENALTY = 0.75;
         const AI_TIE_EPSILON = 0.0001;
-        const AI_TIME_LIMIT_DEFAULT = 1200; // Increased from 650ms for slower AI thinking
-        const AI_TIME_LIMIT_LARGE = 400; // Increased from 180ms for slower AI thinking
+        const AI_TIME_LIMIT_DEFAULT = 3600; // Increased to 3600ms to support deeper search and 3+ move planning (tripled from 1200ms)
+        const AI_TIME_LIMIT_LARGE = 1200; // Increased to 1200ms for large boards to support deeper search (tripled from 400ms)
 
         // AI Player Profiles - Different strategies and play styles (invisible to player)
         const AI_PROFILES = {
@@ -2712,11 +2712,11 @@
         function getAiTimeBudget() {
             let base = isLargeBoardVariant() ? AI_TIME_LIMIT_LARGE : AI_TIME_LIMIT_DEFAULT;
             if (aiDifficulty === 'Hard') {
-                base += isLargeBoardVariant() ? 182 : 338; // +30% difficulty: increased thinking time (140→182, 260→338)
+                base += isLargeBoardVariant() ? 600 : 1800; // Increased for depth 65 planning: allows extensive multi-move lookahead
             } else if (aiDifficulty === 'Medium') {
-                base += isLargeBoardVariant() ? 48 : 120; // +20% difficulty: increased thinking time (40→48, 100→120)
+                base += isLargeBoardVariant() ? 400 : 1200; // Increased for depth 44 planning: allows significant multi-move lookahead
             } else if (aiDifficulty === 'Easy') {
-                base += isLargeBoardVariant() ? 20 : 30; // +10% difficulty: give AI more thinking time
+                base += isLargeBoardVariant() ? 200 : 600; // Increased for depth 25 planning: allows 3+ move lookahead
             }
             return base;
         }
@@ -3712,14 +3712,14 @@
             element.classList.add('selected-diff');
 
             if (level === 'Easy') {
-                baseAiDepth = 12; // Increased by 20% (10 * 1.2 = 12)
-                pieceValueScale = 3.84768; // Increased by 20% (3.2064 * 1.2)
+                baseAiDepth = 25; // Increased by 60% intelligence + 30% general difficulty (12 * 1.6 * 1.3 ≈ 25) - plans 3+ moves ahead
+                pieceValueScale = 8.0031744; // Increased by 60% intelligence + 30% general difficulty (3.84768 * 1.6 * 1.3)
             } else if (level === 'Medium') {
-                baseAiDepth = 19; // Increased by 20% (16 * 1.2 ≈ 19)
-                pieceValueScale = 5.018112; // Increased by 20% (4.18176 * 1.2)
+                baseAiDepth = 44; // Increased by 80% intelligence + 30% general difficulty (19 * 1.8 * 1.3 ≈ 44) - plans 3+ moves ahead
+                pieceValueScale = 11.74238208; // Increased by 80% intelligence + 30% general difficulty (5.018112 * 1.8 * 1.3)
             } else if (level === 'Hard') {
-                baseAiDepth = 25; // Increased by 20% (21 * 1.2 ≈ 25)
-                pieceValueScale = 6.386688; // Increased by 20% (5.32224 * 1.2)
+                baseAiDepth = 65; // Increased by 100% intelligence + 30% general difficulty (25 * 2.0 * 1.3 = 65) - plans 3+ moves ahead
+                pieceValueScale = 16.6053888; // Increased by 100% intelligence + 30% general difficulty (6.386688 * 2.0 * 1.3)
             }
             applyAiDepthForVariant();
         }
