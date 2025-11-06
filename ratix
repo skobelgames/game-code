@@ -7467,6 +7467,7 @@
                                 'AI is attempting to summon a Spectre...',
                                 (success) => {
                                     if (success) {
+                                        applyCoinFlipSuccessEffect();
                                         // Successfully summoned Spectre
                                         board[summonRow][summonCol] = { type: 'Spectre', player: 'B' };
                                         spectresSummoned['B']++;
@@ -7507,6 +7508,7 @@
                                 'AI is attempting to summon a Zombie...',
                                 (success) => {
                                     if (success) {
+                                        applyCoinFlipSuccessEffect();
                                         // Successfully summoned Zombie
                                         const zombiePiece = createZombiePiece('B');
                                         board[summonRow][summonCol] = zombiePiece;
@@ -7543,6 +7545,7 @@
                                 'AI is attempting to summon a Spectre...',
                                 (success) => {
                                     if (success) {
+                                        applyCoinFlipSuccessEffect();
                                         // Successfully summoned Spectre
                                         const spectrePiece = createSpectrePiece('B');
                                         board[summonRow][summonCol] = spectrePiece;
@@ -7581,6 +7584,7 @@
                                     'AI is attempting to capture the Spectre...',
                                     (success) => {
                                         if (success) {
+                                            applyCoinFlipSuccessEffect();
                                             movePiece(from[0], from[1], pos[0], pos[1], jump);
                                             gameLog.push(`AI successfully captured the Spectre!`);
                                         } else {
@@ -7672,6 +7676,7 @@
                                     'AI is attempting to shoot the Spectre...',
                                     (success) => {
                                         if (success) {
+                                            applyCoinFlipSuccessEffect();
                                             shootPiece(from[0], from[1], pos[0], pos[1]);
                                             gameLog.push(`AI successfully shot the Spectre!`);
                                         } else {
@@ -7713,6 +7718,7 @@
                                         fusilierShotLastTurn[attackingPiece.player].delete(attackingPiece);
 
                                         if (success) {
+                                            applyCoinFlipSuccessEffect();
                                             shootPiece(from[0], from[1], pos[0], pos[1]);
                                             gameLog.push(`AI Fusilier Crack Shot hit!`);
                                         } else {
@@ -7740,6 +7746,7 @@
                                         fusilierCrackShotActive = null;
 
                                         if (success) {
+                                            applyCoinFlipSuccessEffect();
                                             shootPiece(from[0], from[1], pos[0], pos[1]);
                                             gameLog.push(`AI Fusilier Crack Shot hit!`);
                                         } else {
