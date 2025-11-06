@@ -2112,9 +2112,9 @@
         
         // AI Difficulty
         let aiDifficulty = 'Medium';
-        let baseAiDepth = 6; // Track difficulty selection (defaults to Medium, increased from 4 to 5 to 6)
-        let aiMaxDepth = 6; // Effective depth after variant adjustments (increased from 4 to 5 to 6)
-        let pieceValueScale = 1.65; // Increased from 1.25 to 1.50 to 1.65 (+10% more difficulty)
+        let baseAiDepth = 7; // Track difficulty selection (defaults to Medium, +20% difficulty)
+        let aiMaxDepth = 7; // Effective depth after variant adjustments (+20% difficulty)
+        let pieceValueScale = 1.98; // Defaults to Medium (+20% difficulty)
         const AI_LEFTOVER_PENALTY = 0.75;
         const AI_TIE_EPSILON = 0.0001;
         const AI_TIME_LIMIT_DEFAULT = 1200; // Increased from 650ms for slower AI thinking
@@ -2152,11 +2152,11 @@
         function getAiTimeBudget() {
             let base = isLargeBoardVariant() ? AI_TIME_LIMIT_LARGE : AI_TIME_LIMIT_DEFAULT;
             if (aiDifficulty === 'Hard') {
-                base += isLargeBoardVariant() ? 140 : 260; // Increased further for +10% more thinking time
+                base += isLargeBoardVariant() ? 182 : 338; // +30% difficulty: increased thinking time (140→182, 260→338)
             } else if (aiDifficulty === 'Medium') {
-                base += isLargeBoardVariant() ? 40 : 100; // Medium also gets more time now
+                base += isLargeBoardVariant() ? 48 : 120; // +20% difficulty: increased thinking time (40→48, 100→120)
             } else if (aiDifficulty === 'Easy') {
-                base = Math.max(isLargeBoardVariant() ? 180 : 280, base - 100); // Adjusted for new difficulty
+                base += isLargeBoardVariant() ? 20 : 30; // +10% difficulty: give AI more thinking time
             }
             return base;
         }
@@ -3096,14 +3096,14 @@
             element.classList.add('selected-diff');
 
             if (level === 'Easy') {
-                baseAiDepth = 4; // Increased from 3 (+20% then +10% = +30% total)
-                pieceValueScale = 1.52; // Increased from 1.15 to 1.38 to 1.52 (+10% more)
+                baseAiDepth = 5; // Increased by 10% difficulty (4 → 5)
+                pieceValueScale = 1.67; // Increased by 10% difficulty (1.52 → 1.67)
             } else if (level === 'Medium') {
-                baseAiDepth = 6; // Increased from 4 to 5 to 6 (+10% more difficulty)
-                pieceValueScale = 1.65; // Increased from 1.25 to 1.50 to 1.65 (+10% more)
+                baseAiDepth = 7; // Increased by 20% difficulty (6 → 7)
+                pieceValueScale = 1.98; // Increased by 20% difficulty (1.65 → 1.98)
             } else if (level === 'Hard') {
-                baseAiDepth = 7; // Increased from 5 to 6 to 7 (+10% more difficulty)
-                pieceValueScale = 1.78; // Increased from 1.35 to 1.62 to 1.78 (+10% more)
+                baseAiDepth = 9; // Increased by 30% difficulty (7 → 9)
+                pieceValueScale = 2.31; // Increased by 30% difficulty (1.78 → 2.31)
             }
             applyAiDepthForVariant();
         }
@@ -6164,13 +6164,17 @@
                             score += aiPieceValues[targetPiece.type] * 2.4; // heavily favour captures
                             // Add proximity bonus for close attacks
                             const distance = Math.abs(mr - r) + Math.abs(mc - c);
-                            if (distance <= 2) {
+                            if (distance === 1) {
+                                // CRITICAL PRIORITY: Adjacent pieces are immediate threats - heavily prioritize capturing them
+                                score += aiPieceValues[targetPiece.type] * 4.2; // 420% bonus for adjacent captures (increased by 20%)
+                            } else if (distance <= 2) {
                                 score += aiPieceValues[targetPiece.type] * 0.5; // 50% bonus for close attacks in simple AI
                             }
                         } else if (move.special) {
                             let specialBonus = 2.0; // Base special move bonus
-                            if (aiDifficulty === 'Hard') specialBonus = 4.5; // Much higher for Hard
-                            else if (aiDifficulty === 'Medium') specialBonus = 3.5; // Higher for Medium
+                            if (aiDifficulty === 'Hard') specialBonus = 5.85; // +30% difficulty (4.5 → 5.85)
+                            else if (aiDifficulty === 'Medium') specialBonus = 4.2; // +20% difficulty (3.5 → 4.2)
+                            else if (aiDifficulty === 'Easy') specialBonus = 2.2; // Slightly higher for Easy (+10%)
                             score += specialBonus;
                         } else {
                             score -= 0.5; // penalise idle repositioning
@@ -6286,7 +6290,10 @@
                                     }
                                     // Add proximity bonus: prioritize attacking adjacent/in-range pieces
                                     const distance = Math.abs(move.pos[0] - r) + Math.abs(move.pos[1] - c);
-                                    if (distance <= 2) {
+                                    if (distance === 1) {
+                                        // CRITICAL PRIORITY: Adjacent pieces are immediate threats - heavily prioritize capturing them
+                                        targetValue += aiPieceValues[targetPiece.type] * 2.4; // 240% bonus for adjacent captures in minimax (increased by 20%)
+                                    } else if (distance <= 2) {
                                         targetValue += aiPieceValues[targetPiece.type] * 0.3; // 30% bonus for close attacks
                                     }
                                 }
@@ -6321,8 +6328,8 @@
                                         // Add 40% bonus to encourage using Inferno special ability
                                         infernoValue *= 1.4;
                                         // Apply difficulty multiplier for special moves: Medium 1.2x, Hard 1.4x
-                                        if (aiDifficulty === 'Hard') infernoValue *= 1.4;
-                                        else if (aiDifficulty === 'Medium') infernoValue *= 1.2;
+                                        if (aiDifficulty === 'Hard') infernoValue *= 1.82; // +30% difficulty (1.4 → 1.82)
+                                        else if (aiDifficulty === 'Medium') infernoValue *= 1.44; // +20% difficulty (1.2 → 1.44)
                                         allPossibleActions.push({ type: 'move', pos: [nr, nc], from: [r,c], cost: 2, special: 'inferno', pieceType: 'Dragon', targetValue: infernoValue });
                                     }
                                 }
@@ -6337,8 +6344,8 @@
                                     if (isValid(nr, nc) && !board[nr][nc]) {
                                         // Strafe is a positional move, increased value for tactical positioning
                                         let strafeValue = 2.5;
-                                        if (aiDifficulty === 'Hard') strafeValue *= 1.3;
-                                        else if (aiDifficulty === 'Medium') strafeValue *= 1.15;
+                                        if (aiDifficulty === 'Hard') strafeValue *= 1.69; // +30% difficulty (1.3 → 1.69)
+                                        else if (aiDifficulty === 'Medium') strafeValue *= 1.38; // +20% difficulty (1.15 → 1.38)
                                         allPossibleActions.push({ type: 'move', pos: [nr, nc], from: [r,c], cost: 2, special: 'strafe', pieceType: 'Wizard', targetValue: strafeValue });
                                     }
                                 }
@@ -6353,8 +6360,8 @@
                                     if (isValid(nr, nc) && !board[nr][nc]) {
                                         // Strafe is a positional move, increased value for tactical positioning
                                         let strafeValue = 2.5;
-                                        if (aiDifficulty === 'Hard') strafeValue *= 1.3;
-                                        else if (aiDifficulty === 'Medium') strafeValue *= 1.15;
+                                        if (aiDifficulty === 'Hard') strafeValue *= 1.69; // +30% difficulty (1.3 → 1.69)
+                                        else if (aiDifficulty === 'Medium') strafeValue *= 1.38; // +20% difficulty (1.15 → 1.38)
                                         allPossibleActions.push({ type: 'move', pos: [nr, nc], from: [r,c], cost: 2, special: 'strafe', pieceType: 'Dragon', targetValue: strafeValue });
                                     }
                                 }
@@ -6373,8 +6380,8 @@
                                             // Base value = 0.5 * 9 = 4.5, increased to 9.0 to heavily encourage summoning
                                             // Apply difficulty multiplier: Easy 1.0x, Medium 1.3x, Hard 1.5x
                                             let summonValue = 9.0;
-                                            if (aiDifficulty === 'Hard') summonValue *= 1.5;
-                                            else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                            if (aiDifficulty === 'Hard') summonValue *= 1.95; // +30% difficulty (1.5 → 1.95)
+                                            else if (aiDifficulty === 'Medium') summonValue *= 1.56; // +20% difficulty (1.3 → 1.56)
                                             allPossibleActions.push({ type: 'summon', pos: [nr, nc], from: [r,c], cost: 2, special: 'summonSpectre', pieceType: 'Wizard', targetValue: summonValue });
                                         }
                                     }
@@ -6393,8 +6400,8 @@
                                             // Expected value = 0.5 * 3 = 1.5, increased to 6.0 to encourage summoning
                                             // Apply difficulty multiplier: Easy 1.0x, Medium 1.3x, Hard 1.5x
                                             let summonValue = 6.0;
-                                            if (aiDifficulty === 'Hard') summonValue *= 1.5;
-                                            else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                            if (aiDifficulty === 'Hard') summonValue *= 1.95; // +30% difficulty (1.5 → 1.95)
+                                            else if (aiDifficulty === 'Medium') summonValue *= 1.56; // +20% difficulty (1.3 → 1.56)
                                             allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'summonZombie', pieceType: 'Necromancer', targetValue: summonValue });
                                         }
                                     }
