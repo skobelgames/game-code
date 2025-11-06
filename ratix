@@ -5133,6 +5133,37 @@
 
                                     lastAction = { move: true };
                                     movedPieces.add(`${fromRow},${fromCol}`);
+
+                                    // Check if mercenary coin flip is needed
+                                    if (success && moveResult?.mercenaryFlipNeeded) {
+                                        const mercPiece = moveResult.mercenaryPiece;
+                                        const mercPos = moveResult.mercenaryPos;
+
+                                        handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
+                                            selectedPiece = null;
+                                            validMoves = [];
+                                            showPieceInfo(null);
+                                            renderBoard();
+                                            updateStatus();
+                                            updateEndTurnButton();
+                                            updateGameLog();
+                                            checkGameOver();
+
+                                            if (bonusTurnGranted) {
+                                                return; // Player continues their turn
+                                            }
+
+                                            if (mercenaryBonusTurnActive) {
+                                                mercenaryBonusTurnActive = false;
+                                                mercenaryBonusTurnPiece = null;
+                                            }
+                                            if (movesLeft === 0 && !reinforcementPending) {
+                                                triggerAiTurn();
+                                            }
+                                        });
+                                        return;
+                                    }
+
                                     selectedPiece = null;
                                     validMoves = [];
                                     showPieceInfo(null);
@@ -5141,10 +5172,7 @@
                                     updateEndTurnButton();
                                     updateGameLog();
                                     checkGameOver();
-                                    // Don't trigger AI turn if mercenary won bonus turn
-                                    if (moveResult?.mercenaryBonusTurn) {
-                                        return; // Player continues their turn
-                                    }
+
                                     // If we were in mercenary bonus turn mode and didn't get another bonus turn, clear the state
                                     if (mercenaryBonusTurnActive) {
                                         mercenaryBonusTurnActive = false;
@@ -5168,17 +5196,38 @@
                                 }
                                 ballistaDoubleTimeUsed[currentPlayer]++;
                             }
-                            // If mercenary won coin flip, don't end turn - allow continued movement
-                            if (moveResult?.mercenaryBonusTurn) {
-                                selectedPiece = null;
-                                validMoves = [];
-                                showPieceInfo(null);
-                                renderBoard();
-                                updateStatus();
-                                updateEndTurnButton();
-                                checkGameOver();
-                                return; // Don't trigger AI turn - player continues
+
+                            // Check if mercenary coin flip is needed
+                            if (moveResult?.mercenaryFlipNeeded) {
+                                const mercPiece = moveResult.mercenaryPiece;
+                                const mercPos = moveResult.mercenaryPos;
+
+                                // Show blocking coin flip modal
+                                handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
+                                    selectedPiece = null;
+                                    validMoves = [];
+                                    showPieceInfo(null);
+                                    renderBoard();
+                                    updateStatus();
+                                    updateEndTurnButton();
+                                    checkGameOver();
+
+                                    if (bonusTurnGranted) {
+                                        return; // Player continues their turn
+                                    }
+
+                                    // If we were in mercenary bonus turn mode and didn't get another bonus turn, clear the state
+                                    if (mercenaryBonusTurnActive) {
+                                        mercenaryBonusTurnActive = false;
+                                        mercenaryBonusTurnPiece = null;
+                                    }
+                                    if (movesLeft === 0 && !reinforcementPending) {
+                                        triggerAiTurn();
+                                    }
+                                });
+                                return; // Exit to wait for coin flip callback
                             }
+
                             // If we were in mercenary bonus turn mode and didn't get another bonus turn, clear the state
                             if (mercenaryBonusTurnActive) {
                                 mercenaryBonusTurnActive = false;
@@ -6168,21 +6217,6 @@
                         return;
                     }
                     captured = true;
-
-                    // Mercenary special move: coin flip for bonus turn after zombie jump capture
-                    if (piece.type === 'Mercenary' && piece.player === currentPlayer && !mercenaryBonusTurnUsed[piece.player].has(piece)) {
-                        const coinFlip = mercenaryCoinFlip(piece.player);
-                        if (coinFlip) {
-                            // Restore full move points for bonus turn
-                            movesLeft = initialMovesLeft;
-                            mercenaryBonusTurnUsed[piece.player].add(piece);
-                            // Remove the mercenary from movedPieces so it can move again
-                            movedPieces.delete(`${toRow},${toCol}`);
-                            gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again.`);
-                        } else {
-                            gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
-                        }
-                    }
                 } else {
                     capturedSquares.push([jump[0], jump[1]]);
                     capturedPieces[piece.player].push(capturedPiece);
@@ -6194,21 +6228,6 @@
                     cleanupNecromancerTracking(capturedPiece);
                     board[jump[0]][jump[1]] = null;
                     captured = true;
-
-                    // Mercenary special move: coin flip for bonus turn after jump capture
-                    if (piece.type === 'Mercenary' && piece.player === currentPlayer && !mercenaryBonusTurnUsed[piece.player].has(piece)) {
-                        const coinFlip = mercenaryCoinFlip(piece.player);
-                        if (coinFlip) {
-                            // Restore full move points for bonus turn
-                            movesLeft = initialMovesLeft;
-                            mercenaryBonusTurnUsed[piece.player].add(piece);
-                            // Remove the mercenary from movedPieces so it can move again
-                            movedPieces.delete(`${toRow},${toCol}`);
-                            gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again.`);
-                        } else {
-                            gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
-                        }
-                    }
                 }
             }
 
@@ -6225,21 +6244,6 @@
                             return;
                         }
                         captured = true;
-
-                        // Mercenary special move: coin flip for bonus turn after zombie capture
-                        if (piece.type === 'Mercenary' && piece.player === currentPlayer && !mercenaryBonusTurnUsed[piece.player].has(piece)) {
-                            const coinFlip = mercenaryCoinFlip(piece.player);
-                            if (coinFlip) {
-                                // Restore full move points for bonus turn
-                                movesLeft = initialMovesLeft;
-                                mercenaryBonusTurnUsed[piece.player].add(piece);
-                                // Remove the mercenary from movedPieces so it can move again
-                                movedPieces.delete(`${toRow},${toCol}`);
-                                gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again.`);
-                            } else {
-                                gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
-                            }
-                        }
                     } else {
                         capturedSquares.push([toRow, toCol]);
                         capturedPieces[piece.player].push(capturedPiece);
@@ -6278,27 +6282,14 @@
 
             checkSupremacy(piece.player);
 
-            // Mercenary special move: coin flip for bonus turn after capture
+            // Mercenary special move: check if coin flip is needed for bonus turn after capture
             let mercenaryBonusTurn = false;
+            let mercenaryFlipNeeded = false;
             if (captured && piece.type === 'Mercenary' && piece.player === currentPlayer &&
                 !mercenaryBonusTurnUsed[piece.player].has(piece) &&
                 mercenaryBonusTurnCount[piece.player] < 3) {
-                const coinFlip = mercenaryCoinFlip(piece.player);
-                if (coinFlip) {
-                    // Grant bonus turn (move points stay the same, mercenary move won't cost points)
-                    mercenaryBonusTurnUsed[piece.player].add(piece);
-                    mercenaryBonusTurnCount[piece.player]++;
-                    // Remove the mercenary from movedPieces so it can move again
-                    movedPieces.delete(`${toRow},${toCol}`);
-                    // Set bonus turn state to restrict selection to this mercenary only
-                    mercenaryBonusTurnActive = true;
-                    mercenaryBonusTurnPiece = { row: toRow, col: toCol };
-                    const remaining = 3 - mercenaryBonusTurnCount[piece.player];
-                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again without cost. (${remaining} bonus turns remaining)`);
-                    mercenaryBonusTurn = true;
-                } else {
-                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
-                }
+                // Indicate that a coin flip is needed
+                mercenaryFlipNeeded = true;
             } else if (captured && piece.type === 'Mercenary' && piece.player === currentPlayer &&
                        mercenaryBonusTurnCount[piece.player] >= 3) {
                 gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary has no bonus turns remaining (3/3 used).`);
@@ -6306,7 +6297,41 @@
 
             updateGameLog();
             updateCapturedPiecesDisplay();
-            return { mercenaryBonusTurn };
+            return { mercenaryBonusTurn, mercenaryFlipNeeded, mercenaryPiece: piece, mercenaryPos: { row: toRow, col: toCol } };
+        }
+
+        function handleMercenaryCoinFlip(player, piece, row, col, callback) {
+            const playerLabel = player === 'W' ? 'Player' : 'AI';
+            const automated = player === 'B'; // Automated for AI
+
+            performCoinToss(
+                'Mercenary Bonus Turn',
+                `${playerLabel} mercenary attempts bonus turn`,
+                (success) => {
+                    if (success) {
+                        // Grant bonus turn
+                        mercenaryBonusTurnUsed[player].add(piece);
+                        mercenaryBonusTurnCount[player]++;
+                        // Remove the mercenary from movedPieces so it can move again
+                        movedPieces.delete(`${row},${col}`);
+                        // Set bonus turn state to restrict selection to this mercenary only
+                        mercenaryBonusTurnActive = true;
+                        mercenaryBonusTurnPiece = { row, col };
+                        const remaining = 3 - mercenaryBonusTurnCount[player];
+                        gameLog.push(`${playerLabel} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again without cost. (${remaining} bonus turns remaining)`);
+
+                        updateGameLog();
+                        renderBoard();
+                        callback(true); // Bonus turn granted
+                    } else {
+                        gameLog.push(`${playerLabel} Mercenary lost the coin flip. No bonus turn.`);
+                        updateGameLog();
+                        renderBoard();
+                        callback(false); // No bonus turn
+                    }
+                },
+                automated
+            );
         }
 
         function shootPiece(fromRow, fromCol, toRow, toCol) {
@@ -7622,8 +7647,9 @@
                                     'Capture Spectre',
                                     'AI is attempting to capture the Spectre...',
                                     (success) => {
+                                        let moveResult = null;
                                         if (success) {
-                                            movePiece(from[0], from[1], pos[0], pos[1], jump);
+                                            moveResult = movePiece(from[0], from[1], pos[0], pos[1], jump);
                                             gameLog.push(`AI successfully captured the Spectre!`);
                                         } else {
                                             gameLog.push(`AI failed to capture the Spectre.`);
@@ -7657,6 +7683,18 @@
                                         renderBoard();
                                         updateGameLog();
 
+                                        // Check if mercenary coin flip is needed
+                                        if (success && moveResult?.mercenaryFlipNeeded) {
+                                            const mercPiece = moveResult.mercenaryPiece;
+                                            const mercPos = moveResult.mercenaryPos;
+
+                                            handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
+                                                // Continue AI turn after coin flip
+                                                setTimeout(() => makeNextMove(), 500);
+                                            });
+                                            return;
+                                        }
+
                                         // Continue AI turn
                                         setTimeout(() => makeNextMove(), 500);
                                     },
@@ -7665,35 +7703,52 @@
                                 return; // Exit to wait for coin toss callback
                             } else {
                                 // Normal move/capture
-                                movePiece(from[0], from[1], pos[0], pos[1], jump);
-                            }
+                                const moveResult = movePiece(from[0], from[1], pos[0], pos[1], jump);
 
-                            if (special === 'charge') {
-                                cavalryChargeUsed['B'] = true;
-                            }
-                            // Handle AI Inferno
-                            if (special === 'inferno') {
-                                performInfernoCapture(pos[0], pos[1], 'B');
-                                dragonInfernoUsed['B'] = true;
-                            }
-                            // Handle AI Strafe
-                            if (special === 'strafe') {
-                                const piece = board[pos[0]][pos[1]]; // Piece is now at destination
-                                if (piece && piece.type === 'Wizard') {
-                                    wizardStrafeUsed['B']++;
-                                } else if (piece && piece.type === 'Dragon') {
-                                    dragonStrafeUsed['B']++;
+                                if (special === 'charge') {
+                                    cavalryChargeUsed['B'] = true;
+                                }
+                                // Handle AI Inferno
+                                if (special === 'inferno') {
+                                    performInfernoCapture(pos[0], pos[1], 'B');
+                                    dragonInfernoUsed['B'] = true;
+                                }
+                                // Handle AI Strafe
+                                if (special === 'strafe') {
+                                    const piece = board[pos[0]][pos[1]]; // Piece is now at destination
+                                    if (piece && piece.type === 'Wizard') {
+                                        wizardStrafeUsed['B']++;
+                                    } else if (piece && piece.type === 'Dragon') {
+                                        dragonStrafeUsed['B']++;
+                                    }
+                                }
+                                if (special === 'ballistaDoubleTime') {
+                                    ballistaDoubleTimeUsed['B']++;
+                                }
+                                if (special === 'elephantryCharge') {
+                                    const pieceKey = `${from[0]},${from[1]},B`;
+                                    elephantryChargeUsed.add(pieceKey);
+                                    gameLog.push(`AI used Elephantry Charge from (${from[0]},${from[1]}) to (${pos[0]},${pos[1]})`);
+                                }
+                                movedPieces.add(`${pos[0]},${pos[1]}`);
+
+                                // Check if mercenary coin flip is needed
+                                if (moveResult?.mercenaryFlipNeeded) {
+                                    const mercPiece = moveResult.mercenaryPiece;
+                                    const mercPos = moveResult.mercenaryPos;
+
+                                    renderBoard();
+                                    updateGameLog();
+
+                                    handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
+                                        highlightSquares = [];
+                                        renderBoard();
+                                        // Continue AI turn after coin flip
+                                        setTimeout(() => makeNextMove(), 500);
+                                    });
+                                    return; // Exit to wait for coin flip callback
                                 }
                             }
-                            if (special === 'ballistaDoubleTime') {
-                                ballistaDoubleTimeUsed['B']++;
-                            }
-                            if (special === 'elephantryCharge') {
-                                const pieceKey = `${from[0]},${from[1]},B`;
-                                elephantryChargeUsed.add(pieceKey);
-                                gameLog.push(`AI used Elephantry Charge from (${from[0]},${from[1]}) to (${pos[0]},${pos[1]})`);
-                            }
-                            movedPieces.add(`${pos[0]},${pos[1]}`);
                         } else if (action.type === 'shoot') {
                             // Check if shooting a Spectre - requires coin toss
                         const targetPiece = board[pos[0]][pos[1]];
@@ -7863,10 +7918,27 @@
                         const { pos, facing, move, cost, jump } = action;
                         highlightSquares = [pos, move];
                         turnPiece(pos[0], pos[1], facing);
-                        movePiece(pos[0], pos[1], move[0], move[1], jump);
+                        const moveResult = movePiece(pos[0], pos[1], move[0], move[1], jump);
                         movesLeft -= cost;
                         movedPieces.add(`${pos[0]},${pos[1]}`);
                         movedPieces.add(`${move[0]},${move[1]}`);
+
+                        // Check if mercenary coin flip is needed
+                        if (moveResult?.mercenaryFlipNeeded) {
+                            const mercPiece = moveResult.mercenaryPiece;
+                            const mercPos = moveResult.mercenaryPos;
+
+                            renderBoard();
+                            updateGameLog();
+
+                            handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
+                                highlightSquares = [];
+                                renderBoard();
+                                // Continue AI turn after coin flip
+                                setTimeout(() => makeNextMove(), 500);
+                            });
+                            return; // Exit to wait for coin flip callback
+                        }
                     } else if (action.type === 'turnAndShoot') {
                         const { pos, facing, shoot, cost } = action;
                         highlightSquares = [pos, shoot];
@@ -7877,11 +7949,28 @@
                     } else if (action.type === 'archerMoveDiagShoot') {
                         const { from, move, shoot, cost } = action;
                         highlightSquares = [from, move, shoot];
-                        movePiece(from[0], from[1], move[0], move[1]);
+                        const moveResult = movePiece(from[0], from[1], move[0], move[1]);
                         shootPiece(move[0], move[1], shoot[0], shoot[1]);
                         archerMoveDiagShootUsed['B']++;
                         movesLeft -= cost;
                         movedPieces.add(`${move[0]},${move[1]}`);
+
+                        // Check if mercenary coin flip is needed
+                        if (moveResult?.mercenaryFlipNeeded) {
+                            const mercPiece = moveResult.mercenaryPiece;
+                            const mercPos = moveResult.mercenaryPos;
+
+                            renderBoard();
+                            updateGameLog();
+
+                            handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
+                                highlightSquares = [];
+                                renderBoard();
+                                // Continue AI turn after coin flip
+                                setTimeout(() => makeNextMove(), 500);
+                            });
+                            return; // Exit to wait for coin flip callback
+                        }
                     }
                     
                     renderBoard();
