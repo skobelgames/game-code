@@ -2621,7 +2621,7 @@
             },
             'Mercenary': {
                 points: '1 point to move 1 square in any direction; 2 points for 2 squares in any direction.',
-                extra: 'Can move or capture in any direction. Turn (1 point) or Turn and Move (2 points) via buttons. Can turn 90° left or right per action. Special Move: After a successful capture, triggers a coin flip - if successful, the mercenary continues its turn instantly without move point costs (once per turn).'
+                extra: 'Can move or capture in any direction. Special Move: After a successful capture, triggers a coin flip - if successful, the mercenary continues its turn instantly without move point costs (once per turn).'
             },
             'Necromancer': {
                 points: '1 point to move 1 square in any direction. Special actions cost 2 points: summon Zombie or Spectre (coin flip) or channel a 2-range shot.',
@@ -2652,14 +2652,13 @@
                 extra: 'Summoned to the back row. Moves forward, attempting diagonal detours if blocked, and resolves captures (including defending) via coin flip. Converts opposing Zombies on successful clashes.'
             }
         };
-        const turnablePieces = ['Archer', 'Ballista', 'Elephantry', 'Fusilier', 'Infantry', 'Mercenary'];
+        const turnablePieces = ['Archer', 'Ballista', 'Elephantry', 'Fusilier', 'Infantry'];
         const turnCosts = {
             'Archer': 1,
             'Ballista': 2,
             'Elephantry': 1,
             'Fusilier': 1,
-            'Infantry': 1,
-            'Mercenary': 1
+            'Infantry': 1
         };
         const pieceTypes = {
             'Cavalry': { move: (r, c, board, player) => {
@@ -3669,7 +3668,7 @@
                     if (turnablePieces.includes(piece.type)) {
                         turnButton.style.display = 'inline';
                         turnButton.disabled = movesLeft < turnCosts[piece.type];
-                        if (piece.type === 'Infantry' || piece.type === 'Mercenary') {
+                        if (piece.type === 'Infantry') {
                             turnMoveButton.style.display = 'inline';
                             turnMoveButton.disabled = movesLeft < 2;
                         }
@@ -4503,7 +4502,7 @@
                 return;
             }
 
-            if (turnAndMoveMode && selectedPiece && (board[selectedPiece.row][selectedPiece.col]?.type === 'Infantry' || board[selectedPiece.row][selectedPiece.col]?.type === 'Mercenary')) {
+            if (turnAndMoveMode && selectedPiece && board[selectedPiece.row][selectedPiece.col]?.type === 'Infantry') {
                 const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col);
                 if (move && move.type === 'move' && movesLeft >= 1) {
                     movePiece(selectedPiece.row, selectedPiece.col, row, col, move.jump);
@@ -5417,7 +5416,7 @@
         function openTurnAndMoveModal() {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
-            if ((piece.type === 'Infantry' || piece.type === 'Mercenary') && movesLeft >= 2) {
+            if (piece.type === 'Infantry' && movesLeft >= 2) {
                 const validDirections = getValidTurnDirections(piece.facing);
                 const select = document.getElementById('turn-move-select');
                 select.innerHTML = validDirections.map(dir => `<option value="${dir}">${dir} (${facingIcons[dir]})</option>`).join('');
@@ -6799,7 +6798,7 @@
                                     allPossibleActions.push({ type: 'turn', pos: [r,c], from: [r,c], facing, cost: turnCosts[piece.type], pieceType: piece.type, targetValue: 0 });
                                     
                                     // Check for turn and move
-                                    if ((piece.type === 'Infantry' || piece.type === 'Mercenary') && movesLeft >= turnCosts[piece.type] + 1) {
+                                    if (piece.type === 'Infantry' && movesLeft >= turnCosts[piece.type] + 1) {
                                         // Simulate the turn to get new moves
                                         const tempBoard = cloneBoard(board);
                                         tempBoard[r][c].facing = facing;
@@ -7087,7 +7086,7 @@
                                     let newMovesLeft = movesLeft - turnCosts[piece.type];
                                     
                                     let eval;
-                                    if ((piece.type === 'Infantry' || piece.type === 'Mercenary') && newMovesLeft >= 1) {
+                                    if (piece.type === 'Infantry' && newMovesLeft >= 1) {
                                         // Opponent turn-and-move
                                         const tempBoard = cloneBoard(newBoard);
                                         const turnMoves = pieceTypes[piece.type].move(r, c, tempBoard, opponent, false, facing, newMovesLeft);
