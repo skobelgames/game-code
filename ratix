@@ -1533,7 +1533,17 @@
             }
         }
 
-        function performCoinToss(title, message, callback, automated = false) {
+        function performCoinToss(title, message, callback, automated = false, skipOverlay = false) {
+            // If skipOverlay is true, perform the coin toss silently without showing UI
+            if (skipOverlay) {
+                const result = Math.random() < 0.5; // true = white (success), false = black (failure)
+                // Execute callback immediately with the result
+                if (callback) {
+                    callback(result);
+                }
+                return;
+            }
+
             gamePaused = true;
             // Save timer state before stopping
             pausedTimers.game = gameTimerInterval;
@@ -8656,59 +8666,65 @@
             const turnShootModal = document.getElementById('turn-shoot-modal');
             if (turnShootModal) turnShootModal.style.display = 'none';
 
-            // Determine starting player randomly without overlay
-            const playerWins = Math.random() < 0.5;
+            // Perform coin toss to determine starting player (without overlay)
+            performCoinToss(
+                'First Turn',
+                'Determining who goes first...',
+                (playerWins) => {
+                    if (playerWins) {
+                        // Player (white) goes first
+                        currentPlayer = 'W';
+                        gameLog.push('Player won the coin toss and goes first!');
 
-            if (playerWins) {
-                // Player (white) goes first
-                currentPlayer = 'W';
-                gameLog.push('Player won the coin toss and goes first!');
+                        const baseMoves = calculateBaseMoves('W');
+                        movesLeft = baseMoves;
+                        initialMovesLeft = baseMoves;
 
-                const baseMoves = calculateBaseMoves('W');
-                movesLeft = baseMoves;
-                initialMovesLeft = baseMoves;
+                        // Render board and update UI
+                        renderBoard();
+                        updateScoreDisplay();
+                        updateStatus();
+                        updateGameLog();
+                        updateCapturedPiecesDisplay();
+                        updateEndTurnButton();
 
-                // Render board and update UI
-                renderBoard();
-                updateScoreDisplay();
-                updateStatus();
-                updateGameLog();
-                updateCapturedPiecesDisplay();
-                updateEndTurnButton();
+                        // Start timer after everything is set up
+                        startGameTimer();
+                        const startReady = applyStartTurnModifiers('W', baseMoves);
 
-                // Start timer after everything is set up
-                startGameTimer();
-                const startReady = applyStartTurnModifiers('W', baseMoves);
+                        if (!startReady) {
+                            checkGameOver();
+                            setTimeout(() => triggerAiTurn(), 0);
+                        }
+                    } else {
+                        // AI (black) goes first
+                        currentPlayer = 'B';
+                        gameLog.push(`${getOpponentDisplayName()} won the coin toss and goes first!`);
 
-                if (!startReady) {
-                    checkGameOver();
-                    setTimeout(() => triggerAiTurn(), 0);
-                }
-            } else {
-                // AI (black) goes first
-                currentPlayer = 'B';
-                gameLog.push(`${getOpponentDisplayName()} won the coin toss and goes first!`);
+                        const baseMoves = calculateBaseMoves('B');
+                        movesLeft = baseMoves;
+                        initialMovesLeft = baseMoves;
 
-                const baseMoves = calculateBaseMoves('B');
-                movesLeft = baseMoves;
-                initialMovesLeft = baseMoves;
+                        // Render board and update UI
+                        renderBoard();
+                        updateScoreDisplay();
+                        updateStatus();
+                        updateGameLog();
+                        updateCapturedPiecesDisplay();
+                        updateEndTurnButton();
 
-                // Render board and update UI
-                renderBoard();
-                updateScoreDisplay();
-                updateStatus();
-                updateGameLog();
-                updateCapturedPiecesDisplay();
-                updateEndTurnButton();
+                        // Start timer after everything is set up
+                        startGameTimer();
 
-                // Start timer after everything is set up
-                startGameTimer();
-
-                // Trigger AI turn after a brief delay
-                setTimeout(() => {
-                    aiTurn();
-                }, 1000);
-            }
+                        // Trigger AI turn after a brief delay
+                        setTimeout(() => {
+                            aiTurn();
+                        }, 1000);
+                    }
+                },
+                false,
+                true  // skipOverlay = true to prevent showing the coin flip modal
+            );
         }
 
         function updateStatus() {
