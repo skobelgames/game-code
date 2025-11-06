@@ -1852,7 +1852,7 @@
             const result = Math.random() < 0.5;
             const playerLabel = player === 'W' ? 'Player' : 'AI';
             const title = 'Mercenary Bonus Turn';
-            const message = result ? 'Coin flip won! Bonus turn granted!' : 'Coin flip lost. No bonus turn.';
+            const message = `${playerLabel} mercenary attempts bonus turn`;
             enqueueZombieCoinFlip(result, title, message);
             return result;
         }
@@ -6015,7 +6015,9 @@
                             // Restore full move points for bonus turn
                             movesLeft = initialMovesLeft;
                             mercenaryBonusTurnUsed[piece.player].add(piece);
-                            gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted with full move points.`);
+                            // Remove the mercenary from movedPieces so it can move again
+                            movedPieces.delete(`${toRow},${toCol}`);
+                            gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again.`);
                         } else {
                             gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
                         }
@@ -6039,7 +6041,9 @@
                             // Restore full move points for bonus turn
                             movesLeft = initialMovesLeft;
                             mercenaryBonusTurnUsed[piece.player].add(piece);
-                            gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted with full move points.`);
+                            // Remove the mercenary from movedPieces so it can move again
+                            movedPieces.delete(`${toRow},${toCol}`);
+                            gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again.`);
                         } else {
                             gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
                         }
@@ -6068,7 +6072,9 @@
                                 // Restore full move points for bonus turn
                                 movesLeft = initialMovesLeft;
                                 mercenaryBonusTurnUsed[piece.player].add(piece);
-                                gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted with full move points.`);
+                                // Remove the mercenary from movedPieces so it can move again
+                                movedPieces.delete(`${toRow},${toCol}`);
+                                gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again.`);
                             } else {
                                 gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
                             }
@@ -6118,7 +6124,9 @@
                     // Restore full move points for bonus turn
                     movesLeft = initialMovesLeft;
                     mercenaryBonusTurnUsed[piece.player].add(piece);
-                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted with full move points.`);
+                    // Remove the mercenary from movedPieces so it can move again
+                    movedPieces.delete(`${toRow},${toCol}`);
+                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again.`);
                 } else {
                     gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
                 }
