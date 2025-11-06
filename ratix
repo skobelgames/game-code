@@ -472,29 +472,26 @@
         }
         #board.coin-flip-success {
             border-color: #FFFFFF !important;
-            box-shadow: 0 0 20px #FFFFFF;
-            animation: coinFlipGlow 1.5s ease-in-out;
+            box-shadow: 0 0 30px #FFFFFF;
+            animation: coinFlipSuccessGlow 1.5s ease-in-out;
         }
-        @keyframes coinFlipGlow {
+        @keyframes coinFlipSuccessGlow {
             0% {
-                border-color: #000000;
-                box-shadow: 0 0 0px #000000;
-            }
-            50% {
-                border-color: #FFFFFF;
                 box-shadow: 0 0 30px #FFFFFF;
             }
+            50% {
+                box-shadow: 0 0 50px #FFFFFF;
+            }
             100% {
-                border-color: #000000;
-                box-shadow: 0 0 0px #000000;
+                box-shadow: 0 0 30px #FFFFFF;
             }
         }
         #board.coin-flip-failure {
             animation: coinFlipFailure 1.5s ease-in-out;
         }
         @keyframes coinFlipFailure {
-            0% {
-                background-color: transparent;
+            0%, 5% {
+                background-color: #000000;
             }
             50% {
                 background-color: #000000;
