@@ -931,6 +931,10 @@
                     <h3>Game Statistics</h3>
                     <p id="stats-turn-count"></p>
                     <p id="stats-duration"></p>
+                    <p id="stats-most-captures"></p>
+                    <p id="stats-highest-score"></p>
+                    <p id="stats-summons"></p>
+                    <p id="stats-reinforcements"></p>
                 </div>
             </div>
         </div>
@@ -1592,6 +1596,8 @@
             // Remove warcry active background when switching to AI turn
             removeWarcryActiveBackground();
             applyEndTurnEffects('W');
+            // Update turn statistics before switching to AI
+            updateTurnStats('W');
             aiPending = true;
             try {
                 aiTurn();
@@ -1610,6 +1616,8 @@
             if (!skipEndEffects) {
                 applyEndTurnEffects('B');
             }
+            // Update turn statistics before switching players
+            updateTurnStats('B');
             aiPending = false;
             aiTurnTimeoutForced = false;
             stopTurnTimer();
@@ -2206,6 +2214,7 @@
             scores[player] += captureValue;
             registerScoreGain(player, captureValue);
             registerPieceLoss(targetPiece.player, targetPiece.type);
+            trackCapture(player); // Track capture for statistics
             if (targetPiece.type === 'Champion') {
                 championCaptured[targetPiece.player] = true;
             }
@@ -2312,6 +2321,7 @@
                 scores[attackerPiece.player] += captureValue;
                 registerScoreGain(attackerPiece.player, captureValue);
                 registerPieceLoss(zombieOwner, targetPiece.type);
+                trackCapture(attackerPiece.player); // Track capture for statistics
                 gameLog.push(`${attackerLabel} ${successVerb} Zombie at (${targetRow},${targetCol}) after winning the coin flip.`);
                 return { handled: true, success: true };
             } else {
@@ -2328,6 +2338,7 @@
                     registerPieceLoss(attackerPiece.player, attackerPiece.type);
                     scores[zombieOwner] += 3;
                     registerScoreGain(zombieOwner, 3);
+                    trackCapture(zombieOwner); // Track capture for statistics
                     gameLog.push(`${attackerLabel} failed to ${attemptVerb} Zombie at (${targetRow},${targetCol}) and was lost in the attempt. (+3 bonus to ${zombieOwner === 'W' ? 'Player' : 'AI'})`);
                     renderBoard();
                     updateScoreDisplay();
@@ -2646,8 +2657,38 @@
             warcryBonusCount: { 'W': 0, 'B': 0 },
             despairPenaltyCount: { 'W': 0, 'B': 0 },
             gameStartTime: null,
-            gameDuration: 0
+            gameDuration: 0,
+            // New statistics for end game display
+            capturesThisTurn: { 'W': 0, 'B': 0 },
+            mostCapturesInTurn: { 'W': 0, 'B': 0 },
+            scoreThisTurn: { 'W': 0, 'B': 0 },
+            highestScoreInTurn: { 'W': 0, 'B': 0 },
+            summonCount: { 'W': 0, 'B': 0 },
+            reinforcementCount: { 'W': 0, 'B': 0 }
         };
+
+        // Helper functions for tracking statistics
+        function trackCapture(player) {
+            gameStats.capturesThisTurn[player]++;
+        }
+
+        function trackScore(player, scoreGain) {
+            gameStats.scoreThisTurn[player] += scoreGain;
+        }
+
+        function updateTurnStats(player) {
+            // Update max captures if this turn had more
+            if (gameStats.capturesThisTurn[player] > gameStats.mostCapturesInTurn[player]) {
+                gameStats.mostCapturesInTurn[player] = gameStats.capturesThisTurn[player];
+            }
+            // Update max score if this turn had more
+            if (gameStats.scoreThisTurn[player] > gameStats.highestScoreInTurn[player]) {
+                gameStats.highestScoreInTurn[player] = gameStats.scoreThisTurn[player];
+            }
+            // Reset for next turn
+            gameStats.capturesThisTurn[player] = 0;
+            gameStats.scoreThisTurn[player] = 0;
+        }
 
         function updateAiPieceValues() {
             aiPieceValues = Object.fromEntries(Object.entries(basePieceValues).map(([k, v]) => [k, Math.round(v * pieceValueScale)]));
@@ -2844,6 +2885,9 @@
             turnScoreGain[player] = previousScore + amount;
             const newScore = turnScoreGain[player];
 
+            // Track score for statistics
+            trackScore(player, amount);
+
             // Check if warcry threshold was just reached
             if (previousScore < HONOUR_THRESHOLD && newScore >= HONOUR_THRESHOLD && !warcryAchievedThisTurn[player]) {
                 warcryAchievedThisTurn[player] = true;
@@ -2860,6 +2904,7 @@
 
         function registerReinforcement(player, type) {
             reinforcementTotals[player] = (reinforcementTotals[player] || 0) + 1;
+            gameStats.reinforcementCount[player]++; // Track reinforcement for statistics
             if (type !== 'Infantry') {
                 return false;
             }
@@ -2868,7 +2913,7 @@
             if (infantryReinforcements[player] >= RELENTLESS_THRESHOLD && (reinforcementTotals[opponent] || 0) === 0) {
                 gameLog.push(`${player === 'W' ? 'Player' : 'AI'} achieved Relentless victory!`);
                 updateGameLog();
-                endGame(player);
+                endGame(player, 'Relentless');
                 return true;
             }
             return false;
@@ -3910,6 +3955,12 @@
             gameStats.despairPenaltyCount = { 'W': 0, 'B': 0 };
             gameStats.gameStartTime = null;
             gameStats.gameDuration = 0;
+            gameStats.capturesThisTurn = { 'W': 0, 'B': 0 };
+            gameStats.mostCapturesInTurn = { 'W': 0, 'B': 0 };
+            gameStats.scoreThisTurn = { 'W': 0, 'B': 0 };
+            gameStats.highestScoreInTurn = { 'W': 0, 'B': 0 };
+            gameStats.summonCount = { 'W': 0, 'B': 0 };
+            gameStats.reinforcementCount = { 'W': 0, 'B': 0 };
         }
 
         function renderBoard() {
@@ -4870,8 +4921,10 @@
 
                                 // Award 3 bonus points for successful summoning
                                 scores[currentPlayer] += 3;
+                                registerScoreGain(currentPlayer, 3);
                                 updateScoreDisplay();
 
+                                gameStats.summonCount[currentPlayer]++; // Track summon for statistics
                                 gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} summoned a Spectre! (+3 bonus points)`);
                             } else {
                                 // Failed summoning
@@ -5134,6 +5187,7 @@
                                 scores[currentPlayer] += captureValue;
                                 registerScoreGain(currentPlayer, captureValue);
                                 registerPieceLoss(capturedPiece.player, capturedPiece.type);
+                                trackCapture(currentPlayer); // Track capture for statistics
                                 gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry charged and captured ${capturedPiece.type} (+${captureValue} points) at (${captureRow},${captureCol})`);
 
                                 if (capturedPiece.type === 'Champion') {
@@ -5256,6 +5310,7 @@
                                     scores[currentPlayer] += captureValue;
                                     registerScoreGain(currentPlayer, captureValue);
                                     registerPieceLoss(targetPiece.player, targetPiece.type);
+                                    trackCapture(currentPlayer); // Track capture for statistics
                                     gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry triple shot hit! Captured ${targetPiece.type} (+${captureValue} points)`);
 
                                     if (targetPiece.type === 'Champion') {
@@ -6075,6 +6130,7 @@
                                 fusiliersSummoned[currentPlayer]++;
                             }
 
+                            gameStats.summonCount[currentPlayer]++; // Track summon for statistics
                             gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} successfully summoned ${unitType} at (${backRow},${col})!`);
                         } else {
                             gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} succeeded summon but no empty squares in back row!`);
@@ -6173,6 +6229,7 @@
                             necromancersSummoned[player] = (necromancersSummoned[player] || 0) + 1;
                             necromancerTeleportCounts.set(necromancerPiece, 0);
                             setNecromancerShotCooldown(necromancerPiece, 0);
+                            gameStats.summonCount[player]++; // Track summon for statistics
                             gameLog.push(`${player === 'W' ? 'Player' : 'AI'} summoned a Necromancer at (${backRow},${targetCol}).`);
                         } else {
                             gameLog.push('Necromancer summon succeeded but the chosen square was no longer available.');
@@ -6300,11 +6357,13 @@
                                 const zombiePiece = createZombiePiece(player);
                                 board[backRow][targetCol] = zombiePiece;
                                 zombiesSummoned[player] = (zombiesSummoned[player] || 0) + 1;
+                                gameStats.summonCount[player]++; // Track summon for statistics
                                 gameLog.push(`${player === 'W' ? 'Player' : 'AI'} summoned a Zombie at (${backRow},${targetCol}).`);
                             } else {
                                 const spectrePiece = createSpectrePiece(player);
                                 board[backRow][targetCol] = spectrePiece;
                                 spectresSummoned[player] = (spectresSummoned[player] || 0) + 1;
+                                gameStats.summonCount[player]++; // Track summon for statistics
                                 gameLog.push(`${player === 'W' ? 'Player' : 'AI'} summoned a Spectre at (${backRow},${targetCol}).`);
                             }
                         } else {
@@ -6519,6 +6578,7 @@
                         scores[player] += captureValue;
                         registerScoreGain(player, captureValue);
                         registerPieceLoss(opponent, targetPiece.type);
+                        trackCapture(player); // Track capture for statistics
                         gameLog.push(`${player === 'W' ? 'Player' : 'AI'} captured ${targetPiece.type} (+${captureValue} points) with Dragon's Inferno at (${nr},${nc})`);
 
                         if (targetPiece.type === 'Champion') {
@@ -6568,6 +6628,7 @@
                     scores[piece.player] += captureValue;
                     registerScoreGain(piece.player, captureValue);
                     registerPieceLoss(opponent, capturedPiece.type);
+                    trackCapture(piece.player); // Track capture for statistics
                     gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} captured ${capturedPiece.type} (+${captureValue} points) with ${piece.type} at (${jump[0]},${jump[1]})`);
                     cleanupNecromancerTracking(capturedPiece);
                     board[jump[0]][jump[1]] = null;
@@ -6595,6 +6656,7 @@
                         scores[piece.player] += captureValue;
                         registerScoreGain(piece.player, captureValue);
                         registerPieceLoss(opponent, capturedPiece.type);
+                        trackCapture(piece.player); // Track capture for statistics
                         gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} captured ${capturedPiece.type} (+${captureValue} points) with ${piece.type} at (${toRow},${toCol})`);
                         if (capturedPiece.type === 'Champion') {
                             championCaptured[capturedPiece.player] = true;
@@ -6706,6 +6768,7 @@
                 scores[piece.player] += captureValue;
                 registerScoreGain(piece.player, captureValue);
                 registerPieceLoss(getOpponent(piece.player), targetPiece.type);
+                trackCapture(piece.player); // Track capture for statistics
                 gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} shot ${targetPiece.type} (+${captureValue} points) with ${piece.type} at (${toRow},${toCol})`);
                 if (targetPiece.type === 'Champion') {
                     championCaptured[targetPiece.player] = true;
@@ -8528,15 +8591,52 @@
                 gameStats.gameDuration = Math.floor((Date.now() - gameStats.gameStartTime) / 1000);
             }
 
-            // Prepare winner message
-            let winnerText, reasonText;
+            // Prepare winner message and title
+            let winnerText, reasonText, modalTitle;
             if (winner === 'draw') {
                 winnerText = 'Draw!';
-                reasonText = reason || 'Game ended in a draw';
+                modalTitle = 'Game Complete';
+
+                // Create detailed draw reason text
+                if (reason === 'Match') {
+                    reasonText = 'Match: Both players only have their King remaining';
+                } else if (reason === 'Truce') {
+                    reasonText = 'Truce: A truce was accepted between the players';
+                } else if (reason === 'Game timer expired.') {
+                    reasonText = 'Supremacy: Game timer expired with equal scores';
+                } else {
+                    reasonText = reason || 'Game ended in a draw';
+                }
             } else {
                 const winnerLabel = winner === 'W' ? 'Player' : getOpponentDisplayName();
+                const loserLabel = winner === 'W' ? getOpponentDisplayName() : 'Player';
                 winnerText = `${winnerLabel} Wins!`;
-                reasonText = reason || 'Victory achieved';
+
+                // Set modal title based on whether player won or lost
+                if (winner === 'W') {
+                    modalTitle = 'Victory Achieved';
+                } else {
+                    modalTitle = 'All is Lost';
+                }
+
+                // Create detailed victory method text
+                let victoryMethod = '';
+                if (reason === 'Relentless') {
+                    victoryMethod = `Relentless: ${winnerLabel} activated 3 reinforcements using Infantry while ${loserLabel} had 0 reinforcements`;
+                } else if (reason === 'Match') {
+                    victoryMethod = 'Match: Both players only have their King remaining';
+                } else if (reason === 'Truce') {
+                    victoryMethod = 'Truce: A truce was accepted between the players';
+                } else if (reason === 'Game timer expired.') {
+                    victoryMethod = `Supremacy: Game timer expired and ${winnerLabel} had the higher score`;
+                } else if (reason) {
+                    victoryMethod = reason;
+                } else {
+                    // Default: assume it was Regicide (King captured)
+                    victoryMethod = `Regicide: ${loserLabel}'s King was captured`;
+                }
+
+                reasonText = `${winnerLabel} was victorious by ${victoryMethod}`;
             }
 
             // Add to game log
@@ -8546,6 +8646,7 @@
             updateGameLog();
 
             // Populate stats modal
+            document.getElementById('game-stats-title').textContent = modalTitle;
             document.getElementById('stats-winner').textContent = winnerText;
             document.getElementById('stats-reason').textContent = reasonText;
             document.getElementById('stats-player-score').textContent = `Player: ${scores['W']} points`;
@@ -8577,6 +8678,27 @@
 
             document.getElementById('stats-turn-count').textContent = `Total Turns: ${turnCount}`;
             document.getElementById('stats-duration').textContent = `Game Duration: ${durationStr}`;
+
+            // Display new statistics
+            const playerMostCaptures = gameStats.mostCapturesInTurn['W'];
+            const aiMostCaptures = gameStats.mostCapturesInTurn['B'];
+            document.getElementById('stats-most-captures').textContent =
+                `Most Captures in a Turn - Player: ${playerMostCaptures}, ${getOpponentDisplayName()}: ${aiMostCaptures}`;
+
+            const playerHighestScore = gameStats.highestScoreInTurn['W'];
+            const aiHighestScore = gameStats.highestScoreInTurn['B'];
+            document.getElementById('stats-highest-score').textContent =
+                `Highest Score in a Turn - Player: ${playerHighestScore}, ${getOpponentDisplayName()}: ${aiHighestScore}`;
+
+            const playerSummons = gameStats.summonCount['W'];
+            const aiSummons = gameStats.summonCount['B'];
+            document.getElementById('stats-summons').textContent =
+                `Successful Summons - Player: ${playerSummons}, ${getOpponentDisplayName()}: ${aiSummons}`;
+
+            const playerReinforcements = gameStats.reinforcementCount['W'];
+            const aiReinforcements = gameStats.reinforcementCount['B'];
+            document.getElementById('stats-reinforcements').textContent =
+                `Reinforcements - Player: ${playerReinforcements}, ${getOpponentDisplayName()}: ${aiReinforcements}`;
 
             // Show stats modal
             document.getElementById('game-stats-modal').style.display = 'block';
