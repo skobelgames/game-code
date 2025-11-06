@@ -1495,6 +1495,9 @@
             // Update Fusilier cooldowns at the end of the player's turn
             finalizeFusilierShots(player);
 
+            // Clear mercenary bonus turn tracking at the end of the player's turn
+            mercenaryBonusTurnUsed[player].clear();
+
             if (logUpdated) {
                 updateGameLog();
             }
@@ -1667,6 +1670,8 @@
         let fusilierCrackShotCount = {}; // Map of "row,col,player" to remaining uses (starts at 3)
         let fusilierStrafeUsed = new Set(); // Track which fusilier pieces have used strafe (set of "row,col,player", max 2 uses)
         let fusilierStrafeCount = {}; // Map of "row,col,player" to remaining uses (starts at 2)
+        // Mercenary specials
+        let mercenaryBonusTurnUsed = { 'W': new Set(), 'B': new Set() }; // Mercenaries that have used their bonus turn this turn
         // King summoning
         let pistoliersSummoned = { 'W': 0, 'B': 0 }; // Track summoned pistoliers (max 2 per player)
         let fusiliersSummoned = { 'W': 0, 'B': 0 }; // Track summoned fusiliers (max 2 per player)
@@ -2283,7 +2288,7 @@
         };
         const basePieceValues = {
             'Infantry': 1, 'Archer': 2, 'Cavalry': 3, 'Pistolier': 3, 'Fusilier': 4, 'Guard': 4, 'Ballista': 5,
-            'Troll': 6, 'Dragon': 7, 'Ogre': 8, 'Wizard': 9, 'Spectre': 5, 'Mercenary': 10,
+            'Troll': 6, 'Dragon': 7, 'Ogre': 8, 'Wizard': 9, 'Spectre': 5, 'Mercenary': 3,
             'Elephantry': 11, 'Champion': 12, 'King': 13
         };
         basePieceValues['Necromancer'] = 10;
@@ -2617,8 +2622,8 @@
                 extra: 'Cannot move into check. Capture ends the game. Can activate reinforcements. Special Move: Guard of Honour - once per game, swap positions with an adjacent Guard for 2 move points.'
             },
             'Mercenary': {
-                points: '1 point to move 1 square forward or diagonally forward; 2 points for 2 squares.',
-                extra: 'Flexible 2-square path on extended move. Turn (1 point) or Turn and Move (2 points) via buttons. Can turn 90° left or right per action.'
+                points: '1 point to move 1 square in any direction; 2 points for 2 squares in any direction.',
+                extra: 'Can move or capture in any direction. Turn (1 point) or Turn and Move (2 points) via buttons. Can turn 90° left or right per action. Special Move: After a successful capture, triggers a coin flip - if successful, the mercenary continues its turn instantly without move point costs (once per turn).'
             },
             'Necromancer': {
                 points: '1 point to move 1 square in any direction. Special actions cost 2 points: summon Zombie or Spectre (coin flip) or channel a 2-range shot.',
@@ -3104,41 +3109,42 @@
             }},
             'Mercenary': { move: (r, c, board, player, _, facing) => {
                 let moves = [];
-                let dir, diag1, diag2;
-                if (facing === 'U') { dir = [-1,0]; diag1 = [-1,-1]; diag2 = [-1,1]; }
-                else if (facing === 'D') { dir = [1,0]; diag1 = [1,-1]; diag2 = [1,1]; }
-                else if (facing === 'L') { dir = [0,-1]; diag1 = [-1,-1]; diag2 = [1,-1]; }
-                else if (facing === 'R') { dir = [0,1]; diag1 = [-1,1]; diag2 = [1,1]; }
+                // All 8 directions: orthogonal and diagonal
+                const allDirections = [
+                    [-1, 0],  // Up
+                    [1, 0],   // Down
+                    [0, -1],  // Left
+                    [0, 1],   // Right
+                    [-1, -1], // Up-Left
+                    [-1, 1],  // Up-Right
+                    [1, -1],  // Down-Left
+                    [1, 1]    // Down-Right
+                ];
 
-                if (!dir) return []; // Safety check
-
-                let forward = [r + dir[0], c + dir[1]];
-                if (isValid(forward[0], forward[1]) && !board[forward[0]][forward[1]]) {
-                    moves.push({ type: 'move', pos: forward, cost: 1 });
-                }
-                for (let d of [diag1, diag2]) {
-                    let diagonal = [r + d[0], c + d[1]];
-                    if (isValid(diagonal[0], diagonal[1])) {
-                        if (!board[diagonal[0]][diagonal[1]]) {
-                            moves.push({ type: 'move', pos: diagonal, cost: 1 });
-                        } else if (board[diagonal[0]][diagonal[1]].player !== player) {
-                            moves.push({ type: 'move', pos: diagonal, cost: 1 });
+                // 1 square in any direction for 1 point
+                for (let dir of allDirections) {
+                    let newPos = [r + dir[0], c + dir[1]];
+                    if (isValid(newPos[0], newPos[1])) {
+                        if (!board[newPos[0]][newPos[1]]) {
+                            moves.push({ type: 'move', pos: newPos, cost: 1 });
+                        } else if (board[newPos[0]][newPos[1]].player !== player) {
+                            moves.push({ type: 'move', pos: newPos, cost: 1 });
                         }
                     }
                 }
-                let twoForward = [r + 2*dir[0], c + 2*dir[1]];
-                let midForward = [r + dir[0], c + dir[1]];
-                if (isValid(midForward[0], midForward[1]) && !board[midForward[0]][midForward[1]] && 
-                    isValid(twoForward[0], twoForward[1]) && !board[twoForward[0]][twoForward[1]]) {
-                    moves.push({ type: 'move', pos: twoForward, cost: 2 });
-                }
-                for (let d of [diag1, diag2]) {
-                    let twoDiagonal = [r + 2*d[0], c + 2*d[1]];
-                    let midDiagonal = [r + d[0], c + d[1]];
-                    if (isValid(midDiagonal[0], midDiagonal[1]) && !board[midDiagonal[0]][midDiagonal[1]] && 
-                        isValid(twoDiagonal[0], twoDiagonal[1])) {
-                        if (!board[twoDiagonal[0]][twoDiagonal[1]] || board[twoDiagonal[0]][twoDiagonal[1]].player !== player) {
-                            moves.push({ type: 'move', pos: twoDiagonal, cost: 2 });
+
+                // 2 squares in any direction for 2 points
+                for (let dir of allDirections) {
+                    let midPos = [r + dir[0], c + dir[1]];
+                    let twoPos = [r + 2*dir[0], c + 2*dir[1]];
+
+                    // Path must be clear
+                    if (isValid(midPos[0], midPos[1]) && !board[midPos[0]][midPos[1]] &&
+                        isValid(twoPos[0], twoPos[1])) {
+                        if (!board[twoPos[0]][twoPos[1]]) {
+                            moves.push({ type: 'move', pos: twoPos, cost: 2 });
+                        } else if (board[twoPos[0]][twoPos[1]].player !== player) {
+                            moves.push({ type: 'move', pos: twoPos, cost: 2 });
                         }
                     }
                 }
@@ -6004,6 +6010,19 @@
                         return;
                     }
                     captured = true;
+
+                    // Mercenary special move: coin flip for bonus turn after zombie jump capture
+                    if (piece.type === 'Mercenary' && piece.player === currentPlayer && !mercenaryBonusTurnUsed[piece.player].has(piece)) {
+                        const coinFlip = Math.random() < 0.5;
+                        if (coinFlip) {
+                            // Restore full move points for bonus turn
+                            movesLeft = initialMovesLeft;
+                            mercenaryBonusTurnUsed[piece.player].add(piece);
+                            gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted with full move points.`);
+                        } else {
+                            gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
+                        }
+                    }
                 } else {
                     capturedSquares.push([jump[0], jump[1]]);
                     capturedPieces[piece.player].push(capturedPiece);
@@ -6015,6 +6034,19 @@
                     cleanupNecromancerTracking(capturedPiece);
                     board[jump[0]][jump[1]] = null;
                     captured = true;
+
+                    // Mercenary special move: coin flip for bonus turn after jump capture
+                    if (piece.type === 'Mercenary' && piece.player === currentPlayer && !mercenaryBonusTurnUsed[piece.player].has(piece)) {
+                        const coinFlip = Math.random() < 0.5;
+                        if (coinFlip) {
+                            // Restore full move points for bonus turn
+                            movesLeft = initialMovesLeft;
+                            mercenaryBonusTurnUsed[piece.player].add(piece);
+                            gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted with full move points.`);
+                        } else {
+                            gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
+                        }
+                    }
                 }
             }
 
@@ -6031,6 +6063,19 @@
                             return;
                         }
                         captured = true;
+
+                        // Mercenary special move: coin flip for bonus turn after zombie capture
+                        if (piece.type === 'Mercenary' && piece.player === currentPlayer && !mercenaryBonusTurnUsed[piece.player].has(piece)) {
+                            const coinFlip = Math.random() < 0.5;
+                            if (coinFlip) {
+                                // Restore full move points for bonus turn
+                                movesLeft = initialMovesLeft;
+                                mercenaryBonusTurnUsed[piece.player].add(piece);
+                                gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted with full move points.`);
+                            } else {
+                                gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
+                            }
+                        }
                     } else {
                         capturedSquares.push([toRow, toCol]);
                         capturedPieces[piece.player].push(capturedPiece);
@@ -6068,6 +6113,19 @@
             }
 
             checkSupremacy(piece.player);
+
+            // Mercenary special move: coin flip for bonus turn after capture
+            if (captured && piece.type === 'Mercenary' && piece.player === currentPlayer && !mercenaryBonusTurnUsed[piece.player].has(piece)) {
+                const coinFlip = Math.random() < 0.5;
+                if (coinFlip) {
+                    // Restore full move points for bonus turn
+                    movesLeft = initialMovesLeft;
+                    mercenaryBonusTurnUsed[piece.player].add(piece);
+                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted with full move points.`);
+                } else {
+                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
+                }
+            }
 
             updateGameLog();
             updateCapturedPiecesDisplay();
@@ -7733,6 +7791,7 @@
             dragonStrafeUsed = { 'W': 0, 'B': 0 };
             fusilierShotLastTurn = { 'W': new Set(), 'B': new Set() };
             fusilierShotThisTurn = { 'W': new Set(), 'B': new Set() };
+            mercenaryBonusTurnUsed = { 'W': new Set(), 'B': new Set() };
             spectresSummoned = { 'W': 0, 'B': 0 };
             wizardSummonedThisTurn = { 'W': false, 'B': false };
             wizardCannotMoveNextTurn = { 'W': new Set(), 'B': new Set() };
