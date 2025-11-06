@@ -581,7 +581,7 @@
         #board.warcry-achievement {
             border-color: #d4af37 !important;
             box-shadow: 0 0 30px #d4af37;
-            animation: warcryGlow 2s ease-in-out;
+            animation: warcryGlow 2.6s ease-in-out;
         }
         @keyframes warcryGlow {
             0% {
@@ -599,7 +599,7 @@
         }
         .warcry-achievement-background {
             background-color: #000000 !important;
-            animation: fadeOutWarcryAchievementBackground 2s ease-in-out;
+            animation: fadeOutWarcryAchievementBackground 2.6s ease-in-out;
         }
         @keyframes fadeOutWarcryAchievementBackground {
             from { background-color: #000000; }
@@ -616,6 +616,22 @@
             }
             50% {
                 background: linear-gradient(135deg, #202020 0%, #4a3f1a 50%, #202020 100%);
+            }
+        }
+        /* Active warcry bonus border */
+        #board.warcry-active-border {
+            border-color: #d4af37 !important;
+            box-shadow: 0 0 30px #d4af37;
+            animation: warcryActiveBorderPulse 2s ease-in-out infinite;
+        }
+        @keyframes warcryActiveBorderPulse {
+            0%, 100% {
+                border-color: #d4af37;
+                box-shadow: 0 0 20px #d4af37;
+            }
+            50% {
+                border-color: #d4af37;
+                box-shadow: 0 0 40px #d4af37;
             }
         }
     </style>
@@ -3693,10 +3709,10 @@
                 modal.style.display = 'block';
             }
 
-            // Auto-close after 2 seconds
+            // Auto-close after 2.6 seconds
             setTimeout(() => {
                 closeWarcryAchievementPopup();
-            }, 2000);
+            }, 2600);
         }
 
         function closeWarcryAchievementPopup() {
@@ -3735,15 +3751,23 @@
 
         function applyWarcryActiveBackground() {
             const body = document.body;
+            const boardDiv = document.getElementById('board');
             if (!body.classList.contains('warcry-active-background')) {
                 body.classList.add('warcry-active-background');
+            }
+            if (boardDiv && !boardDiv.classList.contains('warcry-active-border')) {
+                boardDiv.classList.add('warcry-active-border');
             }
         }
 
         function removeWarcryActiveBackground() {
             const body = document.body;
+            const boardDiv = document.getElementById('board');
             if (body.classList.contains('warcry-active-background')) {
                 body.classList.remove('warcry-active-background');
+            }
+            if (boardDiv && boardDiv.classList.contains('warcry-active-border')) {
+                boardDiv.classList.remove('warcry-active-border');
             }
         }
 
