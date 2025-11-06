@@ -8018,6 +8018,11 @@
 
             function makeNextMove() {
                 try {
+                    // If game is paused (e.g., warcry animation), reschedule and wait
+                    if (gamePaused) {
+                        setTimeout(() => makeNextMove(), 200);
+                        return;
+                    }
                     if (currentPlayer !== 'B') {
                         return;
                     }
@@ -8156,7 +8161,7 @@
                                     updateScoreDisplay();
 
                                     // Continue AI turn
-                                    setTimeout(() => makeNextMove(), 500);
+                                    setTimeout(() => makeNextMove(), 1200);
                                 },
                                 true, // Automated mode
                                 false // showOverlay
@@ -8193,7 +8198,7 @@
                                     updateScoreDisplay();
 
                                     // Continue AI turn
-                                    setTimeout(() => makeNextMove(), 500);
+                                    setTimeout(() => makeNextMove(), 1200);
                                 },
                                 true, // Automated mode
                                 false // showOverlay
@@ -8230,7 +8235,7 @@
                                     updateScoreDisplay();
 
                                     // Continue AI turn
-                                    setTimeout(() => makeNextMove(), 500);
+                                    setTimeout(() => makeNextMove(), 1200);
                                 },
                                 true, // Automated mode
                                 false // showOverlay
@@ -8295,13 +8300,13 @@
 
                                             handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
                                                 // Continue AI turn after coin flip
-                                                setTimeout(() => makeNextMove(), 500);
+                                                setTimeout(() => makeNextMove(), 1200);
                                             });
                                             return;
                                         }
 
                                         // Continue AI turn
-                                        setTimeout(() => makeNextMove(), 500);
+                                        setTimeout(() => makeNextMove(), 1200);
                                     },
                                     true, // Automated mode
                                     false // showOverlay
@@ -8345,7 +8350,7 @@
 
                                     handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
                                         // Continue AI turn after coin flip
-                                        setTimeout(() => makeNextMove(), 500);
+                                        setTimeout(() => makeNextMove(), 1200);
                                     });
                                     return; // Exit to wait for coin flip callback
                                 }
@@ -8387,7 +8392,7 @@
                                         updateGameLog();
 
                                         // Continue AI turn
-                                        setTimeout(() => makeNextMove(), 500);
+                                        setTimeout(() => makeNextMove(), 1200);
                                     },
                                     true, // Automated mode
                                     false // showOverlay
@@ -8422,7 +8427,7 @@
                                         updateGameLog();
 
                                         // Continue AI turn
-                                        setTimeout(() => makeNextMove(), 500);
+                                        setTimeout(() => makeNextMove(), 1200);
                                     },
                                     true, // Automated mode
                                     false // showOverlay
@@ -8450,7 +8455,7 @@
                                         updateGameLog();
 
                                         // Continue AI turn
-                                        setTimeout(() => makeNextMove(), 500);
+                                        setTimeout(() => makeNextMove(), 1200);
                                     },
                                     true, // Automated mode
                                     false // showOverlay
@@ -8534,7 +8539,7 @@
 
                             handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
                                 // Continue AI turn after coin flip
-                                setTimeout(() => makeNextMove(), 500);
+                                setTimeout(() => makeNextMove(), 1200);
                             });
                             return; // Exit to wait for coin flip callback
                         }
@@ -8561,7 +8566,7 @@
 
                             handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
                                 // Continue AI turn after coin flip
-                                setTimeout(() => makeNextMove(), 500);
+                                setTimeout(() => makeNextMove(), 1200);
                             });
                             return; // Exit to wait for coin flip callback
                         }
@@ -8590,13 +8595,13 @@
                             console.error('AI post-move cleanup failed:', err);
                             completeAiTurn({ reason: 'AI move error. Player resumes turn.' });
                         }
-                    }, 800); // Highlight duration
+                    }, 1200); // Highlight duration
                 } catch (err) {
                     console.error('AI move evaluation failed:', err);
                     completeAiTurn({ reason: 'AI move error. Player resumes turn.' });
                 }
             }
-            setTimeout(() => makeNextMove(), 800); // Start after brief delay for player to see board state
+            setTimeout(() => makeNextMove(), 1500); // Start after brief delay for player to see board state
         }
 
         function resetGame() {
@@ -8764,7 +8769,7 @@
                         // Trigger AI turn after a brief delay
                         setTimeout(() => {
                             aiTurn();
-                        }, 1000);
+                        }, 1500);
                     }
                 }
             );
