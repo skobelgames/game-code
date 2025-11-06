@@ -5373,7 +5373,10 @@
                         movedPieces.add(`${selectedPiece.row},${selectedPiece.col}`);
                         movedPieces.add(`${opponentWizardRow},${opponentWizardCol}`);
                     }
-                    movesLeft -= move.cost;
+                    // Only deduct move cost if not in mercenary bonus turn mode
+                    if (!mercenaryBonusTurnActive) {
+                        movesLeft -= move.cost;
+                    }
                     lastAction = { move: true };
                     movedPieces.add(`${selectedPiece.row},${selectedPiece.col}`);
                     if (move.type === 'move' || move.type === 'teleport') {
@@ -5386,6 +5389,11 @@
                     updateStatus();
                     updateEndTurnButton();
                     checkGameOver();
+                    // Clear mercenary bonus turn state after move completes
+                    if (mercenaryBonusTurnActive) {
+                        mercenaryBonusTurnActive = false;
+                        mercenaryBonusTurnPiece = null;
+                    }
                     if (movesLeft === 0 && !reinforcementPending) {
                         triggerAiTurn();
                     }
@@ -6277,8 +6285,7 @@
                 mercenaryBonusTurnCount[piece.player] < 3) {
                 const coinFlip = mercenaryCoinFlip(piece.player);
                 if (coinFlip) {
-                    // Restore full move points for bonus turn
-                    movesLeft = initialMovesLeft;
+                    // Grant bonus turn (move points stay the same, mercenary move won't cost points)
                     mercenaryBonusTurnUsed[piece.player].add(piece);
                     mercenaryBonusTurnCount[piece.player]++;
                     // Remove the mercenary from movedPieces so it can move again
@@ -6287,7 +6294,7 @@
                     mercenaryBonusTurnActive = true;
                     mercenaryBonusTurnPiece = { row: toRow, col: toCol };
                     const remaining = 3 - mercenaryBonusTurnCount[piece.player];
-                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again. (${remaining} bonus turns remaining)`);
+                    gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again without cost. (${remaining} bonus turns remaining)`);
                     mercenaryBonusTurn = true;
                 } else {
                     gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
