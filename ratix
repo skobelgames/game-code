@@ -256,7 +256,7 @@
             font-size: 14px;
             text-align: left;
         }
-        #reinforce-modal, #turn-modal, #turn-move-modal, #turn-shoot-modal, #truce-modal, #coin-toss-modal, #king-summon-modal, #champion-summon-modal, #necromancer-summon-modal {
+        #reinforce-modal, #turn-modal, #turn-move-modal, #turn-shoot-modal, #truce-modal, #coin-toss-modal, #king-summon-modal, #champion-summon-modal, #necromancer-summon-modal, #game-stats-modal {
             display: none;
             position: fixed;
             top: 50%;
@@ -470,6 +470,20 @@
             border-color: #FFD700 !important;
             box-shadow: 0 0 10px #FFD700;
         }
+        /* Alternating glow when both timer warning and warcry are active */
+        #board.low-time.warcry-active-border {
+            animation: alternatingTimerWarcryGlow 2s ease-in-out infinite !important;
+        }
+        @keyframes alternatingTimerWarcryGlow {
+            0%, 100% {
+                border-color: #FFD700;
+                box-shadow: 0 0 30px #FFD700;
+            }
+            50% {
+                border-color: #d4af37;
+                box-shadow: 0 0 40px #d4af37;
+            }
+        }
         #board.coin-flip-success {
             border-color: #FFFFFF !important;
             box-shadow: 0 0 20px #FFFFFF;
@@ -633,6 +647,67 @@
                 border-color: #d4af37;
                 box-shadow: 0 0 40px #d4af37;
             }
+        }
+        /* Game stats modal styles */
+        #game-stats-modal {
+            z-index: 2004;
+            max-width: 600px;
+            min-width: 500px;
+        }
+        #game-stats-modal .modal-header {
+            background-color: #333;
+            color: #fff;
+            padding: 15px 20px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 8px 8px 0 0;
+        }
+        #game-stats-modal .modal-header span {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        #game-stats-modal .modal-content {
+            padding: 0;
+        }
+        #game-stats-content h2 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            color: #333;
+            text-align: center;
+        }
+        #game-stats-content h3 {
+            margin: 20px 0 10px 0;
+            font-size: 18px;
+            color: #555;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
+        }
+        #game-stats-content p {
+            margin: 8px 0;
+            font-size: 16px;
+            color: #333;
+        }
+        #stats-reason {
+            font-style: italic;
+            color: #666;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #stats-player-bonuses, #stats-ai-bonuses {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        #stats-player-bonuses p, #stats-ai-bonuses p {
+            margin: 5px 0;
+            font-size: 15px;
+        }
+        #game-stats-modal .modal-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        #game-stats-modal .modal-footer button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
@@ -833,6 +908,35 @@
     <div id="warcry-achievement-modal">
         <h1>WARCRY</h1>
         <p>Bonus Granted</p>
+    </div>
+    <div id="game-stats-modal">
+        <div class="modal-header">
+            <span id="game-stats-title">Game Complete</span>
+        </div>
+        <div class="modal-content">
+            <div id="game-stats-content">
+                <h2 id="stats-winner"></h2>
+                <p id="stats-reason"></p>
+                <div id="stats-scores">
+                    <h3>Final Scores</h3>
+                    <p id="stats-player-score"></p>
+                    <p id="stats-ai-score"></p>
+                </div>
+                <div id="stats-bonuses">
+                    <h3>Bonuses Earned</h3>
+                    <div id="stats-player-bonuses"></div>
+                    <div id="stats-ai-bonuses"></div>
+                </div>
+                <div id="stats-misc">
+                    <h3>Game Statistics</h3>
+                    <p id="stats-turn-count"></p>
+                    <p id="stats-duration"></p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="game-stats-close" onclick="closeGameStats()" style="background-color: #4CAF50; color: white; padding: 12px 30px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer;">Return to Main Menu</button>
+        </div>
     </div>
     <script>
         let ROWS = 10;
@@ -1639,6 +1743,7 @@
 
             if (turnScoreGain[player] >= HONOUR_THRESHOLD) {
                 nextTurnModifier[player] += HONOUR_BONUS;
+                gameStats.warcryBonusCount[player]++;
                 gameLog.push(`${player === 'W' ? 'Player' : 'AI'} triggered Honour (Warcry) bonus (+${HONOUR_BONUS} moves next turn).`);
                 logUpdated = true;
             }
@@ -1647,6 +1752,7 @@
             for (let type in losses) {
                 if (losses[type] >= 2 && !DESPAIR_EXCLUDED.has(type)) {
                     nextTurnModifier[opponent] -= DESPAIR_PENALTY;
+                    gameStats.despairPenaltyCount[opponent]++;
                     gameLog.push(`${opponent === 'W' ? 'Player' : 'AI'} suffers Despair penalty (-${DESPAIR_PENALTY} moves next turn).`);
                     logUpdated = true;
                     break;
@@ -2535,6 +2641,14 @@
         let reinforcementTotals = { 'W': 0, 'B': 0 };
         let infantryReinforcements = { 'W': 0, 'B': 0 };
 
+        // Game statistics tracking
+        let gameStats = {
+            warcryBonusCount: { 'W': 0, 'B': 0 },
+            despairPenaltyCount: { 'W': 0, 'B': 0 },
+            gameStartTime: null,
+            gameDuration: 0
+        };
+
         function updateAiPieceValues() {
             aiPieceValues = Object.fromEntries(Object.entries(basePieceValues).map(([k, v]) => [k, Math.round(v * pieceValueScale)]));
         }
@@ -2622,6 +2736,10 @@
 
         function startGameTimer() {
             stopGameTimer();
+            // Record game start time
+            if (gameStats.gameStartTime === null) {
+                gameStats.gameStartTime = Date.now();
+            }
             gameTimerInterval = setInterval(() => {
                 if (gameTimeRemaining > 0) {
                     gameTimeRemaining -= 1;
@@ -3769,6 +3887,29 @@
             if (boardDiv && boardDiv.classList.contains('warcry-active-border')) {
                 boardDiv.classList.remove('warcry-active-border');
             }
+        }
+
+        function closeGameStats() {
+            // Hide modal
+            const modal = document.getElementById('game-stats-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+
+            // Return to main menu
+            document.getElementById('start-menu').style.display = 'flex';
+            document.getElementById('game-container').style.display = 'none';
+            const landingHeader = document.getElementById('landing-header');
+            if (landingHeader) landingHeader.style.display = 'block';
+            const landingFooter = document.getElementById('landing-footer');
+            if (landingFooter) landingFooter.style.display = 'block';
+            resetVariantSelections();
+
+            // Reset game stats
+            gameStats.warcryBonusCount = { 'W': 0, 'B': 0 };
+            gameStats.despairPenaltyCount = { 'W': 0, 'B': 0 };
+            gameStats.gameStartTime = null;
+            gameStats.gameDuration = 0;
         }
 
         function renderBoard() {
@@ -8381,17 +8522,64 @@
             playerTurnTimeRemaining = 0;
             aiTurnTimeRemaining = 0;
             updateTimerDisplay();
-            const scoreSummary = `Final Score - Player: ${scores['W']}, AI: ${scores['B']}`;
-            let message;
-            if (winner === 'draw') {
-                message = `Draw! ${reason ? reason + ' ' : ''}${scoreSummary}`;
-            } else {
-                const winnerLabel = winner === 'W' ? 'Player' : 'AI';
-                message = `${winnerLabel} wins! ${reason ? reason + ' ' : ''}${scoreSummary}`;
+
+            // Calculate game duration
+            if (gameStats.gameStartTime !== null) {
+                gameStats.gameDuration = Math.floor((Date.now() - gameStats.gameStartTime) / 1000);
             }
+
+            // Prepare winner message
+            let winnerText, reasonText;
+            if (winner === 'draw') {
+                winnerText = 'Draw!';
+                reasonText = reason || 'Game ended in a draw';
+            } else {
+                const winnerLabel = winner === 'W' ? 'Player' : getOpponentDisplayName();
+                winnerText = `${winnerLabel} Wins!`;
+                reasonText = reason || 'Victory achieved';
+            }
+
+            // Add to game log
+            const scoreSummary = `Final Score - Player: ${scores['W']}, ${getOpponentDisplayName()}: ${scores['B']}`;
+            const message = `${winnerText} ${reasonText} ${scoreSummary}`;
             gameLog.push(message);
-            alert(message);
             updateGameLog();
+
+            // Populate stats modal
+            document.getElementById('stats-winner').textContent = winnerText;
+            document.getElementById('stats-reason').textContent = reasonText;
+            document.getElementById('stats-player-score').textContent = `Player: ${scores['W']} points`;
+            document.getElementById('stats-ai-score').textContent = `${getOpponentDisplayName()}: ${scores['B']} points`;
+
+            // Format bonuses
+            const playerBonusesDiv = document.getElementById('stats-player-bonuses');
+            const aiBonusesDiv = document.getElementById('stats-ai-bonuses');
+
+            const playerBonusHTML = `
+                <p><strong>Player:</strong></p>
+                <p>• Warcry Bonuses: ${gameStats.warcryBonusCount['W']}</p>
+                <p>• Despair Penalties: ${gameStats.despairPenaltyCount['W']}</p>
+            `;
+
+            const aiBonusHTML = `
+                <p><strong>${getOpponentDisplayName()}:</strong></p>
+                <p>• Warcry Bonuses: ${gameStats.warcryBonusCount['B']}</p>
+                <p>• Despair Penalties: ${gameStats.despairPenaltyCount['B']}</p>
+            `;
+
+            playerBonusesDiv.innerHTML = playerBonusHTML;
+            aiBonusesDiv.innerHTML = aiBonusHTML;
+
+            // Format duration
+            const minutes = Math.floor(gameStats.gameDuration / 60);
+            const seconds = gameStats.gameDuration % 60;
+            const durationStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            document.getElementById('stats-turn-count').textContent = `Total Turns: ${turnCount}`;
+            document.getElementById('stats-duration').textContent = `Game Duration: ${durationStr}`;
+
+            // Show stats modal
+            document.getElementById('game-stats-modal').style.display = 'block';
 
             // Reset game pause state
             gamePaused = false;
@@ -8403,14 +8591,6 @@
             // Clear AI pending and other active game states
             aiPending = false;
             reinforcementPending = null;
-
-            document.getElementById('start-menu').style.display = 'flex';
-            document.getElementById('game-container').style.display = 'none';
-            const landingHeader = document.getElementById('landing-header');
-            if (landingHeader) landingHeader.style.display = 'block';
-            const landingFooter = document.getElementById('landing-footer');
-            if (landingFooter) landingFooter.style.display = 'block';
-            resetVariantSelections();
         }
 
         function checkGameOver() {
