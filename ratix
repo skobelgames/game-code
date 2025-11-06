@@ -489,6 +489,20 @@
                 box-shadow: 0 0 0px #000000;
             }
         }
+        #board.coin-flip-failure {
+            animation: coinFlipFailure 1.5s ease-in-out;
+        }
+        @keyframes coinFlipFailure {
+            0% {
+                background-color: transparent;
+            }
+            50% {
+                background-color: #000000;
+            }
+            100% {
+                background-color: transparent;
+            }
+        }
         button {
             padding: 10px 20px;
             font-size: 16px;
@@ -2025,6 +2039,7 @@
                     moveZombieTo(fromRow, fromCol, targetRow, targetCol, player);
                     return 'moved';
                 } else {
+                    applyCoinFlipFailureEffect();
                     cleanupNecromancerTracking(zombie);
                     board[fromRow][fromCol] = null;
                     gameLog.push(`${playerLabel} zombie lost the clash against an opposing Zombie at (${targetRow},${targetCol}).`);
@@ -2041,6 +2056,7 @@
                 moveZombieTo(fromRow, fromCol, targetRow, targetCol, player);
                 return 'moved';
             } else {
+                applyCoinFlipFailureEffect();
                 gameLog.push(`${playerLabel} zombie failed to capture ${targetPiece.type} at (${targetRow},${targetCol}).`);
                 return 'stay';
             }
@@ -2077,6 +2093,7 @@
                 gameLog.push(`${attackerLabel} ${successVerb} Zombie at (${targetRow},${targetCol}) after winning the coin flip.`);
                 return { handled: true, success: true };
             } else {
+                applyCoinFlipFailureEffect();
                 // For ranged/shooting attacks, the attacker stays on the board
                 if (viaRanged) {
                     gameLog.push(`${attackerLabel} failed to ${attemptVerb} Zombie at (${targetRow},${targetCol}). The shot missed and the attacker remains safe.`);
@@ -3520,6 +3537,20 @@
             }
         }
 
+        function applyCoinFlipFailureEffect() {
+            const boardDiv = document.getElementById('board');
+            if (boardDiv) {
+                // Delay the effect by 2 seconds to sync with coin flip reveal
+                setTimeout(() => {
+                    boardDiv.classList.add('coin-flip-failure');
+                    // Remove the class after animation completes (1.5s)
+                    setTimeout(() => {
+                        boardDiv.classList.remove('coin-flip-failure');
+                    }, 1500);
+                }, 2000); // Wait 2 seconds for coin flip animation to complete
+            }
+        }
+
         function renderBoard() {
             const boardDiv = document.getElementById('board');
             boardDiv.innerHTML = '';
@@ -4483,6 +4514,7 @@
 
                                 gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} summoned a Spectre! (+3 bonus points)`);
                             } else {
+                                applyCoinFlipFailureEffect();
                                 // Failed summoning
                                 gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} failed to summon a Spectre.`);
                             }
@@ -4880,6 +4912,7 @@
                                     checkSupremacy(currentPlayer);
                                 }
                             } else {
+                                applyCoinFlipFailureEffect();
                                 gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry triple shot missed at (${targetRow},${targetCol}).`);
                             }
 
@@ -4954,6 +4987,7 @@
                                         movePiece(fromRow, fromCol, toRow, toCol, null);
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Pistolier successfully captured by landing!`);
                                     } else {
+                                        applyCoinFlipFailureEffect();
                                         // Failed to capture - still move but don't capture
                                         const targetPiece = board[toRow][toCol];
                                         board[toRow][toCol] = board[fromRow][fromCol];
@@ -5083,6 +5117,7 @@
                                         }
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} successfully captured the Spectre!`);
                                     } else {
+                                        applyCoinFlipFailureEffect();
                                         // Failed to capture Spectre - move not executed
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} failed to capture the Spectre.`);
                                     }
@@ -5176,6 +5211,7 @@
                                         }
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} successfully shot the Spectre!`);
                                     } else {
+                                        applyCoinFlipFailureEffect();
                                         // Failed to shoot Spectre
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} failed to shoot the Spectre.`);
                                     }
@@ -5225,6 +5261,7 @@
                                         shootPiece(fromRow, fromCol, row, col);
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Fusilier Crack Shot hit!`);
                                     } else {
+                                        applyCoinFlipFailureEffect();
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Fusilier Crack Shot missed.`);
                                     }
 
@@ -5266,6 +5303,7 @@
                                         shootPiece(fromRow, fromCol, row, col);
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Fusilier Crack Shot hit!`);
                                     } else {
+                                        applyCoinFlipFailureEffect();
                                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Fusilier Crack Shot missed.`);
                                     }
 
@@ -5639,6 +5677,7 @@
                             gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} succeeded summon but no empty squares in back row!`);
                         }
                     } else {
+                        applyCoinFlipFailureEffect();
                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} failed to summon ${unitType}.`);
                     }
 
@@ -5738,6 +5777,7 @@
                             gameLog.push('Necromancer summon succeeded but the chosen square was no longer available.');
                         }
                     } else {
+                        applyCoinFlipFailureEffect();
                         gameLog.push(`${player === 'W' ? 'Player' : 'AI'} failed to summon a Necromancer.`);
                     }
 
@@ -5872,6 +5912,7 @@
                             gameLog.push('Summon succeeded but the chosen square was occupied.');
                         }
                     } else {
+                        applyCoinFlipFailureEffect();
                         gameLog.push(`${player === 'W' ? 'Player' : 'AI'} failed to summon ${summonType}.`);
                     }
 
@@ -6255,6 +6296,7 @@
                     // Apply board glow effect for successful coin flip
                     applyCoinFlipSuccessEffect();
                 } else {
+                    applyCoinFlipFailureEffect();
                     gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} Mercenary lost the coin flip. No bonus turn.`);
                 }
             } else if (captured && piece.type === 'Mercenary' && piece.player === currentPlayer &&
@@ -7467,6 +7509,7 @@
                                 'AI is attempting to summon a Spectre...',
                                 (success) => {
                                     if (success) {
+                                        applyCoinFlipSuccessEffect();
                                         // Successfully summoned Spectre
                                         board[summonRow][summonCol] = { type: 'Spectre', player: 'B' };
                                         spectresSummoned['B']++;
@@ -7478,6 +7521,7 @@
 
                                         gameLog.push(`AI summoned a Spectre at (${summonRow},${summonCol})! (+3 bonus points)`);
                                     } else {
+                                        applyCoinFlipFailureEffect();
                                         // Failed summoning
                                         gameLog.push(`AI failed to summon a Spectre.`);
                                     }
@@ -7507,6 +7551,7 @@
                                 'AI is attempting to summon a Zombie...',
                                 (success) => {
                                     if (success) {
+                                        applyCoinFlipSuccessEffect();
                                         // Successfully summoned Zombie
                                         const zombiePiece = createZombiePiece('B');
                                         board[summonRow][summonCol] = zombiePiece;
@@ -7514,6 +7559,7 @@
 
                                         gameLog.push(`AI summoned a Zombie at (${summonRow},${summonCol})!`);
                                     } else {
+                                        applyCoinFlipFailureEffect();
                                         // Failed summoning
                                         gameLog.push(`AI failed to summon a Zombie.`);
                                     }
@@ -7543,6 +7589,7 @@
                                 'AI is attempting to summon a Spectre...',
                                 (success) => {
                                     if (success) {
+                                        applyCoinFlipSuccessEffect();
                                         // Successfully summoned Spectre
                                         const spectrePiece = createSpectrePiece('B');
                                         board[summonRow][summonCol] = spectrePiece;
@@ -7550,6 +7597,7 @@
 
                                         gameLog.push(`AI summoned a Spectre at (${summonRow},${summonCol})!`);
                                     } else {
+                                        applyCoinFlipFailureEffect();
                                         // Failed summoning
                                         gameLog.push(`AI failed to summon a Spectre.`);
                                     }
@@ -7581,9 +7629,11 @@
                                     'AI is attempting to capture the Spectre...',
                                     (success) => {
                                         if (success) {
+                                            applyCoinFlipSuccessEffect();
                                             movePiece(from[0], from[1], pos[0], pos[1], jump);
                                             gameLog.push(`AI successfully captured the Spectre!`);
                                         } else {
+                                            applyCoinFlipFailureEffect();
                                             gameLog.push(`AI failed to capture the Spectre.`);
                                         }
 
@@ -7672,9 +7722,11 @@
                                     'AI is attempting to shoot the Spectre...',
                                     (success) => {
                                         if (success) {
+                                            applyCoinFlipSuccessEffect();
                                             shootPiece(from[0], from[1], pos[0], pos[1]);
                                             gameLog.push(`AI successfully shot the Spectre!`);
                                         } else {
+                                            applyCoinFlipFailureEffect();
                                             gameLog.push(`AI failed to shoot the Spectre.`);
                                         }
 
@@ -7713,9 +7765,11 @@
                                         fusilierShotLastTurn[attackingPiece.player].delete(attackingPiece);
 
                                         if (success) {
+                                            applyCoinFlipSuccessEffect();
                                             shootPiece(from[0], from[1], pos[0], pos[1]);
                                             gameLog.push(`AI Fusilier Crack Shot hit!`);
                                         } else {
+                                            applyCoinFlipFailureEffect();
                                             gameLog.push(`AI Fusilier Crack Shot missed.`);
                                         }
 
@@ -7740,9 +7794,11 @@
                                         fusilierCrackShotActive = null;
 
                                         if (success) {
+                                            applyCoinFlipSuccessEffect();
                                             shootPiece(from[0], from[1], pos[0], pos[1]);
                                             gameLog.push(`AI Fusilier Crack Shot hit!`);
                                         } else {
+                                            applyCoinFlipFailureEffect();
                                             gameLog.push(`AI Fusilier Crack Shot missed.`);
                                         }
 
