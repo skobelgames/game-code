@@ -1162,6 +1162,27 @@
                 const reinforceModal = document.getElementById('reinforce-modal');
                 if (reinforceModal) reinforceModal.style.display = 'none';
 
+                // Hide modal overlay to ensure no overlay remains on main menu
+                const modalOverlay = document.getElementById('modal-overlay');
+                if (modalOverlay) modalOverlay.style.display = 'none';
+
+                // Hide any other modals that might be open
+                const modalsToClose = [
+                    'coin-toss-modal',
+                    'turn-modal',
+                    'turn-move-modal',
+                    'turn-shoot-modal',
+                    'warcry-achievement-modal',
+                    'game-stats-modal',
+                    'king-summon-modal',
+                    'how-to-play-modal',
+                    'truce-modal'
+                ];
+                modalsToClose.forEach(modalId => {
+                    const modalEl = document.getElementById(modalId);
+                    if (modalEl) modalEl.style.display = 'none';
+                });
+
                 // Show main menu
                 document.getElementById('game-container').style.display = 'none';
                 document.getElementById('start-menu').style.display = 'flex';
@@ -4028,11 +4049,36 @@
         }
 
         function closeGameStats() {
-            // Hide modal
+            // Hide game stats modal
             const modal = document.getElementById('game-stats-modal');
             if (modal) {
                 modal.style.display = 'none';
             }
+
+            // Hide modal overlay to ensure no overlay remains on main menu
+            const modalOverlay = document.getElementById('modal-overlay');
+            if (modalOverlay) {
+                modalOverlay.style.display = 'none';
+            }
+
+            // Hide any other modals that might be open
+            const modalsToClose = [
+                'coin-toss-modal',
+                'turn-modal',
+                'turn-move-modal',
+                'turn-shoot-modal',
+                'warcry-achievement-modal',
+                'reinforce-modal',
+                'champion-summon-modal',
+                'necromancer-summon-modal',
+                'king-summon-modal',
+                'how-to-play-modal',
+                'truce-modal'
+            ];
+            modalsToClose.forEach(modalId => {
+                const modalEl = document.getElementById(modalId);
+                if (modalEl) modalEl.style.display = 'none';
+            });
 
             // Return to main menu
             document.getElementById('start-menu').style.display = 'flex';
