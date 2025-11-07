@@ -193,13 +193,36 @@
         .valid-shoot { background-color: #ff2020 !important; }
         .valid-swap { background-color: #99ff99 !important; }
         .hint-highlight {
-            background-color: #00ffff !important;
-            box-shadow: 0 0 10px 3px #00ffff !important;
-            animation: pulse-hint 1s infinite;
+            background-color: transparent !important;
+            box-shadow: 0 0 16px rgba(0, 255, 255, 0.9) !important;
+            animation: pulse-hint 1.2s ease-in-out infinite;
+            position: relative;
+            z-index: 2;
+            opacity: 1 !important;
+        }
+        #coin-toss-progress {
+            display: none;
+            color: #000000 !important;
+            font-weight: bold;
+            margin-left: 12px;
+            text-shadow: none;
         }
         @keyframes pulse-hint {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            0%, 100% {
+                box-shadow: 0 0 16px rgba(0, 255, 255, 0.95);
+            }
+            50% {
+                box-shadow: 0 0 28px rgba(0, 255, 255, 0.25);
+            }
+        }
+        .energy-blast-path,
+        .energy-blast-residual {
+            background-color: transparent !important;
+            box-shadow: 0 0 16px rgba(0, 255, 255, 0.9) !important;
+            animation: pulse-hint 1.2s ease-in-out infinite;
+            position: relative;
+            z-index: 2;
+            opacity: 1 !important;
         }
         .piece-arrow {
             font-size: 12px;
@@ -256,7 +279,7 @@
             font-size: 14px;
             text-align: left;
         }
-        #reinforce-modal, #turn-modal, #turn-move-modal, #turn-shoot-modal, #truce-modal, #coin-toss-modal, #king-summon-modal, #champion-summon-modal, #necromancer-summon-modal, #game-stats-modal {
+        #reinforce-modal, #turn-modal, #turn-move-modal, #turn-shoot-modal, #truce-modal, #coin-toss-modal, #king-summon-modal, #champion-summon-modal, #necromancer-summon-modal, #spell-direction-modal, #protection-modal, #game-stats-modal {
             display: none;
             position: fixed;
             top: 50%;
@@ -513,6 +536,25 @@
                 box-shadow: 0 0 0px #000000;
             }
         }
+        #board.coin-flip-success-energy {
+            border-color: #6a80ff !important;
+            box-shadow: 0 0 24px #8fd4ff;
+            animation: coinFlipEnergyBlastGlow 1.5s ease-in-out;
+        }
+        @keyframes coinFlipEnergyBlastGlow {
+            0% {
+                border-color: #000000;
+                box-shadow: 0 0 0px #000000;
+            }
+            50% {
+                border-color: #6a80ff;
+                box-shadow: 0 0 32px #9fd6ff;
+            }
+            100% {
+                border-color: #000000;
+                box-shadow: 0 0 0px #000000;
+            }
+        }
         #board.coin-flip-failure {
             animation: coinFlipFailure 1.5s ease-in-out;
         }
@@ -628,6 +670,95 @@
         @keyframes fadeOutWarcryAchievementBackground {
             from { background-color: #000000; }
             to { background-color: #202020; }
+        }
+        .energy-blast-overlay {
+            background: linear-gradient(135deg, #150c2b 0%, #24104f 50%, #150c2b 100%) !important;
+            background-size: 400% 400%;
+            animation: energyBlastOverlay 6s ease-in-out infinite;
+            position: relative;
+        }
+        @keyframes energyBlastOverlay {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        .energy-blast-overlay::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at 20% 20%, rgba(143, 212, 255, 0.25), transparent 70%),
+                        radial-gradient(circle at 80% 0%, rgba(106, 128, 255, 0.2), transparent 65%),
+                        radial-gradient(circle at 60% 80%, rgba(80, 58, 255, 0.15), transparent 70%);
+            animation: energyBlastRipple 12s linear infinite;
+            z-index: 0;
+            opacity: 0.4;
+        }
+        @keyframes energyBlastRipple {
+            0% {
+                transform: translate3d(0, 0, 0);
+                opacity: 0.5;
+            }
+            50% {
+                transform: translate3d(-2%, -1%, 0);
+                opacity: 0.35;
+            }
+            100% {
+                transform: translate3d(2%, 1%, 0);
+                opacity: 0.5;
+            }
+        }
+        #energy-blast-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #0e1330;
+            padding: 30px 40px;
+            border: 2px solid #6a80ff;
+            border-radius: 10px;
+            z-index: 2003;
+            text-align: center;
+            min-width: 400px;
+            box-shadow: 0 0 30px rgba(122, 146, 255, 0.8);
+        }
+        #energy-blast-popup h1 {
+            margin: 0;
+            font-size: 48px;
+            color: #8fd4ff;
+            text-shadow: 0 0 15px rgba(143, 212, 255, 0.8);
+            letter-spacing: 4px;
+        }
+        #energy-blast-popup p {
+            margin: 15px 0 0 0;
+            font-size: 20px;
+            color: #c5e4ff;
+        }
+        #board.energy-blast-glow {
+            border-color: #6a80ff !important;
+            box-shadow: 0 0 20px #6a80ff;
+            animation: energyBlastGlow 1.6s ease-in-out infinite !important;
+        }
+        @keyframes energyBlastGlow {
+            0% {
+                box-shadow: 0 0 10px #4b5dff;
+            }
+            50% {
+                box-shadow: 0 0 32px #9fd6ff;
+            }
+            100% {
+                box-shadow: 0 0 10px #4b5dff;
+            }
         }
         /* Active warcry bonus background */
         .warcry-active-background {
@@ -784,6 +915,13 @@
             </div>
         </div>
         <div class="variant-option">
+            <button id="variant-btn-36s-supreme" data-ready="false" onclick="handleVariantClick('36s-supreme')">36's (Supreme)</button>
+            <div id="variant-info-36s-supreme" class="variant-info">
+                <p class="variant-description">Board: 10x14. Layout mirrors the Elite formation but unlocks experimental spellcraft for Wizards and Necromancers.</p>
+                <p class="variant-difficulty"><strong>Recommended skill:</strong> Intended for master tacticians who can leverage high-risk, high-reward magic.</p>
+            </div>
+        </div>
+        <div class="variant-option">
             <button id="variant-btn-ccb" data-ready="false" onclick="handleVariantClick('ccb')">24's Close-Combat Battle</button>
             <div id="variant-info-ccb" class="variant-info">
                 <p class="variant-description">Board: 8x12. Layout: no buffer columns, keeping Infantry and the elite Cavalry/Troll/Dragon/Wizard formation in immediate close-quarters contact.</p>
@@ -854,6 +992,8 @@
             <button id="inferno-button" onclick="activateInferno()" style="display: none;">Inferno</button>
             <button id="strafe-button" onclick="activateStrafe()" style="display: none;">Strafe</button>
             <button id="summon-spectre-button" onclick="activateSummonSpectre()" style="display: none;">Summon Spectre</button>
+            <button id="energy-blast-button" onclick="activateEnergyBlast()" style="display: none;">Energy Blast</button>
+            <button id="sacrifice-button" onclick="activateSacrifice()" style="display: none;">Sacrifice</button>
             <button id="hint-button" onclick="showHint()" style="display: none;">Get Hint</button>
             <button id="end-turn-button" onclick="endTurn()" disabled>End Round</button>
         </div>
@@ -887,6 +1027,22 @@
         <div class="modal-header"><span>Necromancer Summon</span><button class="modal-close" onclick="closeNecromancerSummonModal()" aria-label="Close">&times;</button></div>
         <select id="necromancer-summon-select"></select>
         <button onclick="confirmNecromancerSummon()">Summon (2 pts + coin flip)</button>
+    </div>
+    <div id="spell-direction-modal">
+        <div class="modal-header"><span id="spell-direction-title">Select Direction</span><button class="modal-close" onclick="closeSpellDirectionModal()" aria-label="Close">&times;</button></div>
+        <select id="spell-direction-select"></select>
+        <button onclick="confirmSpellDirection()">Confirm</button>
+    </div>
+    <div id="protection-modal">
+        <div class="modal-header"><span>Spell Protection</span><button class="modal-close" onclick="declineProtection()" aria-label="Close">&times;</button></div>
+        <div class="modal-content">
+            <p id="protection-message"></p>
+            <select id="protection-select"></select>
+        </div>
+        <div class="modal-footer">
+            <button onclick="confirmProtection()">Sacrifice</button>
+            <button onclick="declineProtection()">Decline</button>
+        </div>
     </div>
     <div id="turn-modal">
         <div class="modal-header"><span>Select Facing Direction</span><button class="modal-close" onclick="closeTurnModal()" aria-label="Close">&times;</button></div>
@@ -940,11 +1096,16 @@
         <div class="modal-footer">
             <button id="coin-toss-start" onclick="startCoinToss()" style="display: none; background-color: #2196F3;">Flip Coin</button>
             <button id="coin-toss-continue" onclick="closeCoinToss()" style="display: none; background-color: #4CAF50;">Continue</button>
+            <span id="coin-toss-progress" class="coin-progress">Successes: 0/0</span>
         </div>
     </div>
     <div id="warcry-achievement-modal">
         <h1>WARCRY</h1>
         <p>Bonus Granted</p>
+    </div>
+    <div id="energy-blast-popup">
+        <h1>ENERGY BLAST</h1>
+        <p>Spell Unleashed</p>
     </div>
     <div id="game-stats-modal">
         <div class="modal-header">
@@ -1063,11 +1224,16 @@
         let gameOver = false; // Track if game has ended
         let pausedTimers = { game: null, turn: null, turnPlayer: null }; // Store timer states when paused
 
+        const ENERGY_BLAST_FLIP_COUNT = 4;
+        const ENERGY_BLAST_RESIDUAL_DURATION = 3;
+        const ENERGY_BLAST_STEP_PROBABILITIES = [0, 0.9375, 0.6875, 0.3125, 0.0625];
+        const ENERGY_BLAST_AI_THRESHOLD = 6;
         const VARIANT_LABELS = {
             '24s': "24's (Standard)",
             '36s': "36's (Advanced)",
             '36s-expert': "36's (Expert)",
             '36s-elite': "36's (Elite)",
+            '36s-supreme': "36's (Supreme)",
             'ccb': "24's Close-Combat Battle"
         };
         const VARIANT_KEYS = Object.keys(VARIANT_LABELS);
@@ -1221,6 +1387,7 @@
                     <li><strong>36's (Advanced):</strong> 10x14 board with 36 pieces per side - includes Archers, Ballistas, and Ogres</li>
                     <li><strong>36's (Expert):</strong> 10x14 board with 36 pieces per side - includes all advanced pieces plus Mercenaries and Elephantry</li>
                     <li><strong>36's (Elite):</strong> 10x14 board with 36 pieces per side - includes all Expert pieces plus Necromancers and Zombies for advanced summoning gameplay</li>
+                    <li><strong>36's (Supreme):</strong> 10x14 board with the Elite roster and unlocks experimental spellcraft for Wizards and Necromancers.</li>
                     <li><strong>24's Close-Combat Battle:</strong> Smaller 8x12 board for faster games</li>
                 </ul>
 
@@ -1305,6 +1472,14 @@
                     <li><strong>Archer - Longshot Diagonal:</strong> Shoot diagonally 2 squares (2 points, twice per game)</li>
                     <li><strong>Ballista - Extend Range:</strong> +1 shooting range this round (2 points, once per round)</li>
                     <li><strong>Ballista - Double Time:</strong> Move 2 squares in one direction (2 points, twice per game)</li>
+                </ul>
+
+                <h2>Supreme Spellcraft</h2>
+                <p>Exclusive to the 36's (Supreme) variant:</p>
+                <ul>
+                    <li><strong>Energy Blast:</strong> Wizards and Necromancers must first succeed on a spellcasting coin flip (costs 2 move points even on failure), then perform four consecutive flips (1 square per success) to determine the blast distance. First use costs 2 move points, second costs 3. The blast travels straight or diagonally toward the opponent's side and vaporizes every enemy along its path while ignoring friendlies.</li>
+                    <li><strong>Sacrifice Spell:</strong> Once per game, a Wizard or Necromancer may spend 3 move points, win a coin flip, and remove themselves from play to detonate a blast that reaches 2 squares orthogonally and 1 square diagonally. Only available if the coin flip succeeds.</li>
+                    <li><strong>Protection:</strong> When a spell would capture a King, that player may (once per game) spend 2 score points and sacrifice a Wizard, Necromancer, or Champion to negate the capture.</li>
                 </ul>
 
                 <h2>Tips</h2>
@@ -1543,7 +1718,9 @@
                 document.getElementById('coin-toss-description').textContent = 'The coin will flip to determine the outcome. White side means success, black side means failure.';
             }
 
-            document.getElementById('coin-toss-continue').style.display = 'none';
+            const continueBtn = document.getElementById('coin-toss-continue');
+            if (continueBtn) continueBtn.style.display = 'none';
+            updateCoinTossEnergyBlastProgress();
 
             // If automated (AI action), hide the button and auto-start
             if (automated) {
@@ -1578,6 +1755,8 @@
             document.getElementById('coin-toss-message').textContent = 'Flipping...';
 
             const coinResult = document.getElementById('coin-result');
+            const continueBtn = document.getElementById('coin-toss-continue');
+            const isEnergyBlastFlip = !!coinTossEnergyBlastMode;
 
             // Determine result
             const result = Math.random() < 0.5; // true = white (success), false = black (failure)
@@ -1603,7 +1782,7 @@
                         document.getElementById('coin-toss-message').textContent = "You won the coin toss! You're going first.";
                     } else {
                         document.getElementById('coin-toss-message').textContent = "Success!";
-                        applyCoinFlipSuccessEffect();
+                        applyCoinFlipSuccessEffect(coinTossSpecialEffect);
                     }
                 } else {
                     coinResult.classList.add('black');
@@ -1617,12 +1796,25 @@
                         applyCoinFlipFailureEffect();
                     }
                 }
+                coinTossSpecialEffect = null;
+
+                if (coinTossEnergyBlastMode) {
+                    coinTossEnergyBlastMode.successes = Math.min(
+                        coinTossEnergyBlastMode.total || ENERGY_BLAST_FLIP_COUNT,
+                        (coinTossEnergyBlastMode.successes || 0) + (result ? 1 : 0)
+                    );
+                    updateCoinTossEnergyBlastProgress();
+                }
 
                 // Show continue button after result is displayed
+                const showDelay = isEnergyBlastFlip ? 0 : 500;
                 setTimeout(() => {
-                    document.getElementById('coin-toss-continue').style.display = 'inline-block';
+                    if (!isEnergyBlastFlip && continueBtn) {
+                        continueBtn.style.display = 'inline-block';
+                    }
 
                     // Auto-close after a delay
+                    const autoCloseDelay = isEnergyBlastFlip ? 800 : 2000;
                     setTimeout(() => {
                         // Close overlay and modal
                         if (window.coinTossShowOverlay) {
@@ -1655,8 +1847,8 @@
                             }
                             pausedTimers = { game: null, turn: null, turnPlayer: null };
                         }, 300);
-                    }, 2000);
-                }, 500);
+                    }, autoCloseDelay);
+                }, showDelay);
             }, 2000);
         }
 
@@ -1857,9 +2049,13 @@
                 validMoves = [];
             }
 
+            pendingEnergyBlast = null;
+            activeEnergyBlastCost = null;
             renderBoard();
             updateStatus();
             updateEndTurnButton();
+            resumeGameForEnergyBlastFlips();
+            removeEnergyBlastGlow();
         }
 
         function applyEndTurnEffects(player) {
@@ -1996,6 +2192,7 @@
             roundLosses[player] = roundLosses[player] || {};
             roundLosses[opponent] = {};
             decrementNecromancerCooldown(player);
+            decayEnergyBlastResiduals(player);
             let turnStartHandled = false;
             const finalizeTurnStart = () => {
                 if (turnStartHandled) return;
@@ -2033,6 +2230,20 @@
             return moves > 0;
         }
         let highlightSquares = [];
+        let pendingSpellAction = null;
+        let energyBlastUsage = new Map();
+        let sacrificeAttemptedPieces = new Set();
+        let energyBlastFlipContext = null;
+        let pendingEnergyBlast = null;
+        let activeEnergyBlastCost = null;
+        let energyBlastGlowActive = false;
+        let energyBlastResidualSquares = new Map();
+        let energyBlastFlipPauseState = null;
+        let coinTossEnergyBlastMode = null;
+        let coinTossSpecialEffect = null;
+        let pendingAiEnergyBlastResume = null;
+        let protectionUsed = { 'W': false, 'B': false };
+        let pendingProtection = null;
         let kingSpecialUsed = { 'W': false, 'B': false };
         let wizardTeleportUsed = { 'W': 0, 'B': 0 };
         let wizardTeleportSwapUsed = { 'W': false, 'B': false };
@@ -2306,6 +2517,10 @@
             return null;
         }
 
+        function hasBackRowSpawnSlot(player) {
+            return findBackRowSpawnColumn(player) !== null;
+        }
+
         function spawnZombieAtBackRow(player, preferredCol = null) {
             const spawnCol = findBackRowSpawnColumn(player, preferredCol);
             if (spawnCol === null) return false;
@@ -2509,7 +2724,7 @@
         }
 
         function advanceZombiesForPlayer(player, onComplete = null) {
-            if (gameVariant !== '36s-elite') {
+            if (gameVariant !== '36s-elite' && gameVariant !== '36s-supreme') {
                 if (typeof onComplete === 'function') {
                     onComplete();
                 }
@@ -2694,7 +2909,7 @@
 
         // Current AI profile (selected randomly at game start)
         let currentAiProfile = null;
-        const LARGE_BOARD_VARIANTS = ['36s', '36s-expert', '36s-elite'];
+        const LARGE_BOARD_VARIANTS = ['36s', '36s-expert', '36s-elite', '36s-supreme'];
         let aiSearchDeadline = 0;
         function aiTimeExpired() {
             return aiSearchDeadline && Date.now() >= aiSearchDeadline;
@@ -3802,6 +4017,9 @@
             } else if (variant === '36s-elite') {
                 ROWS = 10;
                 COLS = 14;
+            } else if (variant === '36s-supreme') {
+                ROWS = 10;
+                COLS = 14;
             } else if (variant === 'ccb') {
                 ROWS = 8;
                 COLS = 12;
@@ -3895,7 +4113,7 @@
                         firstMoves.add(`1,${c},B`);
                     }
                 }
-            } else if (gameVariant === '36s-elite') {
+            } else if (gameVariant === '36s-elite' || gameVariant === '36s-supreme') {
                 const backRowW = ['Cavalry', 'Ogre', 'Ballista', 'Wizard', 'Guard', 'Champion', 'King', 'Guard', 'Wizard', 'Ballista', 'Ogre', 'Cavalry'];
                 const backRowB = ['Cavalry', 'Ogre', 'Ballista', 'Wizard', 'Guard', 'King', 'Champion', 'Guard', 'Wizard', 'Ballista', 'Ogre', 'Cavalry']; // King and Champion swapped for AI
                 const secondRow = ['Cavalry', 'Troll', 'Dragon', 'Archer', 'Archer', 'Guard', 'Guard', 'Archer', 'Archer', 'Dragon', 'Troll', 'Cavalry'];
@@ -3933,16 +4151,15 @@
             // Don't render board here - wait until coin toss determines starting player
         }
 
-        function applyCoinFlipSuccessEffect() {
+        function applyCoinFlipSuccessEffect(theme = null) {
             const boardDiv = document.getElementById('board');
-            if (boardDiv) {
-                // Add white border glow effect to the board
-                boardDiv.classList.add('coin-flip-success');
-                // Remove the class after animation completes (1.5s)
-                setTimeout(() => {
-                    boardDiv.classList.remove('coin-flip-success');
-                }, 1500);
-            }
+            if (!boardDiv) return;
+            const effectClass = theme === 'energy-blast' ? 'coin-flip-success-energy' : 'coin-flip-success';
+            boardDiv.classList.remove('coin-flip-success', 'coin-flip-success-energy');
+            boardDiv.classList.add(effectClass);
+            setTimeout(() => {
+                boardDiv.classList.remove(effectClass);
+            }, 1500);
         }
 
         function applyCoinFlipFailureEffect() {
@@ -4034,6 +4251,205 @@
             pausedTimers = { game: null, turn: null, turnPlayer: null };
         }
 
+        function applyEnergyBlastGlow() {
+            const board = document.getElementById('board');
+            if (board) {
+                board.classList.add('energy-blast-glow');
+            }
+            const body = document.body;
+            if (body) {
+                body.classList.add('energy-blast-overlay');
+            }
+            energyBlastGlowActive = true;
+        }
+
+        function removeEnergyBlastGlow() {
+            if (!energyBlastGlowActive) return;
+            const board = document.getElementById('board');
+            if (board) {
+                board.classList.remove('energy-blast-glow');
+            }
+            const body = document.body;
+            if (body) {
+                body.classList.remove('energy-blast-overlay');
+            }
+            energyBlastGlowActive = false;
+        }
+
+        function showEnergyBlastPopup(callback = () => {}) {
+            const modal = document.getElementById('energy-blast-popup');
+            if (!modal) {
+                callback();
+                return;
+            }
+            pausedTimers.game = gameTimerInterval;
+            pausedTimers.turn = turnTimerInterval;
+            pausedTimers.turnPlayer = currentTurnTimerPlayer;
+            stopGameTimer();
+            stopTurnTimer();
+            gamePaused = true;
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                if (pausedTimers.game && gameTimeRemaining > 0) {
+                    startGameTimer();
+                }
+                if (pausedTimers.turn && pausedTimers.turnPlayer) {
+                    if (pausedTimers.turnPlayer === 'W' && playerTurnTimeRemaining > 0) {
+                        startTurnTimer('W');
+                    } else if (pausedTimers.turnPlayer === 'B' && aiTurnTimeRemaining > 0) {
+                        startTurnTimer('B');
+                    }
+                }
+                pausedTimers = { game: null, turn: null, turnPlayer: null };
+                gamePaused = false;
+                callback();
+            }, 2000);
+        }
+
+        function pauseGameForEnergyBlastFlips() {
+            if (!energyBlastFlipPauseState) {
+                energyBlastFlipPauseState = {
+                    wasPaused: gamePaused,
+                    gameRunning: !!gameTimerInterval,
+                    turnRunning: !!turnTimerInterval,
+                    turnPlayer: currentTurnTimerPlayer
+                };
+            }
+            stopGameTimer();
+            stopTurnTimer();
+            gamePaused = true;
+        }
+
+        function resumeGameForEnergyBlastFlips() {
+            if (!energyBlastFlipPauseState) return;
+            if (!energyBlastFlipPauseState.wasPaused) {
+                if (energyBlastFlipPauseState.gameRunning && gameTimeRemaining > 0) {
+                    startGameTimer();
+                }
+                if (energyBlastFlipPauseState.turnRunning && energyBlastFlipPauseState.turnPlayer) {
+                    if (energyBlastFlipPauseState.turnPlayer === 'W' && playerTurnTimeRemaining > 0) {
+                        startTurnTimer('W');
+                    } else if (energyBlastFlipPauseState.turnPlayer === 'B' && aiTurnTimeRemaining > 0) {
+                        startTurnTimer('B');
+                    }
+                }
+                gamePaused = false;
+            }
+            energyBlastFlipPauseState = null;
+        }
+
+        function updateCoinTossEnergyBlastProgress() {
+            const progressEl = document.getElementById('coin-toss-progress');
+            const continueBtn = document.getElementById('coin-toss-continue');
+            if (!progressEl) return;
+            if (coinTossEnergyBlastMode && coinTossEnergyBlastMode.type === 'range') {
+                const successes = coinTossEnergyBlastMode.successes || 0;
+                const total = coinTossEnergyBlastMode.total || ENERGY_BLAST_FLIP_COUNT;
+                progressEl.style.display = 'inline-block';
+                progressEl.textContent = `Successes: ${successes}/${total}`;
+                if (continueBtn) {
+                    continueBtn.style.display = 'none';
+                }
+            } else {
+                progressEl.style.display = 'none';
+            }
+        }
+
+        function addEnergyBlastResidualSquares(squares) {
+            if (!squares || !squares.length) return;
+            squares.forEach(({ row, col }) => {
+                const key = `${row},${col}`;
+                energyBlastResidualSquares.set(key, ENERGY_BLAST_RESIDUAL_DURATION);
+            });
+            refreshEnergyBlastResidualHighlights();
+        }
+
+        function decayEnergyBlastResiduals(player) {
+            if (!energyBlastResidualSquares.size) return;
+            if (player && player !== 'W') return;
+            let changed = false;
+            const updated = new Map();
+            energyBlastResidualSquares.forEach((value, key) => {
+                const next = value - 1;
+                if (next > 0) {
+                    updated.set(key, next);
+                    if (next !== value) changed = true;
+                } else {
+                    changed = true;
+                }
+            });
+            energyBlastResidualSquares = updated;
+            if (changed) {
+                refreshEnergyBlastResidualHighlights();
+            }
+        }
+
+        function refreshEnergyBlastResidualHighlights() {
+            const squares = document.querySelectorAll('.square');
+            squares.forEach(square => {
+                const key = `${square.dataset.row},${square.dataset.col}`;
+                if (energyBlastResidualSquares.has(key)) {
+                    square.classList.add('energy-blast-residual');
+                } else {
+                    square.classList.remove('energy-blast-residual');
+                }
+            });
+        }
+
+        function animateEnergyBlastPath(pathSquares, callback) {
+            if (!pathSquares || !pathSquares.length) {
+                callback();
+                return;
+            }
+            const wasPaused = gamePaused;
+            const savedTurnPlayer = currentTurnTimerPlayer;
+            if (!wasPaused) {
+                stopGameTimer();
+                stopTurnTimer();
+                gamePaused = true;
+            }
+            const highlighted = [];
+            const stepDuration = 220;
+
+            const removeHighlights = () => {
+                highlighted.forEach(el => el.classList.remove('energy-blast-path'));
+                highlighted.length = 0;
+            };
+
+            const finishAnimation = () => {
+                removeHighlights();
+                if (!wasPaused) {
+                    gamePaused = false;
+                    if (gameTimeRemaining > 0) {
+                        startGameTimer();
+                    }
+                    if (savedTurnPlayer === 'W' && playerTurnTimeRemaining > 0) {
+                        startTurnTimer('W');
+                    } else if (savedTurnPlayer === 'B' && aiTurnTimeRemaining > 0) {
+                        startTurnTimer('B');
+                    }
+                }
+                callback();
+            };
+
+            const highlightStep = (index) => {
+                if (index >= pathSquares.length) {
+                    setTimeout(() => finishAnimation(), stepDuration);
+                    return;
+                }
+                const { row, col } = pathSquares[index];
+                const square = document.querySelector(`.square[data-row="${row}"][data-col="${col}"]`);
+                if (square) {
+                    square.classList.add('energy-blast-path');
+                    highlighted.push(square);
+                }
+                setTimeout(() => highlightStep(index + 1), stepDuration);
+            };
+
+            highlightStep(0);
+        }
+
         function applyWarcryActiveBackground() {
             const body = document.body;
             const boardDiv = document.getElementById('board');
@@ -4108,6 +4524,10 @@
                             square.appendChild(arrow);
                         }
                     }
+                    const squareKey = `${r},${c}`;
+                    if (energyBlastResidualSquares.has(squareKey)) {
+                        square.classList.add('energy-blast-residual');
+                    }
                     square.addEventListener('click', () => handleClick(r, c));
                     boardDiv.appendChild(square);
                     if (currentPlayer === 'B' && highlightSquares.some(([hr, hc]) => hr == r && hc == c)) {
@@ -4119,6 +4539,7 @@
             highlightValidMoves();
             updateScoreDisplay();
             updateEndTurnButton();
+            refreshEnergyBlastResidualHighlights();
             // Apply capture effects after rendering
             capturedSquares.forEach(([r, c]) => addCaptureEffect(r, c));
             capturedSquares = [];
@@ -4151,6 +4572,8 @@
             const infernoButton = document.getElementById('inferno-button'); // Get Inferno button
             const strafeButton = document.getElementById('strafe-button'); // Get Strafe button
             const summonSpectreButton = document.getElementById('summon-spectre-button'); // Get Summon Spectre button
+            const energyBlastButton = document.getElementById('energy-blast-button');
+            const sacrificeButton = document.getElementById('sacrifice-button');
             // Ballista special buttons
             let ballistaRangeButton = document.getElementById('ballista-range-button');
             let ballistaDoubleButton = document.getElementById('ballista-double-button');
@@ -4286,6 +4709,14 @@
             infernoButton.style.display = 'none'; // Hide Inferno button by default
             strafeButton.style.display = 'none'; // Hide Strafe button by default
             summonSpectreButton.style.display = 'none'; // Hide Summon Spectre button by default
+            if (energyBlastButton) {
+                energyBlastButton.style.display = 'none';
+                energyBlastButton.disabled = true;
+            }
+            if (sacrificeButton) {
+                sacrificeButton.style.display = 'none';
+                sacrificeButton.disabled = true;
+            }
             if (ballistaRangeButton) ballistaRangeButton.style.display = 'none';
             if (ballistaDoubleButton) ballistaDoubleButton.style.display = 'none';
             if (elephantryChargeButton) elephantryChargeButton.style.display = 'none';
@@ -4330,7 +4761,7 @@
                         guardHonourButton.disabled = false;
                     }
                     // Show King summon button in Expert-tier modes
-                    if (piece.type === 'King' && (gameVariant === '36s-expert' || gameVariant === '36s-elite') && movesLeft >= 2) {
+                    if (piece.type === 'King' && (gameVariant === '36s-expert' || gameVariant === '36s-elite' || gameVariant === '36s-supreme') && movesLeft >= 2 && hasBackRowSpawnSlot(currentPlayer)) {
                         const canSummonPistolier = pistoliersSummoned[currentPlayer] < 2;
                         const canSummonFusilier = fusiliersSummoned[currentPlayer] < 2;
                         if (canSummonPistolier || canSummonFusilier) {
@@ -4338,14 +4769,14 @@
                             kingSummonButton.disabled = false;
                         }
                     }
-                    if (piece.type === 'Champion' && gameVariant === '36s-elite' && movesLeft >= 2) {
+                    if (piece.type === 'Champion' && (gameVariant === '36s-elite' || gameVariant === '36s-supreme') && movesLeft >= 2 && hasBackRowSpawnSlot(currentPlayer)) {
                         const maxNecromancers = 2;
                         if (necromancersSummoned[currentPlayer] < maxNecromancers) {
                             championSummonButton.style.display = 'inline';
                             championSummonButton.disabled = false;
                         }
                     }
-                    if (piece.type === 'Necromancer' && gameVariant === '36s-elite') {
+                    if (piece.type === 'Necromancer' && (gameVariant === '36s-elite' || gameVariant === '36s-supreme')) {
                         const pieceKey = board[selectedPiece.row][selectedPiece.col];
                         const teleportsUsed = getNecromancerTeleportCount(pieceKey);
                         if (movesLeft >= 2) {
@@ -4395,6 +4826,20 @@
                         if (totalCaptured >= 5) {
                             summonSpectreButton.style.display = 'inline';
                             summonSpectreButton.disabled = false;
+                        }
+                    }
+                    if (isSpellVariant() && isSpellCasterPiece(piece)) {
+                        if (energyBlastButton) {
+                            const uses = energyBlastUsage.get(piece) || 0;
+                            if (uses < 2) {
+                                const blastCost = uses === 0 ? 2 : 3;
+                                energyBlastButton.style.display = 'inline';
+                                energyBlastButton.disabled = movesLeft < blastCost;
+                            }
+                        }
+                        if (sacrificeButton) {
+                            sacrificeButton.style.display = 'inline';
+                            sacrificeButton.disabled = movesLeft < 3 || sacrificeAttemptedPieces.has(piece);
                         }
                     }
                     if (piece.type === 'Ballista' && movesLeft >= 2) {
@@ -4505,6 +4950,355 @@
             return validDirections[currentFacing] || [];
         }
 
+        function isSpellVariant() {
+            return gameVariant === '36s-supreme';
+        }
+
+        function isSpellCasterPiece(piece) {
+            return !!piece && (piece.type === 'Wizard' || piece.type === 'Necromancer');
+        }
+
+        function getSpellDirectionOptions(player) {
+            const forwardStep = player === 'W' ? -1 : 1;
+            return [
+                { id: 'forward', label: 'Forward', dr: forwardStep, dc: 0 },
+                { id: 'diagLeft', label: 'Forward-Left', dr: forwardStep, dc: player === 'W' ? -1 : 1 },
+                { id: 'diagRight', label: 'Forward-Right', dr: forwardStep, dc: player === 'W' ? 1 : -1 }
+            ];
+        }
+
+        function openSpellDirectionModal(action) {
+            const modal = document.getElementById('spell-direction-modal');
+            const select = document.getElementById('spell-direction-select');
+            if (!modal || !select) return;
+            const piece = board[action.row]?.[action.col];
+            if (!piece) return;
+            const options = getSpellDirectionOptions(piece.player);
+            if (!options.length) return;
+            select.innerHTML = options.map(opt => `<option value="${opt.id}">${opt.label}</option>`).join('');
+            document.getElementById('spell-direction-title').textContent = action.type === 'energyBlast'
+                ? 'Select Energy Blast Direction'
+                : 'Select Direction';
+            pendingSpellAction = { ...action, directions: options, player: piece.player };
+            modal.style.display = 'block';
+        }
+
+        function closeSpellDirectionModal(options = {}) {
+            const { keepGlow = false } = options;
+            const modal = document.getElementById('spell-direction-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            pendingSpellAction = null;
+            if (!keepGlow) {
+                activeEnergyBlastCost = null;
+                removeEnergyBlastGlow();
+            }
+        }
+
+        function confirmSpellDirection() {
+            if (!pendingSpellAction) {
+                closeSpellDirectionModal();
+                return;
+            }
+            const select = document.getElementById('spell-direction-select');
+            const directionId = select ? select.value : null;
+            const direction = pendingSpellAction.directions.find(opt => opt.id === directionId) || pendingSpellAction.directions[0];
+            const action = { ...pendingSpellAction };
+            closeSpellDirectionModal({ keepGlow: true });
+            if (action.type === 'energyBlast' && direction) {
+                performEnergyBlast(action.row, action.col, direction);
+            }
+        }
+
+        function startEnergyBlastFlipSequence(context) {
+            energyBlastFlipContext = {
+                context,
+                flips: [],
+                successes: 0
+            };
+            pauseGameForEnergyBlastFlips();
+            runNextEnergyBlastFlip();
+        }
+
+        function runNextEnergyBlastFlip() {
+            const ctx = energyBlastFlipContext;
+            if (!ctx) return;
+            if (ctx.flips.length >= ENERGY_BLAST_FLIP_COUNT) {
+                coinTossEnergyBlastMode = null;
+                updateCoinTossEnergyBlastProgress();
+                energyBlastFlipContext = null;
+                resumeGameForEnergyBlastFlips();
+                completeEnergyBlastAfterRange(ctx.context, ctx.successes, ctx.flips);
+                return;
+            }
+            const flipNumber = ctx.flips.length + 1;
+            coinTossEnergyBlastMode = { successes: ctx.successes, total: ENERGY_BLAST_FLIP_COUNT };
+            updateCoinTossEnergyBlastProgress();
+            pauseGameForEnergyBlastFlips();
+            performCoinToss(
+                'Energy Blast',
+                `Flip ${flipNumber} of ${ENERGY_BLAST_FLIP_COUNT}`,
+                (result) => {
+                    if (!energyBlastFlipContext) {
+                        return;
+                    }
+                    ctx.flips.push(result);
+                    if (result) ctx.successes++;
+                    if (coinTossEnergyBlastMode) {
+                        coinTossEnergyBlastMode.successes = ctx.successes;
+                        updateCoinTossEnergyBlastProgress();
+                    }
+                    pauseGameForEnergyBlastFlips();
+                    runNextEnergyBlastFlip();
+                },
+                true,
+                true
+            );
+        }
+
+        function evaluateEnergyBlastDirection(row, col, direction, piece) {
+            if (!direction) return 0;
+            let expected = 0;
+            let targetRow = row;
+            let targetCol = col;
+            for (let step = 1; step <= ENERGY_BLAST_FLIP_COUNT; step++) {
+                targetRow += direction.dr;
+                targetCol += direction.dc;
+                if (!isValid(targetRow, targetCol)) break;
+                const occupant = board[targetRow][targetCol];
+                if (!occupant || occupant.player === piece.player) continue;
+                const baseValue = aiPieceValues[occupant.type] !== undefined
+                    ? aiPieceValues[occupant.type]
+                    : (pieceValues[occupant.type] || 0);
+                let value = baseValue;
+                if (occupant.type === 'King') {
+                    value += baseValue * 50;
+                } else if (occupant.type === 'Champion') {
+                    value += 6;
+                }
+                expected += value * (ENERGY_BLAST_STEP_PROBABILITIES[step] || 0);
+            }
+            return expected;
+        }
+
+        function findAiEnergyBlastOpportunity(player, availableMoves, movedSet) {
+            if (player !== 'B' || !isSpellVariant() || availableMoves < 2) return null;
+            const opportunities = [];
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const piece = board[r][c];
+                    if (!piece || piece.player !== player) continue;
+                    if (!isSpellCasterPiece(piece)) continue;
+                    if (movedSet.has(`${r},${c}`)) continue;
+                    const uses = energyBlastUsage.get(piece) || 0;
+                    if (uses >= 2) continue;
+                    const cost = uses === 0 ? 2 : 3;
+                    if (availableMoves < cost) continue;
+                    const directions = getSpellDirectionOptions(player);
+                    for (const direction of directions) {
+                        const expected = evaluateEnergyBlastDirection(r, c, direction, piece);
+                        if (expected <= 0) continue;
+                        const score = expected - cost * 1.5;
+                        opportunities.push({ score, from: [r, c], direction, cost });
+                    }
+                }
+            }
+            if (!opportunities.length) return null;
+            opportunities.sort((a, b) => b.score - a.score);
+            const best = opportunities[0];
+            if (best.score < ENERGY_BLAST_AI_THRESHOLD) return null;
+            return {
+                type: 'energyBlast',
+                from: best.from,
+                direction: best.direction,
+                cost: best.cost,
+                prepaid: Math.min(2, best.cost)
+            };
+        }
+
+        function getProtectionCandidates(player) {
+            const types = new Set(['Wizard', 'Necromancer', 'Champion']);
+            const candidates = [];
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const piece = board[r][c];
+                    if (piece && piece.player === player && types.has(piece.type)) {
+                        candidates.push({ row: r, col: c, piece });
+                    }
+                }
+            }
+            return candidates;
+        }
+
+        function applyProtectionSacrifice(player, row, col) {
+            const piece = board[row]?.[col];
+            if (!piece) return null;
+            registerPieceLoss(player, piece.type);
+            if (piece.type === 'Champion') {
+                championCaptured[player] = true;
+                championsOnBackRow[player] = championsOnBackRow[player].filter(([r, c]) => !(r === row && c === col));
+            }
+            cleanupNecromancerTracking(piece);
+            board[row][col] = null;
+            return piece;
+        }
+
+        function requestSpellProtection({ attacker, defender, targetRow, targetCol, ability, logMessage, onResolve }) {
+            if (!isSpellVariant() || !ability) {
+                onResolve(true);
+                return 'resolved';
+            }
+            const targetPiece = board[targetRow]?.[targetCol];
+            if (!targetPiece || targetPiece.type !== 'King') {
+                onResolve(true);
+                return 'resolved';
+            }
+            if (protectionUsed[defender]) {
+                onResolve(true);
+                return 'resolved';
+            }
+            const candidates = getProtectionCandidates(defender);
+            if (!candidates.length) {
+                onResolve(true);
+                return 'resolved';
+            }
+            if (defender === 'B') {
+                candidates.sort((a, b) => (pieceValues[a.piece.type] || 0) - (pieceValues[b.piece.type] || 0));
+                const choice = candidates[0];
+                applyProtectionSacrifice(defender, choice.row, choice.col);
+                protectionUsed[defender] = true;
+                scores[defender] = Math.max(0, scores[defender] - 2);
+                gameLog.push(`${getOpponentDisplayName()} activated Protection against ${ability}, sacrificing ${choice.piece.type} at (${choice.row},${choice.col}).`);
+                renderBoard();
+                updateScoreDisplay();
+                updateGameLog();
+                onResolve(false);
+                return 'resolved';
+            }
+            openProtectionModal({ attacker, defender, targetRow, targetCol, ability, candidates, logMessage, onResolve });
+            return 'pending';
+        }
+
+        function openProtectionModal(context) {
+            const modal = document.getElementById('protection-modal');
+            const select = document.getElementById('protection-select');
+            const message = document.getElementById('protection-message');
+            if (!modal || !select || !message) {
+                context.onResolve(true);
+                return;
+            }
+            pendingProtection = context;
+            message.textContent = `Your King is targeted by ${context.ability}. Sacrifice a spellcaster or Champion to activate Protection?`;
+            select.innerHTML = context.candidates.map(candidate => {
+                return `<option value="${candidate.row},${candidate.col}">${candidate.piece.type} at (${candidate.row},${candidate.col})</option>`;
+            }).join('');
+            pausedTimers.game = gameTimerInterval;
+            pausedTimers.turn = turnTimerInterval;
+            pausedTimers.turnPlayer = currentTurnTimerPlayer;
+            stopGameTimer();
+            stopTurnTimer();
+            gamePaused = true;
+            modal.style.display = 'block';
+        }
+
+        function finalizeProtectionModal() {
+            const modal = document.getElementById('protection-modal');
+            if (modal) modal.style.display = 'none';
+            if (pausedTimers.game && gameTimeRemaining > 0) {
+                startGameTimer();
+            }
+            if (pausedTimers.turn && pausedTimers.turnPlayer) {
+                if (pausedTimers.turnPlayer === 'W' && playerTurnTimeRemaining > 0) {
+                    startTurnTimer('W');
+                } else if (pausedTimers.turnPlayer === 'B' && aiTurnTimeRemaining > 0) {
+                    startTurnTimer('B');
+                }
+            }
+            pausedTimers = { game: null, turn: null, turnPlayer: null };
+            gamePaused = false;
+        }
+
+        function confirmProtection() {
+            if (!pendingProtection) {
+                finalizeProtectionModal();
+                return;
+            }
+            const select = document.getElementById('protection-select');
+            let value = select ? select.value : '';
+            if (!value && pendingProtection.candidates.length) {
+                value = `${pendingProtection.candidates[0].row},${pendingProtection.candidates[0].col}`;
+            }
+            if (!value) {
+                finalizeProtectionModal();
+                pendingProtection.onResolve(true);
+                pendingProtection = null;
+                return;
+            }
+            const [rowStr, colStr] = value.split(',');
+            const row = parseInt(rowStr, 10);
+            const col = parseInt(colStr, 10);
+            const sacrificed = applyProtectionSacrifice(pendingProtection.defender, row, col);
+            protectionUsed[pendingProtection.defender] = true;
+            scores[pendingProtection.defender] = Math.max(0, scores[pendingProtection.defender] - 2);
+            const sacrificedName = sacrificed ? sacrificed.type : 'a unit';
+            gameLog.push(`Player activated Protection against ${pendingProtection.ability}, sacrificing ${sacrificedName} at (${row},${col}).`);
+            renderBoard();
+            updateScoreDisplay();
+            updateGameLog();
+            finalizeProtectionModal();
+            pendingProtection.onResolve(false);
+            pendingProtection = null;
+        }
+
+        function declineProtection() {
+            if (!pendingProtection) {
+                finalizeProtectionModal();
+                return;
+            }
+            gameLog.push(`Player declined Protection against ${pendingProtection.ability}.`);
+            updateGameLog();
+            finalizeProtectionModal();
+            pendingProtection.onResolve(true);
+            pendingProtection = null;
+        }
+
+        function resolveSpellTargetsSequentially(targets, attackerPlayer, ability, onComplete) {
+            let captureCount = 0;
+            const processNext = (index) => {
+                if (index >= targets.length) {
+                    onComplete(captureCount);
+                    return;
+                }
+                const target = targets[index];
+                const occupant = board[target.row]?.[target.col];
+                if (!occupant || occupant.player !== target.defender) {
+                    processNext(index + 1);
+                    return;
+                }
+                const logMessage = target.logMessage;
+                const result = requestSpellProtection({
+                    attacker: attackerPlayer,
+                    defender: occupant.player,
+                    targetRow: target.row,
+                    targetCol: target.col,
+                    ability,
+                    logMessage,
+                    onResolve: (shouldCapture) => {
+                        if (shouldCapture) {
+                            const captured = applySpellCapture(attackerPlayer, target.row, target.col, { logMessage, ability });
+                            if (captured) captureCount++;
+                        }
+                        processNext(index + 1);
+                    }
+                });
+                if (result === 'pending') {
+                    return;
+                }
+            };
+            processNext(0);
+        }
+
         function activateGuardOfHonour() {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
@@ -4522,7 +5316,7 @@
             let canTeleport = false;
             if (piece.type === 'Wizard' && wizardTeleportUsed[currentPlayer] < 2) {
                 canTeleport = true;
-            } else if (piece.type === 'Necromancer' && gameVariant === '36s-elite') {
+            } else if (piece.type === 'Necromancer' && (gameVariant === '36s-elite' || gameVariant === '36s-supreme')) {
                 if (getNecromancerTeleportCount(piece) < 2) {
                     canTeleport = true;
                 }
@@ -4679,6 +5473,303 @@
                 }
             }
             return moves;
+        }
+
+        function activateEnergyBlast() {
+            if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move) return;
+            if (!isSpellVariant()) return;
+            const row = selectedPiece.row;
+            const col = selectedPiece.col;
+            const piece = board[row]?.[col];
+            if (!isSpellCasterPiece(piece)) return;
+            const uses = energyBlastUsage.get(piece) || 0;
+            if (uses >= 2) {
+                gameLog.push('Energy Blast already used twice by this spellcaster.');
+                updateGameLog();
+                return;
+            }
+            const cost = uses === 0 ? 2 : 3;
+            if (movesLeft < cost) {
+                gameLog.push('Not enough move points to cast Energy Blast.');
+                updateGameLog();
+                return;
+            }
+            if (pendingEnergyBlast) return;
+            const prepaid = Math.min(2, cost);
+            pendingEnergyBlast = { row, col, prepaid, cost };
+            movesLeft -= prepaid;
+            updateStatus();
+            updateEndTurnButton();
+            gameLog.push('Channeling Energy Blast (2 move points spent to attempt spellcasting).');
+            updateGameLog();
+            coinTossSpecialEffect = 'energy-blast';
+            performCoinToss(
+                'Energy Blast',
+                'Attempting to channel spell energy...',
+                (success) => {
+                    if (!pendingEnergyBlast || pendingEnergyBlast.row !== row || pendingEnergyBlast.col !== col) {
+                        return;
+                    }
+                    const attemptData = pendingEnergyBlast;
+                    pendingEnergyBlast = null;
+                    if (!success) {
+                        gameLog.push('Energy Blast spellcasting failed.');
+                        updateGameLog();
+                        removeEnergyBlastGlow();
+                        return;
+                    }
+                    const currentPiece = board[row]?.[col];
+                    if (!currentPiece || currentPiece.player !== currentPlayer) {
+                        removeEnergyBlastGlow();
+                        return;
+                    }
+                    selectedPiece = { row, col };
+                    validMoves = getValidMoves(row, col);
+                    showPieceInfo(currentPiece, currentPlayer);
+                    updateEndTurnButton();
+                    activeEnergyBlastCost = { row, col, prepaid: attemptData.prepaid, cost: attemptData.cost };
+                    applyEnergyBlastGlow();
+                    gameLog.push('Energy Blast spellcasting succeeded!');
+                    updateGameLog();
+                    showEnergyBlastPopup(() => {
+                        openSpellDirectionModal({ type: 'energyBlast', row, col });
+                    });
+                },
+                false,
+                false
+            );
+        }
+
+        function performEnergyBlast(row, col, direction) {
+            const piece = board[row]?.[col];
+            if (!piece || !isSpellCasterPiece(piece) || !isSpellVariant()) return;
+            const uses = energyBlastUsage.get(piece) || 0;
+            if (uses >= 2) {
+                gameLog.push('Energy Blast already used twice by this spellcaster.');
+                updateGameLog();
+                return;
+            }
+            const cost = uses === 0 ? 2 : 3;
+            let prepaid = 0;
+            if (activeEnergyBlastCost && activeEnergyBlastCost.row === row && activeEnergyBlastCost.col === col) {
+                prepaid = activeEnergyBlastCost.prepaid || 0;
+                activeEnergyBlastCost = null;
+            }
+            const additionalCost = Math.max(0, cost - prepaid);
+            if (movesLeft < additionalCost) {
+                gameLog.push('Not enough move points to sustain Energy Blast after spellcasting.');
+                updateGameLog();
+                removeEnergyBlastGlow();
+                return;
+            }
+            if (additionalCost > 0) {
+                movesLeft -= additionalCost;
+                updateStatus();
+                updateEndTurnButton();
+            }
+            energyBlastUsage.set(piece, uses + 1);
+            lastAction = { move: true };
+            movedPieces.add(`${row},${col}`);
+            const context = { piece, row, col, direction };
+            if (piece.player === 'W') {
+                startEnergyBlastFlipSequence(context);
+            } else {
+                const flips = [];
+                let successes = 0;
+                for (let i = 0; i < ENERGY_BLAST_FLIP_COUNT; i++) {
+                    const success = randomCoinFlip();
+                    flips.push(success);
+                    if (success) successes++;
+                }
+                completeEnergyBlastAfterRange(context, successes, flips);
+            }
+        }
+
+        function completeEnergyBlastAfterRange(context, successes, flips) {
+            const { piece, row, col, direction } = context;
+            if (!piece) return;
+            const playerLabel = piece.player === 'W' ? 'Player' : getOpponentDisplayName();
+            const flipSummary = flips.map(result => result ? 'Hit' : 'Miss').join(' ');
+            gameLog.push(`${playerLabel} cast Energy Blast (${successes} range) [${flipSummary}]`);
+
+            const finishEnergyBlast = () => {
+                selectedPiece = null;
+                validMoves = [];
+                showPieceInfo(null);
+                renderBoard();
+                updateScoreDisplay();
+                updateCapturedPiecesDisplay();
+                updateStatus();
+                updateEndTurnButton();
+                updateGameLog();
+                checkGameOver();
+                removeEnergyBlastGlow();
+                if (movesLeft === 0 && !reinforcementPending) {
+                    triggerAiTurn();
+                } else {
+                    ensureAITurnIfNeeded();
+                }
+            };
+            const finalizeEnergyBlast = () => {
+                finishEnergyBlast();
+                if (typeof pendingAiEnergyBlastResume === 'function') {
+                    const resume = pendingAiEnergyBlastResume;
+                    pendingAiEnergyBlastResume = null;
+                    resume();
+                }
+            };
+
+            if (successes === 0) {
+                gameLog.push('The blast fizzled before leaving the caster.');
+                finalizeEnergyBlast();
+                return;
+            }
+
+            const targets = [];
+            const pathSquares = [];
+            let targetRow = row;
+            let targetCol = col;
+            for (let step = 1; step <= successes; step++) {
+                targetRow += direction.dr;
+                targetCol += direction.dc;
+                if (!isValid(targetRow, targetCol)) {
+                    break;
+                }
+                pathSquares.push({ row: targetRow, col: targetCol });
+                const occupant = board[targetRow][targetCol];
+                if (!occupant || occupant.player === piece.player) {
+                    continue;
+                }
+                targets.push({
+                    row: targetRow,
+                    col: targetCol,
+                    defender: occupant.player,
+                    logMessage: `${playerLabel} vaporized ${occupant.type} with Energy Blast at (${targetRow},${targetCol})`
+                });
+            }
+
+            const processTargets = () => {
+                if (!targets.length) {
+                    gameLog.push('Energy Blast hit no enemy pieces along its path.');
+                    addEnergyBlastResidualSquares(pathSquares);
+                    finalizeEnergyBlast();
+                    return;
+                }
+                resolveSpellTargetsSequentially(targets, piece.player, 'Energy Blast', (capturesHit) => {
+                    if (capturesHit === 0) {
+                        gameLog.push('Energy Blast was negated or all targets were protected.');
+                    }
+                    addEnergyBlastResidualSquares(pathSquares);
+                    finalizeEnergyBlast();
+                });
+            };
+
+            animateEnergyBlastPath(pathSquares, processTargets);
+        }
+
+        function activateSacrifice() {
+            if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move) return;
+            if (!isSpellVariant()) return;
+            const row = selectedPiece.row;
+            const col = selectedPiece.col;
+            const piece = board[row]?.[col];
+            if (!isSpellCasterPiece(piece)) return;
+            if (movesLeft < 3) {
+                gameLog.push('Not enough move points to perform Sacrifice.');
+                updateGameLog();
+                return;
+            }
+            if (sacrificeAttemptedPieces.has(piece)) {
+                gameLog.push('This spellcaster has already attempted Sacrifice.');
+                updateGameLog();
+                return;
+            }
+            sacrificeAttemptedPieces.add(piece);
+            const playerLabel = 'Player';
+            performCoinToss('Sacrifice', 'Attempting Sacrifice...', (success) => {
+                if (!success) {
+                    gameLog.push(`${playerLabel} failed the Sacrifice coin flip.`);
+                    updateGameLog();
+                    return;
+                }
+                if (movesLeft < 3) {
+                    gameLog.push('Not enough move points remaining to complete Sacrifice.');
+                    updateGameLog();
+                    return;
+                }
+                executeSacrifice(row, col);
+            }, false, false);
+        }
+
+        function executeSacrifice(row, col) {
+            const piece = board[row]?.[col];
+            if (!piece || !isSpellCasterPiece(piece) || !isSpellVariant()) return;
+            if (movesLeft < 3) {
+                gameLog.push('Not enough move points to perform Sacrifice.');
+                updateGameLog();
+                return;
+            }
+            const player = piece.player;
+            const playerLabel = player === 'W' ? 'Player' : getOpponentDisplayName();
+            movesLeft -= 3;
+            lastAction = { move: true };
+            movedPieces.add(`${row},${col}`);
+            registerPieceLoss(player, piece.type);
+
+            if (piece.type === 'Champion') {
+                championCaptured[player] = true;
+                championsOnBackRow[player] = championsOnBackRow[player].filter(([r, c]) => !(r === row && c === col));
+            }
+            cleanupNecromancerTracking(piece);
+            board[row][col] = null;
+
+            const enemy = getOpponent(player);
+            const targets = [];
+            const orthogonal = [[1,0], [-1,0], [0,1], [0,-1]];
+            for (const [dr, dc] of orthogonal) {
+                for (let step = 1; step <= 2; step++) {
+                    const targetRow = row + dr * step;
+                    const targetCol = col + dc * step;
+                    if (!isValid(targetRow, targetCol)) break;
+                    const occupant = board[targetRow][targetCol];
+                    if (occupant && occupant.player === enemy) {
+                        targets.push({ row: targetRow, col: targetCol, defender: enemy, logMessage: `${playerLabel}'s Sacrifice blast engulfed ${occupant.type} at (${targetRow},${targetCol})` });
+                    }
+                }
+            }
+            const diagonals = [[1,1], [1,-1], [-1,1], [-1,-1]];
+            for (const [dr, dc] of diagonals) {
+                const targetRow = row + dr;
+                const targetCol = col + dc;
+                if (!isValid(targetRow, targetCol)) continue;
+                const occupant = board[targetRow][targetCol];
+                if (occupant && occupant.player === enemy) {
+                    targets.push({ row: targetRow, col: targetCol, defender: enemy, logMessage: `${playerLabel}'s Sacrifice blast engulfed ${occupant.type} at (${targetRow},${targetCol})` });
+                }
+            }
+
+            const finishSacrifice = (capturesHit) => {
+                gameLog.push(`${playerLabel} performed Sacrifice, removing their ${piece.type} and striking ${capturesHit} target${capturesHit === 1 ? '' : 's'}.`);
+                selectedPiece = null;
+                validMoves = [];
+                showPieceInfo(null);
+                renderBoard();
+                updateScoreDisplay();
+                updateCapturedPiecesDisplay();
+                updateStatus();
+                updateEndTurnButton();
+                updateGameLog();
+                checkGameOver();
+                if (movesLeft === 0 && !reinforcementPending) {
+                    triggerAiTurn();
+                } else {
+                    ensureAITurnIfNeeded();
+                }
+            };
+
+            resolveSpellTargetsSequentially(targets, player, 'Sacrifice', (capturesHit) => {
+                finishSacrifice(capturesHit);
+            });
         }
 
         function getValidTeleportSwapMoves(row, col) {
@@ -5502,6 +6593,7 @@
                 showPieceInfo(piece, piece.player);
                 lastAction = null;
                 renderBoard();
+                updateEndTurnButton();
             } else if (selectedPiece) {
                 const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col);
                 if (move && movesLeft >= move.cost) {
@@ -6195,7 +7287,12 @@
         function openKingSummonModal() {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
-            if (piece.type === 'King' && (gameVariant === '36s-expert' || gameVariant === '36s-elite')) {
+            if (piece.type === 'King' && (gameVariant === '36s-expert' || gameVariant === '36s-elite' || gameVariant === '36s-supreme')) {
+                if (!hasBackRowSpawnSlot(currentPlayer)) {
+                    gameLog.push('No open squares on the back row to summon a unit.');
+                    updateGameLog();
+                    return;
+                }
                 const select = document.getElementById('king-summon-select');
                 select.innerHTML = '';
 
@@ -6299,8 +7396,13 @@
         function openChampionSummonModal() {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
-            if (!piece || piece.type !== 'Champion' || gameVariant !== '36s-elite') return;
+            if (!piece || piece.type !== 'Champion' || (gameVariant !== '36s-elite' && gameVariant !== '36s-supreme')) return;
             if (necromancersSummoned[currentPlayer] >= 2) return;
+            if (!hasBackRowSpawnSlot(currentPlayer)) {
+                gameLog.push('No open squares on the back row to summon a Necromancer.');
+                updateGameLog();
+                return;
+            }
 
             const backRow = currentPlayer === 'W' ? ROWS - 1 : 0;
             const select = document.getElementById('champion-summon-select');
@@ -6400,7 +7502,7 @@
         function openNecromancerSummonModal(type) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
-            if (!piece || piece.type !== 'Necromancer' || gameVariant !== '36s-elite') return;
+            if (!piece || piece.type !== 'Necromancer' || (gameVariant !== '36s-elite' && gameVariant !== '36s-supreme')) return;
 
             if (type === 'zombie') {
                 const maxZombies = getMaxZombies(currentPlayer);
@@ -6640,7 +7742,7 @@
                     }
                 }
             }
-            if (type === 'Necromancer' && gameVariant === '36s-elite' && movesLeft >= 2) {
+            if (type === 'Necromancer' && (gameVariant === '36s-elite' || gameVariant === '36s-supreme') && movesLeft >= 2) {
                 const pieceObj = piece;
                 if (getNecromancerTeleportCount(pieceObj) < 2) {
                     for (let r = 0; r < ROWS; r++) {
@@ -6975,6 +8077,33 @@
             updateCapturedPiecesDisplay();
         }
 
+        function applySpellCapture(attackerPlayer, targetRow, targetCol, options = {}) {
+            const targetPiece = board[targetRow]?.[targetCol];
+            if (!targetPiece) return false;
+
+            capturedSquares.push([targetRow, targetCol]);
+            capturedPieces[attackerPlayer].push(targetPiece);
+            const captureValue = pieceValues[targetPiece.type] || 0;
+            scores[attackerPlayer] += captureValue;
+            registerScoreGain(attackerPlayer, captureValue);
+            registerPieceLoss(targetPiece.player, targetPiece.type);
+            trackCapture(attackerPlayer);
+            if (options.logMessage) {
+                gameLog.push(options.logMessage);
+            }
+            if (targetPiece.type === 'Champion') {
+                championCaptured[targetPiece.player] = true;
+                championsOnBackRow[targetPiece.player] = championsOnBackRow[targetPiece.player].filter(([r, c]) => !(r === targetRow && c === targetCol));
+            }
+            cleanupNecromancerTracking(targetPiece);
+            board[targetRow][targetCol] = null;
+            if (targetPiece.type === 'King') {
+                const victoryReason = options.victoryReason || options.ability || null;
+                endGame(attackerPlayer, victoryReason);
+            }
+            return true;
+        }
+
         function turnPiece(row, col, newFacing) {
             const piece = board[row][col];
             if (piece && turnablePieces.includes(piece.type)) {
@@ -6988,7 +8117,7 @@
             let availablePieces = capturedPieces[player].map(p => p.type);
             const piece = board[row][col];
             if (piece.type === 'Champion' || piece.type === 'King') {
-                if (gameVariant === '36s-expert' || gameVariant === '36s-elite') {
+                if (gameVariant === '36s-expert' || gameVariant === '36s-elite' || gameVariant === '36s-supreme') {
                     availablePieces.push(...Array(2).fill('Ballista'), ...Array(2).fill('Elephantry'), ...Array(2).fill('Mercenary'));
                 }
             }
@@ -7525,8 +8654,8 @@
                                 }
                             }
 
-                            // Check for Necromancer Zombie Summoning (36s-elite only)
-                            if (piece.type === 'Necromancer' && gameVariant === '36s-elite' && movesLeft >= 2) {
+                            // Check for Necromancer Zombie Summoning (Elite/Supreme)
+                            if (piece.type === 'Necromancer' && (gameVariant === '36s-elite' || gameVariant === '36s-supreme') && movesLeft >= 2) {
                                 const maxZombies = getMaxZombies(player);
                                 if (zombiesSummoned[player] < maxZombies) {
                                     const backRow = player === 'W' ? ROWS - 1 : 0;
@@ -7545,8 +8674,8 @@
                                 }
                             }
 
-                            // Check for Necromancer Spectre Summoning (36s-elite only)
-                            if (piece.type === 'Necromancer' && gameVariant === '36s-elite' && spectresSummoned[player] < 2 && movesLeft >= 2) {
+                            // Check for Necromancer Spectre Summoning (Elite/Supreme)
+                            if (piece.type === 'Necromancer' && (gameVariant === '36s-elite' || gameVariant === '36s-supreme') && spectresSummoned[player] < 2 && movesLeft >= 2) {
                                 const backRow = player === 'W' ? ROWS - 1 : 0;
                                 for (let col = 0; col < COLS; col++) {
                                     if (aiTimeExpired()) break outerBuild;
@@ -8112,6 +9241,14 @@
                 }
 
                 if (!action) {
+                    const energyBlastAction = findAiEnergyBlastOpportunity('B', movesLeft, movedPieces);
+                    if (energyBlastAction) {
+                        action = energyBlastAction;
+                        plannedActions = [];
+                    }
+                }
+
+                if (!action) {
                     plannedActions = [];
                     action = findSimpleAIAction('B', movesLeft, movedPieces);
                 }
@@ -8143,9 +9280,9 @@
                     }
                     
                     highlightSquares = [];
-                    if (action.type === 'move' || action.type === 'shoot' || action.type === 'swap' || action.type === 'teleport' || action.type === 'teleportSwap' || action.type === 'activate' || action.type === 'summon') {
-                        const { from, pos, cost, jump, special } = action;
-                        highlightSquares = [from, pos];
+                    if (action.type === 'move' || action.type === 'shoot' || action.type === 'swap' || action.type === 'teleport' || action.type === 'teleportSwap' || action.type === 'activate' || action.type === 'summon' || action.type === 'energyBlast') {
+                        const { from, pos, cost, jump, special, direction } = action;
+                        highlightSquares = action.type === 'energyBlast' ? [from] : [from, pos];
                         if (action.type === 'summon' && special === 'summonSpectre') {
                             // AI attempts to summon Spectre
                             const wizardRow = from[0], wizardCol = from[1];
@@ -8256,11 +9393,67 @@
 
                                     // Continue AI turn
                                     setTimeout(() => makeNextMove(), 1200);
-                                },
+                                }, 
                                 true, // Automated mode
                                 false // showOverlay
                             );
                             return; // Exit to wait for coin toss callback
+                        } else if (action.type === 'energyBlast') {
+                            const scheduleNextMove = () => setTimeout(() => makeNextMove(), 1200);
+                            if (!from || !direction) {
+                                scheduleNextMove();
+                                return;
+                            }
+                            const [casterRow, casterCol] = from;
+                            const casterPiece = board[casterRow] && board[casterRow][casterCol];
+                            if (!casterPiece || casterPiece.player !== 'B' || !isSpellVariant() || !isSpellCasterPiece(casterPiece)) {
+                                scheduleNextMove();
+                                return;
+                            }
+                            const uses = energyBlastUsage.get(casterPiece) || 0;
+                            if (uses >= 2) {
+                                scheduleNextMove();
+                                return;
+                            }
+                            const spellCost = uses === 0 ? 2 : 3;
+                            if (movesLeft < spellCost) {
+                                scheduleNextMove();
+                                return;
+                            }
+                            const prepaidCost = Math.min(2, spellCost);
+                            movesLeft -= prepaidCost;
+                            updateStatus();
+                            updateEndTurnButton();
+                            gameLog.push('AI is channeling Energy Blast (2 move points spent to attempt spellcasting).');
+                            updateGameLog();
+                            coinTossSpecialEffect = 'energy-blast';
+                            performCoinToss(
+                                'Energy Blast',
+                                'AI is attempting to channel spell energy...',
+                                (success) => {
+                                    if (!success) {
+                                        gameLog.push('AI failed to channel Energy Blast.');
+                                        updateGameLog();
+                                        scheduleNextMove();
+                                        return;
+                                    }
+                                    const currentPiece = board[casterRow]?.[casterCol];
+                                    if (!currentPiece || currentPiece.player !== 'B') {
+                                        removeEnergyBlastGlow();
+                                        scheduleNextMove();
+                                        return;
+                                    }
+                                    activeEnergyBlastCost = { row: casterRow, col: casterCol, prepaid: prepaidCost, cost: spellCost };
+                                    applyEnergyBlastGlow();
+                                    gameLog.push('AI successfully channeled Energy Blast!');
+                                    updateGameLog();
+                                    pendingAiEnergyBlastResume = () => setTimeout(() => makeNextMove(), 1200);
+                                    performEnergyBlast(casterRow, casterCol, direction);
+                                },
+                                true,
+                                false
+                            );
+                            return;
                         } else if (action.type === 'move') {
                             // Check if capturing a Spectre - requires coin toss
                             const targetPiece = board[pos[0]][pos[1]];
@@ -8672,6 +9865,20 @@
             pistolierMoveShootPosition = null;
             archerMoveDiagStart = null;
             highlightSquares = [];
+            pendingSpellAction = null;
+            energyBlastUsage = new Map();
+            sacrificeAttemptedPieces = new Set();
+            energyBlastFlipContext = null;
+            pendingEnergyBlast = null;
+            activeEnergyBlastCost = null;
+            energyBlastGlowActive = false;
+            energyBlastResidualSquares = new Map();
+            energyBlastFlipPauseState = null;
+            coinTossEnergyBlastMode = null;
+            coinTossSpecialEffect = null;
+            pendingAiEnergyBlastResume = null;
+            protectionUsed = { 'W': false, 'B': false };
+            pendingProtection = null;
             kingSpecialUsed = { 'W': false, 'B': false };
             wizardTeleportUsed = { 'W': 0, 'B': 0 };
             wizardTeleportSwapUsed = { 'W': false, 'B': false };
@@ -8727,6 +9934,7 @@
             playerTurnTimeRemaining = TURN_TIME_OPTIONS[selectedTurnTimerKey];
             aiTurnTimeRemaining = TURN_TIME_OPTIONS[selectedTurnTimerKey];
             updateTimerDisplay();
+            removeEnergyBlastGlow();
 
             initBoard();
             showPieceInfo(null);
@@ -8950,7 +10158,10 @@
 
         function updateEndTurnButton() {
             const endTurnButton = document.getElementById('end-turn-button');
-            endTurnButton.disabled = currentPlayer !== 'W' || movesLeft >= initialMovesLeft;
+            if (!endTurnButton) return;
+            const noMovesSpent = movesLeft >= initialMovesLeft;
+            const selectionActive = !!selectedPiece;
+            endTurnButton.disabled = currentPlayer !== 'W' || noMovesSpent || selectionActive;
             // Update hint button visibility
             updateHintButton();
             // Safety net
