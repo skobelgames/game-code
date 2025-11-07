@@ -836,9 +836,9 @@
         </div>
         <div id="score-display">Player Score: 0 | Opponent Score: 0</div>
         <div id="timer-display">
-            <div class="timer-row player" id="player-timer-row">Player Round: 00:00</div>
+            <div class="timer-row player" id="player-timer-row">Player Turn: 00:00</div>
             <div class="timer-row game" id="game-timer-row">Game Time: 00:00</div>
-            <div class="timer-row ai" id="ai-timer-row">Opponent Round: 00:00</div>
+            <div class="timer-row ai" id="ai-timer-row">Opponent Turn: 00:00</div>
         </div>
         <div id="board"></div>
         <div id="controls">
@@ -857,7 +857,7 @@
             <button id="hint-button" onclick="showHint()" style="display: none;">Get Hint</button>
             <button id="end-turn-button" onclick="endTurn()" disabled>End Round</button>
         </div>
-        <div id="status">Player's round: 3 moves remaining</div>
+        <div id="status">Player's turn: 3 moves remaining</div>
         <div id="info-box"></div>
         <div id="game-log"></div>
         <div id="captured-pieces">
@@ -1130,7 +1130,7 @@
 
                 // Reset all game state variables
                 currentPlayer = 'W';
-                roundCount = 0;
+                roundCount = 1;
                 playerRoundNumber = 0;
                 aiRoundNumber = 0;
                 gameRound = 1;
@@ -2754,7 +2754,7 @@
         let aiTurnTimeRemaining = TURN_TIME_OPTIONS[selectedTurnTimerKey];
         let currentTurnTimerPlayer = null;
         let aiTurnTimeoutForced = false;
-        let roundCount = 0; // Initialize round counter early for timer display
+        let roundCount = 1; // Initialize round counter early for timer display
         let playerRoundNumber = 0; // Track player's round count (for first 2 rounds features)
         let aiRoundNumber = 0; // Track AI's round count (for first 2 rounds features)
         let gameRound = 1; // Track game rounds (both players taking 1 round = 1 complete round)
@@ -2858,7 +2858,7 @@
 
             // Update player timer with warning color
             if (playerTimerRow) {
-                playerTimerRow.textContent = `Player Round: ${formatTime(Math.max(0, playerTurnTimeRemaining))}`;
+                playerTimerRow.textContent = `Player Turn: ${formatTime(Math.max(0, playerTurnTimeRemaining))}`;
                 if (playerTurnTimeRemaining <= 10 && playerTurnTimeRemaining > 0 && currentTurnTimerPlayer === 'W') {
                     playerTimerRow.classList.add('low-time');
                 } else {
@@ -2868,7 +2868,7 @@
 
             // Update AI timer with warning color
             if (aiTimerRow) {
-                aiTimerRow.textContent = `${getOpponentDisplayName()} Round: ${formatTime(Math.max(0, aiTurnTimeRemaining))}`;
+                aiTimerRow.textContent = `${getOpponentDisplayName()} Turn: ${formatTime(Math.max(0, aiTurnTimeRemaining))}`;
                 if (aiTurnTimeRemaining <= 10 && aiTurnTimeRemaining > 0 && currentTurnTimerPlayer === 'B') {
                     aiTimerRow.classList.add('low-time');
                 } else {
@@ -8628,7 +8628,7 @@
             // Initialize all game state variables first
             gameOver = false; // Reset game over flag
             currentPlayer = 'W'; // Will be set by coin toss
-            roundCount = 0; // Reset round counter
+            roundCount = 1; // Reset round counter
             playerRoundNumber = 0; // Reset player round counter
             aiRoundNumber = 0; // Reset AI round counter
             gameRound = 1; // Reset game round counter
@@ -8801,7 +8801,7 @@
         }
 
         function updateStatus() {
-            document.getElementById('status').textContent = `${currentPlayer === 'W' ? "Player" : "AI"}'s round: ${movesLeft} moves remaining`;
+            document.getElementById('status').textContent = `${currentPlayer === 'W' ? "Player" : "AI"}'s turn: ${movesLeft} moves remaining`;
 
             // Remove warcry active background when bonus moves are spent
             if (movesLeft <= baseMovesThisTurn) {
