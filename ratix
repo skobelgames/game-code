@@ -539,7 +539,7 @@
         #board.coin-flip-success-energy {
             border-color: #6a80ff !important;
             box-shadow: 0 0 24px #8fd4ff;
-            animation: coinFlipEnergyBlastGlow 1.5s ease-in-out;
+            animation: coinFlipEnergyBlastGlow 1.5s ease-in-out forwards;
         }
         @keyframes coinFlipEnergyBlastGlow {
             0% {
@@ -551,8 +551,8 @@
                 box-shadow: 0 0 32px #9fd6ff;
             }
             100% {
-                border-color: #000000;
-                box-shadow: 0 0 0px #000000;
+                border-color: #6a80ff;
+                box-shadow: 0 0 20px #6a80ff;
             }
         }
         #board.coin-flip-failure {
@@ -4166,8 +4166,12 @@
 
             setTimeout(() => {
                 boardDiv.classList.remove(effectClass);
+                // For energy blast, only remove overlay if energy blast glow is not active
+                // This allows seamless transition from activation to energy blast mode
                 if (theme === 'energy-blast' && body) {
-                    body.classList.remove('energy-blast-overlay');
+                    if (!energyBlastGlowActive) {
+                        body.classList.remove('energy-blast-overlay');
+                    }
                 }
             }, 1500);
         }
