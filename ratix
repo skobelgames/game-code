@@ -4157,8 +4157,18 @@
             const effectClass = theme === 'energy-blast' ? 'coin-flip-success-energy' : 'coin-flip-success';
             boardDiv.classList.remove('coin-flip-success', 'coin-flip-success-energy');
             boardDiv.classList.add(effectClass);
+
+            // Apply purple body overlay for energy blast theme
+            const body = document.body;
+            if (theme === 'energy-blast' && body) {
+                body.classList.add('energy-blast-overlay');
+            }
+
             setTimeout(() => {
                 boardDiv.classList.remove(effectClass);
+                if (theme === 'energy-blast' && body) {
+                    body.classList.remove('energy-blast-overlay');
+                }
             }, 1500);
         }
 
@@ -5053,7 +5063,7 @@
                     runNextEnergyBlastFlip();
                 },
                 true,
-                true
+                false
             );
         }
 
@@ -5612,6 +5622,7 @@
             };
             const finalizeEnergyBlast = () => {
                 finishEnergyBlast();
+                resumeGameForEnergyBlastFlips();
                 if (typeof pendingAiEnergyBlastResume === 'function') {
                     const resume = pendingAiEnergyBlastResume;
                     pendingAiEnergyBlastResume = null;
