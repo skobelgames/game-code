@@ -821,7 +821,7 @@
             <button id="game-timer-long" onclick="setGameTimer('long', this)">60 mins (Long)</button>
         </div>
         <div id="turn-timer-selector">
-            <h3>Select Turn Timer</h3>
+            <h3>Select Round Timer</h3>
             <button id="turn-timer-blitz" onclick="setTurnTimer('blitz', this)">30 secs (Blitz)</button>
             <button id="turn-timer-standard" onclick="setTurnTimer('standard', this)" class="selected-option">60 secs (Standard)</button>
         </div>
@@ -836,9 +836,9 @@
         </div>
         <div id="score-display">Player Score: 0 | Opponent Score: 0</div>
         <div id="timer-display">
-            <div class="timer-row player" id="player-timer-row">Player Turn: 00:00</div>
+            <div class="timer-row player" id="player-timer-row">Player Round: 00:00</div>
             <div class="timer-row game" id="game-timer-row">Game Time: 00:00</div>
-            <div class="timer-row ai" id="ai-timer-row">Opponent Turn: 00:00</div>
+            <div class="timer-row ai" id="ai-timer-row">Opponent Round: 00:00</div>
         </div>
         <div id="board"></div>
         <div id="controls">
@@ -855,9 +855,9 @@
             <button id="strafe-button" onclick="activateStrafe()" style="display: none;">Strafe</button>
             <button id="summon-spectre-button" onclick="activateSummonSpectre()" style="display: none;">Summon Spectre</button>
             <button id="hint-button" onclick="showHint()" style="display: none;">Get Hint</button>
-            <button id="end-turn-button" onclick="endTurn()" disabled>End Turn</button>
+            <button id="end-turn-button" onclick="endTurn()" disabled>End Round</button>
         </div>
-        <div id="status">Player's turn: 3 moves remaining</div>
+        <div id="status">Player's round: 3 moves remaining</div>
         <div id="info-box"></div>
         <div id="game-log"></div>
         <div id="captured-pieces">
@@ -971,11 +971,11 @@
                             <span id="stats-player-despair" class="stat-value"></span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Most Captures (Turn)</span>
+                            <span class="stat-label">Most Captures (Round)</span>
                             <span id="stats-player-captures" class="stat-value"></span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Highest Score (Turn)</span>
+                            <span class="stat-label">Highest Score (Round)</span>
                             <span id="stats-player-high-score" class="stat-value"></span>
                         </div>
                         <div class="stat-item">
@@ -1002,11 +1002,11 @@
                             <span id="stats-ai-despair" class="stat-value"></span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Most Captures (Turn)</span>
+                            <span class="stat-label">Most Captures (Round)</span>
                             <span id="stats-ai-captures" class="stat-value"></span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Highest Score (Turn)</span>
+                            <span class="stat-label">Highest Score (Round)</span>
                             <span id="stats-ai-high-score" class="stat-value"></span>
                         </div>
                         <div class="stat-item">
@@ -1130,9 +1130,9 @@
 
                 // Reset all game state variables
                 currentPlayer = 'W';
-                turnCount = 0;
-                playerTurnNumber = 0;
-                aiTurnNumber = 0;
+                roundCount = 0;
+                playerRoundNumber = 0;
+                aiRoundNumber = 0;
                 gameRound = 1;
                 firstPlayer = null;
                 selectedPiece = null;
@@ -1234,16 +1234,16 @@
 
                 <h2>Draw Conditions</h2>
                 <ul>
-                    <li><strong>Truce:</strong> When both players have 6 or fewer pieces remaining, either player can propose a truce. Both players must agree for the game to end in a draw. If declined, the truce can be proposed again at the start of the next 3 turns. After 3 declined attempts, truce is no longer available.</li>
+                    <li><strong>Truce:</strong> When both players have 6 or fewer pieces remaining, either player can propose a truce. Both players must agree for the game to end in a draw. If declined, the truce can be proposed again at the start of the next 3 rounds. After 3 declined attempts, truce is no longer available.</li>
                     <li><strong>Match:</strong> When both players only have their King remaining, the game automatically ends in a draw.</li>
                 </ul>
 
-                <h2>Turn Mechanics</h2>
+                <h2>Round Mechanics</h2>
                 <ul>
-                    <li>Each turn you have 3 moves (or 2 if your Champion was captured)</li>
+                    <li>Each round you have 3 moves (or 2 if your Champion was captured)</li>
                     <li>Different actions cost different move points (1-2 points)</li>
-                    <li><strong>Honour (Warcry):</strong> Score 10+ points in a turn to gain +2 moves next turn</li>
-                    <li><strong>Despair:</strong> Lose 2+ non-basic pieces in a turn to suffer -2 moves next turn</li>
+                    <li><strong>Honour (Warcry):</strong> Score 10+ points in a round to gain +2 moves next round</li>
+                    <li><strong>Despair:</strong> Lose 2+ non-basic pieces in a round to suffer -2 moves next round</li>
                     <li>Champions on enemy back row reduce opponent's moves by 1</li>
                 </ul>
 
@@ -1303,16 +1303,16 @@
                     <li><strong>Dragon - Inferno:</strong> Move 1 square and capture all adjacent enemies (2 points, once per game)</li>
                     <li><strong>Archer - Skirmish:</strong> Move then shoot diagonally 1 square (2 points, twice per game)</li>
                     <li><strong>Archer - Longshot Diagonal:</strong> Shoot diagonally 2 squares (2 points, twice per game)</li>
-                    <li><strong>Ballista - Extend Range:</strong> +1 shooting range this turn (2 points, once per turn)</li>
+                    <li><strong>Ballista - Extend Range:</strong> +1 shooting range this round (2 points, once per round)</li>
                     <li><strong>Ballista - Double Time:</strong> Move 2 squares in one direction (2 points, twice per game)</li>
                 </ul>
 
                 <h2>Tips</h2>
                 <ul>
                     <li>Protect your King and Champion - losing them severely weakens your army</li>
-                    <li>Plan your moves carefully - you only get 3 per turn</li>
+                    <li>Plan your moves carefully - you only get 3 per round</li>
                     <li>Use special abilities strategically - most can only be used once or twice</li>
-                    <li>Watch the timers - running out of time forfeits your turn</li>
+                    <li>Watch the timers - running out of time forfeits your round</li>
                     <li>Score points by capturing enemy pieces - higher value pieces give more points</li>
                 </ul>
             `;
@@ -1529,8 +1529,8 @@
             // Store overlay state for later cleanup
             window.coinTossShowOverlay = showOverlay;
 
-            // Determine if this is the first turn coin toss or an in-game outcome
-            const isFirstTurn = title === 'First Turn';
+            // Determine if this is the first round coin toss or an in-game outcome
+            const isFirstTurn = title === 'First Round';
             window.coinTossContext = isFirstTurn ? 'first-turn' : 'in-game';
 
             document.getElementById('coin-toss-title').textContent = title;
@@ -1701,10 +1701,10 @@
             // Remove warcry active background when switching to AI turn
             removeWarcryActiveBackground();
             applyEndTurnEffects('W');
-            // Update turn statistics before switching to AI
-            updateTurnStats('W');
+            // Update round statistics before switching to AI
+            updateRoundStats('W');
 
-            // Increment round when second player finishes their turn
+            // Increment round when second player finishes their round
             if (firstPlayer === 'B') {
                 // AI went first, so player finishing means round is complete
                 gameRound++;
@@ -1714,8 +1714,8 @@
             try {
                 aiTurn();
             } catch (err) {
-                console.error('AI turn failed:', err);
-                completeAiTurn({ reason: 'AI encountered an error taking its turn.' });
+                console.error('AI round failed:', err);
+                completeAiTurn({ reason: 'AI encountered an error taking its round.' });
             } finally {
                 // aiTurn clears the flag when it begins; keep safety fallback here
                 if (aiPending) {
@@ -1728,25 +1728,25 @@
             if (!skipEndEffects) {
                 applyEndTurnEffects('B');
             }
-            // Update turn statistics before switching players
-            updateTurnStats('B');
+            // Update round statistics before switching players
+            updateRoundStats('B');
             aiPending = false;
             aiTurnTimeoutForced = false;
             stopTurnTimer();
             highlightSquares = [];
             currentPlayer = 'W';
-            turnCount++; // Increment turn counter when AI finishes and control returns to player
+            roundCount++; // Increment round counter when AI finishes and control returns to player
 
-            // Increment round when second player finishes their turn
+            // Increment round when second player finishes their round
             if (firstPlayer === 'W') {
                 // Player went first, so AI finishing means round is complete
                 gameRound++;
             }
             ballistaRangeBoostActive['W'] = false;
             ballistaRangeBoostUsedThisTurn['W'] = false;
-            // Reset wizard summoning flag for new turn
+            // Reset wizard summoning flag for new round
             wizardSummonedThisTurn['W'] = false;
-            // Clear wizard movement restrictions from previous turn
+            // Clear wizard movement restrictions from previous round
             wizardCannotMoveNextTurn['W'].clear();
 
             const humanBaseMoves = calculateBaseMoves('W');
@@ -1866,36 +1866,36 @@
             const opponent = getOpponent(player);
             let logUpdated = false;
 
-            if (turnScoreGain[player] >= HONOUR_THRESHOLD) {
-                nextTurnModifier[player] += HONOUR_BONUS;
+            if (roundScoreGain[player] >= HONOUR_THRESHOLD) {
+                nextRoundModifier[player] += HONOUR_BONUS;
                 gameStats.warcryBonusCount[player]++;
-                gameLog.push(`${player === 'W' ? 'Player' : 'AI'} triggered Honour (Warcry) bonus (+${HONOUR_BONUS} moves next turn).`);
+                gameLog.push(`${player === 'W' ? 'Player' : 'AI'} triggered Honour (Warcry) bonus (+${HONOUR_BONUS} moves next round).`);
                 logUpdated = true;
             }
 
-            const losses = turnLosses[opponent] || {};
+            const losses = roundLosses[opponent] || {};
             for (let type in losses) {
                 if (losses[type] >= 2 && !DESPAIR_EXCLUDED.has(type)) {
-                    nextTurnModifier[opponent] -= DESPAIR_PENALTY;
+                    nextRoundModifier[opponent] -= DESPAIR_PENALTY;
                     gameStats.despairPenaltyCount[opponent]++;
-                    gameLog.push(`${opponent === 'W' ? 'Player' : 'AI'} suffers Despair penalty (-${DESPAIR_PENALTY} moves next turn).`);
+                    gameLog.push(`${opponent === 'W' ? 'Player' : 'AI'} suffers Despair penalty (-${DESPAIR_PENALTY} moves next round).`);
                     logUpdated = true;
                     break;
                 }
             }
 
-            turnScoreGain[player] = 0;
-            turnLosses[player] = {};
-            turnLosses[opponent] = {};
-            warcryAchievedThisTurn[player] = false;
+            roundScoreGain[player] = 0;
+            roundLosses[player] = {};
+            roundLosses[opponent] = {};
+            warcryAchievedThisRound[player] = false;
 
-            // Update Fusilier cooldowns at the end of the player's turn
+            // Update Fusilier cooldowns at the end of the player's round
             finalizeFusilierShots(player);
 
-            // Clear mercenary bonus turn tracking at the end of the player's turn
+            // Clear mercenary bonus turn tracking at the end of the player's round
             mercenaryBonusTurnUsed[player].clear();
 
-            // Clear mercenary bonus turn state to prevent it from carrying over to next turn
+            // Clear mercenary bonus turn state to prevent it from carrying over to next round
             if (mercenaryBonusTurnActive && mercenaryBonusTurnPiece) {
                 mercenaryBonusTurnActive = false;
                 mercenaryBonusTurnPiece = null;
@@ -1973,7 +1973,7 @@
             }
             pruneFusilierShotTracking(player);
             const opponent = getOpponent(player);
-            let modifier = nextTurnModifier[player] || 0;
+            let modifier = nextRoundModifier[player] || 0;
             let moves = Math.max(0, baseMoves + modifier);
 
             if (modifier > 0) {
@@ -1988,13 +1988,13 @@
                 updateGameLog();
             }
 
-            nextTurnModifier[player] = 0;
+            nextRoundModifier[player] = 0;
             movesLeft = moves;
             initialMovesLeft = moves;
             baseMovesThisTurn = baseMoves; // Store base moves for tracking when bonus is spent
-            turnScoreGain[player] = 0;
-            turnLosses[player] = turnLosses[player] || {};
-            turnLosses[opponent] = {};
+            roundScoreGain[player] = 0;
+            roundLosses[player] = roundLosses[player] || {};
+            roundLosses[opponent] = {};
             decrementNecromancerCooldown(player);
             let turnStartHandled = false;
             const finalizeTurnStart = () => {
@@ -2007,14 +2007,14 @@
                         aiTurnTimeRemaining = 0;
                     }
                     updateTimerDisplay();
-                    gameLog.push(`${player === 'W' ? 'Player' : 'AI'} is immobilized this turn.`);
+                    gameLog.push(`${player === 'W' ? 'Player' : 'AI'} is immobilized this round.`);
                     updateGameLog();
                     return;
                 }
 
                 startTurnTimer(player);
 
-                // Check for truce at start of player's turn
+                // Check for truce at start of player's round
                 if (player === 'W' && truceDeclinedTurns > 0) {
                     truceDeclinedTurns++;
                     if (truceDeclinedTurns <= 3) {
@@ -2754,10 +2754,10 @@
         let aiTurnTimeRemaining = TURN_TIME_OPTIONS[selectedTurnTimerKey];
         let currentTurnTimerPlayer = null;
         let aiTurnTimeoutForced = false;
-        let turnCount = 0; // Initialize turn counter early for timer display
-        let playerTurnNumber = 0; // Track player's turn count (for first 2 turns features)
-        let aiTurnNumber = 0; // Track AI's turn count (for first 2 turns features)
-        let gameRound = 1; // Track game rounds (both players taking 1 turn = 1 complete round)
+        let roundCount = 0; // Initialize round counter early for timer display
+        let playerRoundNumber = 0; // Track player's round count (for first 2 rounds features)
+        let aiRoundNumber = 0; // Track AI's round count (for first 2 rounds features)
+        let gameRound = 1; // Track game rounds (both players taking 1 round = 1 complete round)
         let firstPlayer = null; // Track who went first to properly count rounds
 
         const HONOUR_THRESHOLD = 10;
@@ -2766,10 +2766,10 @@
         const DESPAIR_EXCLUDED = new Set(['Mercenary', 'Infantry', 'Archer']);
         const RELENTLESS_THRESHOLD = 3;
 
-        let turnScoreGain = { 'W': 0, 'B': 0 };
-        let turnLosses = { 'W': {}, 'B': {} };
-        let nextTurnModifier = { 'W': 0, 'B': 0 };
-        let warcryAchievedThisTurn = { 'W': false, 'B': false };
+        let roundScoreGain = { 'W': 0, 'B': 0 };
+        let roundLosses = { 'W': {}, 'B': {} };
+        let nextRoundModifier = { 'W': 0, 'B': 0 };
+        let warcryAchievedThisRound = { 'W': false, 'B': false };
         let reinforcementTotals = { 'W': 0, 'B': 0 };
         let infantryReinforcements = { 'W': 0, 'B': 0 };
 
@@ -2780,35 +2780,35 @@
             gameStartTime: null,
             gameDuration: 0,
             // New statistics for end game display
-            capturesThisTurn: { 'W': 0, 'B': 0 },
-            mostCapturesInTurn: { 'W': 0, 'B': 0 },
-            scoreThisTurn: { 'W': 0, 'B': 0 },
-            highestScoreInTurn: { 'W': 0, 'B': 0 },
+            capturesThisRound: { 'W': 0, 'B': 0 },
+            mostCapturesInRound: { 'W': 0, 'B': 0 },
+            scoreThisRound: { 'W': 0, 'B': 0 },
+            highestScoreInRound: { 'W': 0, 'B': 0 },
             summonCount: { 'W': 0, 'B': 0 },
             reinforcementCount: { 'W': 0, 'B': 0 }
         };
 
         // Helper functions for tracking statistics
         function trackCapture(player) {
-            gameStats.capturesThisTurn[player]++;
+            gameStats.capturesThisRound[player]++;
         }
 
         function trackScore(player, scoreGain) {
-            gameStats.scoreThisTurn[player] += scoreGain;
+            gameStats.scoreThisRound[player] += scoreGain;
         }
 
-        function updateTurnStats(player) {
-            // Update max captures if this turn had more
-            if (gameStats.capturesThisTurn[player] > gameStats.mostCapturesInTurn[player]) {
-                gameStats.mostCapturesInTurn[player] = gameStats.capturesThisTurn[player];
+        function updateRoundStats(player) {
+            // Update max captures if this round had more
+            if (gameStats.capturesThisRound[player] > gameStats.mostCapturesInRound[player]) {
+                gameStats.mostCapturesInRound[player] = gameStats.capturesThisRound[player];
             }
-            // Update max score if this turn had more
-            if (gameStats.scoreThisTurn[player] > gameStats.highestScoreInTurn[player]) {
-                gameStats.highestScoreInTurn[player] = gameStats.scoreThisTurn[player];
+            // Update max score if this round had more
+            if (gameStats.scoreThisRound[player] > gameStats.highestScoreInRound[player]) {
+                gameStats.highestScoreInRound[player] = gameStats.scoreThisRound[player];
             }
-            // Reset for next turn
-            gameStats.capturesThisTurn[player] = 0;
-            gameStats.scoreThisTurn[player] = 0;
+            // Reset for next round
+            gameStats.capturesThisRound[player] = 0;
+            gameStats.scoreThisRound[player] = 0;
         }
 
         function updateAiPieceValues() {
@@ -2853,12 +2853,12 @@
             const board = document.getElementById('board');
 
             if (gameTimerRow) {
-                gameTimerRow.textContent = `Game Time: ${formatTime(Math.max(0, gameTimeRemaining))} | Turn: ${turnCount}`;
+                gameTimerRow.textContent = `Game Time: ${formatTime(Math.max(0, gameTimeRemaining))} | Round: ${roundCount}`;
             }
 
             // Update player timer with warning color
             if (playerTimerRow) {
-                playerTimerRow.textContent = `Player Turn: ${formatTime(Math.max(0, playerTurnTimeRemaining))}`;
+                playerTimerRow.textContent = `Player Round: ${formatTime(Math.max(0, playerTurnTimeRemaining))}`;
                 if (playerTurnTimeRemaining <= 10 && playerTurnTimeRemaining > 0 && currentTurnTimerPlayer === 'W') {
                     playerTimerRow.classList.add('low-time');
                 } else {
@@ -2868,7 +2868,7 @@
 
             // Update AI timer with warning color
             if (aiTimerRow) {
-                aiTimerRow.textContent = `${getOpponentDisplayName()} Turn: ${formatTime(Math.max(0, aiTurnTimeRemaining))}`;
+                aiTimerRow.textContent = `${getOpponentDisplayName()} Round: ${formatTime(Math.max(0, aiTurnTimeRemaining))}`;
                 if (aiTurnTimeRemaining <= 10 && aiTurnTimeRemaining > 0 && currentTurnTimerPlayer === 'B') {
                     aiTimerRow.classList.add('low-time');
                 } else {
@@ -2976,7 +2976,7 @@
             }
             updateTimerDisplay();
             if (player === 'W') {
-                gameLog.push('Player turn timer expired. Turn forfeited.');
+                gameLog.push('Player round timer expired. Round forfeited.');
                 cancelSpecialModes();
                 if (reinforcementPending && reinforcementPending.player === 'W') {
                     reinforcementPending = null;
@@ -2991,7 +2991,7 @@
             } else {
                 aiTurnTimeoutForced = true;
                 movesLeft = 0;
-                completeAiTurn({ reason: 'AI turn timer expired. Player resumes turn.' });
+                completeAiTurn({ reason: 'AI round timer expired. Player resumes round.' });
             }
         }
 
@@ -3002,16 +3002,16 @@
         }
 
         function registerScoreGain(player, amount) {
-            const previousScore = turnScoreGain[player] || 0;
-            turnScoreGain[player] = previousScore + amount;
-            const newScore = turnScoreGain[player];
+            const previousScore = roundScoreGain[player] || 0;
+            roundScoreGain[player] = previousScore + amount;
+            const newScore = roundScoreGain[player];
 
             // Track score for statistics
             trackScore(player, amount);
 
             // Check if warcry threshold was just reached
-            if (previousScore < HONOUR_THRESHOLD && newScore >= HONOUR_THRESHOLD && !warcryAchievedThisTurn[player]) {
-                warcryAchievedThisTurn[player] = true;
+            if (previousScore < HONOUR_THRESHOLD && newScore >= HONOUR_THRESHOLD && !warcryAchievedThisRound[player]) {
+                warcryAchievedThisRound[player] = true;
                 // Show the warcry achievement popup
                 showWarcryAchievementPopup(player);
             }
@@ -3019,8 +3019,8 @@
 
         function registerPieceLoss(player, type) {
             if (DESPAIR_EXCLUDED.has(type)) return;
-            if (!turnLosses[player]) turnLosses[player] = {};
-            turnLosses[player][type] = (turnLosses[player][type] || 0) + 1;
+            if (!roundLosses[player]) roundLosses[player] = {};
+            roundLosses[player][type] = (roundLosses[player][type] || 0) + 1;
         }
 
         function registerReinforcement(player, type) {
@@ -3070,7 +3070,7 @@
             },
             'Ballista': {
                 points: '1 point to move 1 square vertically/horizontally or shoot 3 (or 4 with Extend Range) squares based on facing; 2 points to turn or activate specials.',
-                extra: 'Specials: Extend Range (+1 shoot range this turn, 2 points, once per turn); Double Time (move +1 extra square, 2 points, 2 uses per game). Shoots without moving. Can turn 90° left or right per action.'
+                extra: 'Specials: Extend Range (+1 shoot range this round, 2 points, once per round); Double Time (move +1 extra square, 2 points, 2 uses per game). Shoots without moving. Can turn 90° left or right per action.'
             },
             'Cavalry': {
                 points: '1 point to move up to 5 squares vertically or horizontally. Special Moves: Charge - once per game, move unlimited squares horizontally or vertically for 2 move points; Diagonal Rush - on rounds 1 and 2 only, move up to 3 squares diagonally for 2 move points.',
@@ -3089,8 +3089,8 @@
                 extra: 'Special Moves: Charge - once per piece per game, move forward (straight or diagonal) 3 squares, capturing anything except Spectre; stops on Elephantry/Ogre/Troll/Dragon. Triple Shot - 2 points for 3 shots at 2-square range with coin flip each (stays in position, can retarget). Can turn 90° left or right per action.'
             },
             'Fusilier': {
-                points: '1 point to move 2 squares diagonally or shoot forward/diagonally up to 3 squares. Cannot move and shoot in same turn.',
-                extra: 'Can move through own pieces. After shooting, cannot shoot next turn (can still move). Only captures by shooting. Special Moves: Crack Shot - increase range by +1 for next shot (2 points, 3 uses per piece; success determined by coin flip); Strafe - move 1 square vertically/horizontally without capturing (2 points, 2 uses per piece).'
+                points: '1 point to move 2 squares diagonally or shoot forward/diagonally up to 3 squares. Cannot move and shoot in same round.',
+                extra: 'Can move through own pieces. After shooting, cannot shoot next round (can still move). Only captures by shooting. Special Moves: Crack Shot - increase range by +1 for next shot (2 points, 3 uses per piece; success determined by coin flip); Strafe - move 1 square vertically/horizontally without capturing (2 points, 2 uses per piece).'
             },
             'Guard': {
                 points: '1 point to move 1 square in any direction.',
@@ -3106,11 +3106,11 @@
             },
             'Mercenary': {
                 points: '1 point to move 1 square in any direction; 2 points for 2 squares in any direction.',
-                extra: 'Can move or capture in any direction. Special Move: After a successful capture, triggers a coin flip - if successful, the mercenary continues its turn instantly without move point costs (once per turn).'
+                extra: 'Can move or capture in any direction. Special Move: After a successful capture, triggers a coin flip - if successful, the mercenary continues its round instantly without move point costs (once per round).'
             },
             'Necromancer': {
                 points: '1 point to move 1 square in any direction. Special actions cost 2 points: summon Zombie or Spectre (coin flip) or channel a 2-range shot.',
-                extra: 'Max 2 per player, arrives via Champion summoning. Shoots require a 1-turn cooldown and always resolve captures with coin flips. Teleport twice per game.'
+                extra: 'Max 2 per player, arrives via Champion summoning. Shoots require a 1-round cooldown and always resolve captures with coin flips. Teleport twice per game.'
             },
             'Ogre': {
                 points: '1 point to move 1 square vertically/horizontally or jump 2 squares; 2 points for both.',
@@ -3126,14 +3126,14 @@
             },
             'Troll': {
                 points: '1 point to move up to 2 squares vertically/horizontally or 1 square diagonally; +1 point for 1 extra square in same vertical/horizontal direction (total 2 points).',
-                extra: 'On first turn, can move up to 4 squares vertically/horizontally or 2 squares diagonally at normal cost. No extra move on first turn.'
+                extra: 'On first round, can move up to 4 squares vertically/horizontally or 2 squares diagonally at normal cost. No extra move on first round.'
             },
             'Wizard': {
-                points: '1 point to move up to 4 squares diagonally; 2 points to move up to 5 squares and/or through own pieces. Special Moves: Teleport - twice per game, move to any unoccupied square of the same color for 2 move points; Teleport Swap - once per game, swap with an opponent Wizard on the same color square for 2 move points; Strafe - twice per game, move 1 square horizontally or vertically for 2 move points (cannot capture); Summon Spectre - twice per game, costs 2 points, requires 5+ captured pieces, 50/50 chance, wizard cannot move next turn.',
+                points: '1 point to move up to 4 squares diagonally; 2 points to move up to 5 squares and/or through own pieces. Special Moves: Teleport - twice per game, move to any unoccupied square of the same color for 2 move points; Teleport Swap - once per game, swap with an opponent Wizard on the same color square for 2 move points; Strafe - twice per game, move 1 square horizontally or vertically for 2 move points (cannot capture); Summon Spectre - twice per game, costs 2 points, requires 5+ captured pieces, 50/50 chance, wizard cannot move next round.',
                 extra: 'Cannot move through opponent pieces.'
             },
             'Zombie': {
-                points: 'Automatically shambles forward each turn without spending move points.',
+                points: 'Automatically shambles forward each round without spending move points.',
                 extra: 'Summoned to the back row. Moves forward, attempting diagonal detours if blocked, and resolves captures (including defending) via coin flip. Converts opposing Zombies on successful clashes.'
             }
         };
@@ -4077,10 +4077,10 @@
             gameStats.despairPenaltyCount = { 'W': 0, 'B': 0 };
             gameStats.gameStartTime = null;
             gameStats.gameDuration = 0;
-            gameStats.capturesThisTurn = { 'W': 0, 'B': 0 };
-            gameStats.mostCapturesInTurn = { 'W': 0, 'B': 0 };
-            gameStats.scoreThisTurn = { 'W': 0, 'B': 0 };
-            gameStats.highestScoreInTurn = { 'W': 0, 'B': 0 };
+            gameStats.capturesThisRound = { 'W': 0, 'B': 0 };
+            gameStats.mostCapturesInRound = { 'W': 0, 'B': 0 };
+            gameStats.scoreThisRound = { 'W': 0, 'B': 0 };
+            gameStats.highestScoreInRound = { 'W': 0, 'B': 0 };
             gameStats.summonCount = { 'W': 0, 'B': 0 };
             gameStats.reinforcementCount = { 'W': 0, 'B': 0 };
         }
@@ -6007,7 +6007,7 @@
                 ballistaRangeBoostActive[currentPlayer] = true;
                 ballistaRangeBoostUsedThisTurn[currentPlayer] = true;
                 movesLeft -= 2;
-                gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} activated Ballista Extend Range (+1 range this turn)`);
+                gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} activated Ballista Extend Range (+1 range this round)`);
                 // Keep the piece selected and recalculate valid moves with extended range
                 validMoves = getValidMoves(selectedPiece.row, selectedPiece.col);
                 renderBoard();
@@ -8013,14 +8013,14 @@
         function aiTurn() {
             currentPlayer = 'B';
             aiPending = false; // clear any scheduled AI flag
-            aiTurnNumber++; // Increment AI turn counter
+            aiRoundNumber++; // Increment AI round counter
             const baseMoves = calculateBaseMoves('B');
-            // Reset Ballista per-turn boost for AI
+            // Reset Ballista per-round boost for AI
             ballistaRangeBoostActive['B'] = false;
             ballistaRangeBoostUsedThisTurn['B'] = false;
-            // Reset wizard summoning flag for new turn
+            // Reset wizard summoning flag for new round
             wizardSummonedThisTurn['B'] = false;
-            // Clear wizard movement restrictions from previous turn
+            // Clear wizard movement restrictions from previous round
             wizardCannotMoveNextTurn['B'].clear();
             isFirstPlayerTurn = false;
             aiSearchDeadline = 0;
@@ -8496,7 +8496,7 @@
                             // Extend range for Ballista this turn
                             ballistaRangeBoostActive['B'] = true;
                             ballistaRangeBoostUsedThisTurn['B'] = true;
-                            gameLog.push(`AI activated Ballista Extend Range (+1 range this turn)`);
+                            gameLog.push(`AI activated Ballista Extend Range (+1 range this round)`);
                         } else if (action.type === 'swap') {
                             const kingRow = from[0], kingCol = from[1];
                             const guardRow = pos[0], guardCol = pos[1];
@@ -8608,17 +8608,17 @@
                                     makeNextMove();
                                 } catch (err) {
                                     console.error('AI move loop failed:', err);
-                                    completeAiTurn({ reason: 'AI move error. Player resumes turn.' });
+                                    completeAiTurn({ reason: 'AI move error. Player resumes round.' });
                                 }
                             }, 1000); // Make next move
                         } catch (err) {
                             console.error('AI post-move cleanup failed:', err);
-                            completeAiTurn({ reason: 'AI move error. Player resumes turn.' });
+                            completeAiTurn({ reason: 'AI move error. Player resumes round.' });
                         }
                     }, 1200); // Highlight duration
                 } catch (err) {
                     console.error('AI move evaluation failed:', err);
-                    completeAiTurn({ reason: 'AI move error. Player resumes turn.' });
+                    completeAiTurn({ reason: 'AI move error. Player resumes round.' });
                 }
             }
             setTimeout(() => makeNextMove(), 1500); // Start after brief delay for player to see board state
@@ -8628,9 +8628,9 @@
             // Initialize all game state variables first
             gameOver = false; // Reset game over flag
             currentPlayer = 'W'; // Will be set by coin toss
-            turnCount = 0; // Reset turn counter
-            playerTurnNumber = 0; // Reset player turn counter
-            aiTurnNumber = 0; // Reset AI turn counter
+            roundCount = 0; // Reset round counter
+            playerRoundNumber = 0; // Reset player round counter
+            aiRoundNumber = 0; // Reset AI round counter
             gameRound = 1; // Reset game round counter
             firstPlayer = null; // Reset first player tracker
             selectedPiece = null;
@@ -8713,9 +8713,9 @@
             elephantryChargeUsed = new Set();
             elephantryExtendedRangeShotsRemaining = {};
             capturedSquares = [];
-            turnScoreGain = { 'W': 0, 'B': 0 };
-            turnLosses = { 'W': {}, 'B': {} };
-            nextTurnModifier = { 'W': 0, 'B': 0 };
+            roundScoreGain = { 'W': 0, 'B': 0 };
+            roundLosses = { 'W': {}, 'B': {} };
+            nextRoundModifier = { 'W': 0, 'B': 0 };
             reinforcementTotals = { 'W': 0, 'B': 0 };
             infantryReinforcements = { 'W': 0, 'B': 0 };
             truceAttempts = 0;
@@ -8741,7 +8741,7 @@
 
             // Perform coin toss to determine starting player
             performCoinToss(
-                'First Turn',
+                'First Round',
                 'Determining who goes first...',
                 (playerWins) => {
                     if (playerWins) {
@@ -8801,14 +8801,14 @@
         }
 
         function updateStatus() {
-            document.getElementById('status').textContent = `${currentPlayer === 'W' ? "Player" : "AI"}'s turn: ${movesLeft} moves remaining`;
+            document.getElementById('status').textContent = `${currentPlayer === 'W' ? "Player" : "AI"}'s round: ${movesLeft} moves remaining`;
 
             // Remove warcry active background when bonus moves are spent
             if (movesLeft <= baseMovesThisTurn) {
                 removeWarcryActiveBackground();
             }
 
-            // Explicitly check if turn should end after status update
+            // Explicitly check if round should end after status update
             if (!gamePaused && currentPlayer === 'W' && movesLeft <= 0 && !reinforcementPending && !aiPending) {
                 setTimeout(() => triggerAiTurn(), 0);
             }
@@ -8895,8 +8895,8 @@
             document.getElementById('stats-player-score').textContent = scores['W'];
             document.getElementById('stats-player-warcry').textContent = gameStats.warcryBonusCount['W'];
             document.getElementById('stats-player-despair').textContent = gameStats.despairPenaltyCount['W'];
-            document.getElementById('stats-player-captures').textContent = gameStats.mostCapturesInTurn['W'];
-            document.getElementById('stats-player-high-score').textContent = gameStats.highestScoreInTurn['W'];
+            document.getElementById('stats-player-captures').textContent = gameStats.mostCapturesInRound['W'];
+            document.getElementById('stats-player-high-score').textContent = gameStats.highestScoreInRound['W'];
             document.getElementById('stats-player-summons').textContent = gameStats.summonCount['W'];
             document.getElementById('stats-player-reinforcements').textContent = gameStats.reinforcementCount['W'];
 
@@ -8904,8 +8904,8 @@
             document.getElementById('stats-ai-score').textContent = scores['B'];
             document.getElementById('stats-ai-warcry').textContent = gameStats.warcryBonusCount['B'];
             document.getElementById('stats-ai-despair').textContent = gameStats.despairPenaltyCount['B'];
-            document.getElementById('stats-ai-captures').textContent = gameStats.mostCapturesInTurn['B'];
-            document.getElementById('stats-ai-high-score').textContent = gameStats.highestScoreInTurn['B'];
+            document.getElementById('stats-ai-captures').textContent = gameStats.mostCapturesInRound['B'];
+            document.getElementById('stats-ai-high-score').textContent = gameStats.highestScoreInRound['B'];
             document.getElementById('stats-ai-summons').textContent = gameStats.summonCount['B'];
             document.getElementById('stats-ai-reinforcements').textContent = gameStats.reinforcementCount['B'];
 
@@ -8913,7 +8913,7 @@
             const minutes = Math.floor(gameStats.gameDuration / 60);
             const seconds = gameStats.gameDuration % 60;
             const durationStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            document.getElementById('stats-turn-count').textContent = `Total Turns: ${turnCount}`;
+            document.getElementById('stats-turn-count').textContent = `Total Rounds: ${roundCount}`;
             document.getElementById('stats-duration').textContent = `Game Duration: ${durationStr}`;
 
             // Show stats modal
