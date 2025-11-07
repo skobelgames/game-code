@@ -1133,6 +1133,8 @@
                 turnCount = 0;
                 playerTurnNumber = 0;
                 aiTurnNumber = 0;
+                gameRound = 1;
+                firstPlayer = null;
                 selectedPiece = null;
                 validMoves = [];
                 movedPieces.clear();
@@ -1701,6 +1703,13 @@
             applyEndTurnEffects('W');
             // Update turn statistics before switching to AI
             updateTurnStats('W');
+
+            // Increment round when second player finishes their turn
+            if (firstPlayer === 'B') {
+                // AI went first, so player finishing means round is complete
+                gameRound++;
+            }
+
             aiPending = true;
             try {
                 aiTurn();
@@ -1727,7 +1736,12 @@
             highlightSquares = [];
             currentPlayer = 'W';
             turnCount++; // Increment turn counter when AI finishes and control returns to player
-            playerTurnNumber++; // Increment player turn counter
+
+            // Increment round when second player finishes their turn
+            if (firstPlayer === 'W') {
+                // Player went first, so AI finishing means round is complete
+                gameRound++;
+            }
             ballistaRangeBoostActive['W'] = false;
             ballistaRangeBoostUsedThisTurn['W'] = false;
             // Reset wizard summoning flag for new turn
@@ -2743,6 +2757,8 @@
         let turnCount = 0; // Initialize turn counter early for timer display
         let playerTurnNumber = 0; // Track player's turn count (for first 2 turns features)
         let aiTurnNumber = 0; // Track AI's turn count (for first 2 turns features)
+        let gameRound = 1; // Track game rounds (both players taking 1 turn = 1 complete round)
+        let firstPlayer = null; // Track who went first to properly count rounds
 
         const HONOUR_THRESHOLD = 10;
         const HONOUR_BONUS = 2;
@@ -3057,7 +3073,7 @@
                 extra: 'Specials: Extend Range (+1 shoot range this turn, 2 points, once per turn); Double Time (move +1 extra square, 2 points, 2 uses per game). Shoots without moving. Can turn 90° left or right per action.'
             },
             'Cavalry': {
-                points: '1 point to move up to 5 squares vertically or horizontally. Special Moves: Charge - once per game, move unlimited squares horizontally or vertically for 2 move points; Diagonal Rush - on your first 2 turns only, move up to 3 squares diagonally for 2 move points.',
+                points: '1 point to move up to 5 squares vertically or horizontally. Special Moves: Charge - once per game, move unlimited squares horizontally or vertically for 2 move points; Diagonal Rush - on rounds 1 and 2 only, move up to 3 squares diagonally for 2 move points.',
                 extra: 'Stops at the first piece in its path.'
             },
             'Champion': {
@@ -3082,7 +3098,7 @@
             },
             'Infantry': {
                 points: '1 point to move 1 square forward or diagonally forward; 1 point to turn.',
-                extra: 'First game turn can be up to 3 squares forward. Turn (1 point) or Turn and Move (2 points) via buttons. Both finalize action. Cannot move then turn. Can turn 90° left or right per action.'
+                extra: 'Round 1 only: can move up to 3 squares forward. Turn (1 point) or Turn and Move (2 points) via buttons. Both finalize action. Cannot move then turn. Can turn 90° left or right per action.'
             },
             'King': {
                 points: '1 point to move 1 square vertically or horizontally.',
@@ -3146,8 +3162,8 @@
                         moves.push({ type: 'move', pos: [nr, nc], cost: 1 });
                     }
                 }
-                // Diagonal Rush on each player's first 2 turns only (costs 2 points, up to 3 squares)
-                if ((player === 'W' && playerTurnNumber <= 1) || (player === 'B' && aiTurnNumber <= 2)) {
+                // Diagonal Rush on rounds 1 and 2 only (costs 2 points, up to 3 squares)
+                if (gameRound <= 2) {
                     for (let d of [[1,1], [1,-1], [-1,1], [-1,-1]]) {
                         for (let i = 1; i <= 3; i++) {
                             let nr = r + d[0] * i, nc = c + d[1] * i;
@@ -3315,8 +3331,8 @@
             }},
             'Infantry': { move: (r, c, board, player, _, facing) => {
                 let moves = [];
-                // First turn: can move up to 3 squares forward (for both players on their turn 1)
-                let max = ((player === 'W' && playerTurnNumber === 0) || (player === 'B' && aiTurnNumber === 1)) ? 3 : 1;
+                // Round 1 only: can move up to 3 squares forward
+                let max = (gameRound === 1) ? 3 : 1;
                 let dir, diag1, diag2;
                 if (facing === 'U') { dir = [-1,0]; diag1 = [-1,-1]; diag2 = [-1,1]; }
                 else if (facing === 'D') { dir = [1,0]; diag1 = [1,-1]; diag2 = [1,1]; }
@@ -8615,6 +8631,8 @@
             turnCount = 0; // Reset turn counter
             playerTurnNumber = 0; // Reset player turn counter
             aiTurnNumber = 0; // Reset AI turn counter
+            gameRound = 1; // Reset game round counter
+            firstPlayer = null; // Reset first player tracker
             selectedPiece = null;
             validMoves = [];
             movedPieces.clear();
@@ -8729,6 +8747,7 @@
                     if (playerWins) {
                         // Player (white) goes first
                         currentPlayer = 'W';
+                        firstPlayer = 'W'; // Track who went first for round counting
                         gameLog.push('Player won the coin toss and goes first!');
 
                         const baseMoves = calculateBaseMoves('W');
@@ -8754,6 +8773,7 @@
                     } else {
                         // AI (black) goes first
                         currentPlayer = 'B';
+                        firstPlayer = 'B'; // Track who went first for round counting
                         gameLog.push(`${getOpponentDisplayName()} won the coin toss and goes first!`);
 
                         const baseMoves = calculateBaseMoves('B');
