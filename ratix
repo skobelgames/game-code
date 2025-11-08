@@ -2,9 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>Ratix - Strategic Chess Variant</title>
     <style>
+        /* Universal box-sizing for consistent layout */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        /* Prevent horizontal scrolling and lock viewport */
+        html {
+            overflow-x: hidden;
+            width: 100%;
+            height: 100%;
+        }
+
         body {
             display: flex;
             flex-direction: column;
@@ -13,6 +25,9 @@
             background-color: #202020;
             margin: 0;
             padding: 20px;
+            min-height: 100vh;
+            overflow-x: hidden;
+            width: 100%;
         }
         #game-container {
             display: none;
@@ -20,7 +35,9 @@
             align-items: stretch;
             width: 100%;
             max-width: 1400px;
+            min-width: 320px; /* Minimum width for smallest devices */
             margin: 0 auto;
+            overflow-x: hidden;
         }
         #start-menu {
             display: flex;
@@ -30,6 +47,9 @@
             padding: 20px;
             border: 2px solid #333;
             border-radius: 10px;
+            max-width: calc(100% - 40px);
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
         #start-menu h2 {
             margin-bottom: 20px;
@@ -157,10 +177,17 @@
             border: 2px solid #000000;
             background-color: #fff;
             margin: 0 auto;
+            /* Lock board dimensions - will be set by JavaScript based on variant */
+            flex-shrink: 0;
+            flex-grow: 0;
         }
         .square {
             width: 50px;
             height: 50px;
+            min-width: 50px;
+            min-height: 50px;
+            max-width: 50px;
+            max-height: 50px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -168,6 +195,7 @@
             cursor: pointer;
             position: relative;
             transition: background-color 0.5s ease-in-out; /* Smooth transition for background color */
+            flex-shrink: 0;
         }
         .piece {
             font-family: Arial, sans-serif;
@@ -178,9 +206,14 @@
             align-items: center;
             width: 40px;
             height: 40px;
+            min-width: 40px;
+            min-height: 40px;
+            max-width: 40px;
+            max-height: 40px;
             background-color: rgb(0, 0, 0);
             border-radius: 50%;
             line-height: 1;
+            flex-shrink: 0;
         }
         .piece.white {
             background-color: rgb(255, 255, 255);
@@ -243,6 +276,9 @@
             font-size: 14px;
             color: #000;
             box-sizing: border-box;
+            min-height: 80px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         #score-display {
             width: 100%;
@@ -254,6 +290,8 @@
             gap: 20px;
             color: #fff;
             margin: 10px auto 0;
+            box-sizing: border-box;
+            overflow: hidden;
         }
         .player-panel,
         .round-panel {
@@ -267,6 +305,10 @@
             min-width: 220px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
             color: #fff;
+            box-sizing: border-box;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            overflow: hidden;
         }
         .player-panel {
             flex: 1 1 280px;
@@ -319,19 +361,27 @@
             display: none;
             box-sizing: border-box;
             overflow-y: auto;
+            overflow-x: hidden;
             max-height: var(--board-panel-max-height, 400px);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         #game-log {
             width: 100%;
             height: 180px;
+            min-height: 180px;
+            max-height: 180px;
             padding: 15px;
             background-color: #fff;
             border: 1px solid #333;
             border-radius: 5px;
             font-size: 14px;
             overflow-y: auto;
+            overflow-x: hidden;
             text-align: left;
             box-sizing: border-box;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         #captured-pieces {
             width: 100%;
@@ -343,9 +393,12 @@
             text-align: left;
             box-sizing: border-box;
             overflow-y: auto;
+            overflow-x: hidden;
             max-height: var(--board-panel-max-height, 400px);
             display: flex;
             gap: 15px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         #captured-pieces h3 {
             font-size: 14px;
@@ -387,24 +440,30 @@
         }
         #game-layout {
             display: grid;
-            grid-template-columns: minmax(220px, 260px) minmax(520px, auto) minmax(220px, 260px);
+            grid-template-columns: 260px minmax(520px, 704px) 260px;
             gap: 20px;
-            width: 100%;
+            width: fit-content;
+            max-width: 100%;
             justify-content: center;
             align-items: flex-start;
-            margin-top: 20px;
+            margin: 20px auto 0;
         }
         #board-column {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 20px;
+            min-width: 520px; /* Minimum for 10-column board (10*50px + 2*2px border + padding) */
+            max-width: 704px; /* Maximum for 14-column board (14*50px + 2*2px border + padding) */
         }
         #left-panel,
         #right-panel {
             display: flex;
             flex-direction: column;
             gap: 15px;
+            width: 260px;
+            min-width: 260px;
+            max-width: 260px;
         }
         #left-controls,
         #right-controls {
@@ -415,42 +474,91 @@
         #left-controls button,
         #right-controls button {
             width: 100%;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         @media (max-width: 1024px) {
+            body {
+                padding: 10px;
+            }
             #score-display {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 15px;
             }
             .player-panel,
             .round-panel {
                 flex: 1 1 auto;
                 max-width: none;
+                min-width: 0;
             }
             #game-layout {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                width: 100%;
+                gap: 15px;
             }
             #left-panel,
             #right-panel,
             #board-column {
                 width: 100%;
-                max-width: 520px;
+                max-width: 100%;
+                min-width: 0;
+            }
+            #board-column {
+                min-width: min(100%, 520px);
+                max-width: 100%;
+            }
+            #board {
+                max-width: 100%;
+                overflow-x: auto;
             }
             #left-controls,
             #right-controls {
                 flex-direction: row;
                 flex-wrap: wrap;
+                justify-content: center;
             }
             #left-controls button,
             #right-controls button {
                 width: auto;
                 flex: 1 1 150px;
+                min-width: 120px;
+            }
+        }
+
+        /* Extra small devices - ensure board fits */
+        @media (max-width: 600px) {
+            body {
+                padding: 5px;
+            }
+            .square {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                min-height: 40px;
+                max-width: 40px;
+                max-height: 40px;
+            }
+            .piece {
+                width: 32px;
+                height: 32px;
+                min-width: 32px;
+                min-height: 32px;
+                max-width: 32px;
+                max-height: 32px;
+                font-size: 22px;
+            }
+            #game-layout {
+                gap: 10px;
             }
         }
         #reinforce-modal, #turn-modal, #turn-move-modal, #turn-shoot-modal, #truce-modal, #coin-toss-modal, #king-summon-modal, #spell-direction-modal, #protection-modal {
             display: none;
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -459,6 +567,10 @@
             border: 2px solid #333;
             border-radius: 10px;
             z-index: 1000;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow: auto;
+            box-sizing: border-box;
         }
         #truce-modal {
             z-index: 2001;
@@ -563,7 +675,7 @@
         }
         #how-to-play-modal {
             display: none;
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -572,10 +684,11 @@
             border: 2px solid #333;
             border-radius: 10px;
             z-index: 2000;
-            width: 80%;
+            width: 90%;
             max-width: 800px;
-            max-height: 80vh;
+            max-height: 90vh;
             overflow: hidden;
+            box-sizing: border-box;
         }
         #how-to-play-modal .modal-header {
             background-color: #333;
@@ -730,6 +843,8 @@
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
+            box-sizing: border-box;
+            min-height: 40px;
         }
         button:disabled {
             cursor: not-allowed;
@@ -777,7 +892,7 @@
         /* Warcry achievement popup styles */
         #warcry-achievement-modal {
             display: none;
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -787,7 +902,9 @@
             border-radius: 10px;
             z-index: 2003;
             text-align: center;
-            min-width: 400px;
+            min-width: min(400px, 90%);
+            max-width: 90%;
+            box-sizing: border-box;
         }
         #warcry-achievement-modal h1 {
             margin: 0;
