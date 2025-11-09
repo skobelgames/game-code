@@ -1248,6 +1248,117 @@
                 box-shadow: 0 0 40px #d4af37;
             }
         }
+        /* Soul Blast (Lich) purple overlay and effects */
+        .soul-blast-overlay {
+            background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 50%, #1a0a2e 100%) !important;
+            background-size: 400% 400%;
+            animation: soulBlastOverlay 6s ease-in-out infinite;
+            position: relative;
+        }
+        @keyframes soulBlastOverlay {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        .soul-blast-overlay::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at 20% 20%, rgba(138, 43, 226, 0.25), transparent 70%),
+                        radial-gradient(circle at 80% 0%, rgba(106, 13, 173, 0.2), transparent 65%),
+                        radial-gradient(circle at 60% 80%, rgba(75, 0, 130, 0.15), transparent 70%);
+            animation: soulBlastRipple 12s linear infinite;
+            z-index: 0;
+            opacity: 0.4;
+        }
+        @keyframes soulBlastRipple {
+            0% {
+                transform: translate3d(0, 0, 0);
+                opacity: 0.5;
+            }
+            50% {
+                transform: translate3d(-2%, -1%, 0);
+                opacity: 0.35;
+            }
+            100% {
+                transform: translate3d(2%, 1%, 0);
+                opacity: 0.5;
+            }
+        }
+        #board.soul-blast-glow {
+            border-color: #8a2be2 !important;
+            box-shadow: 0 0 20px #8a2be2;
+            animation: soulBlastGlow 1.6s ease-in-out infinite !important;
+        }
+        @keyframes soulBlastGlow {
+            0% {
+                box-shadow: 0 0 10px #6a0dad;
+            }
+            50% {
+                box-shadow: 0 0 32px #ba55d3;
+            }
+            100% {
+                box-shadow: 0 0 10px #6a0dad;
+            }
+        }
+        .soul-blast-path,
+        .soul-blast-residual {
+            position: relative;
+            z-index: 4;
+        }
+        .soul-blast-path::after,
+        .soul-blast-residual::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid rgba(138, 43, 226, 0.95);
+            border-radius: 0;
+            box-shadow: 0 0 12px rgba(186, 85, 211, 0.9), 0 0 20px rgba(138, 43, 226, 0.45);
+            pointer-events: none;
+            z-index: 5;
+            animation: soulBlastRingPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes soulBlastRingPulse {
+            0%, 100% {
+                opacity: 1;
+                box-shadow: 0 0 12px rgba(186, 85, 211, 0.9), 0 0 20px rgba(138, 43, 226, 0.45);
+            }
+            50% {
+                opacity: 0.65;
+                box-shadow: 0 0 18px rgba(186, 85, 211, 0.8), 0 0 28px rgba(138, 43, 226, 0.35);
+            }
+        }
+        /* Slow motion effect for soul blast capture */
+        .soul-blast-slow-motion {
+            animation: soulBlastSlowCapture 1.5s ease-in-out;
+        }
+        @keyframes soulBlastSlowCapture {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+        }
         /* Game stats modal styles */
         #game-stats-modal {
             display: none;
@@ -2774,6 +2885,7 @@
             roundLosses[opponent] = {};
             decrementNecromancerCooldown(player);
             decayEnergyBlastResiduals(player);
+            decaySoulBlastResiduals(player);
             let turnStartHandled = false;
             const finalizeTurnStart = () => {
                 if (turnStartHandled) return;
@@ -2823,6 +2935,8 @@
         let energyBlastFlipPauseState = null;
         let coinTossEnergyBlastMode = null;
         let coinTossSpecialEffect = null;
+        let soulBlastGlowActive = false;
+        let soulBlastResidualSquares = new Map();
         let pendingAiEnergyBlastResume = null;
         let activeControlButton = null;
         let mercenaryBonusHighlight = null;
@@ -5426,6 +5540,31 @@
             energyBlastGlowActive = false;
         }
 
+        function applySoulBlastGlow() {
+            const board = document.getElementById('board');
+            if (board) {
+                board.classList.add('soul-blast-glow');
+            }
+            const body = document.body;
+            if (body) {
+                body.classList.add('soul-blast-overlay');
+            }
+            soulBlastGlowActive = true;
+        }
+
+        function removeSoulBlastGlow() {
+            if (!soulBlastGlowActive) return;
+            const board = document.getElementById('board');
+            if (board) {
+                board.classList.remove('soul-blast-glow');
+            }
+            const body = document.body;
+            if (body) {
+                body.classList.remove('soul-blast-overlay');
+            }
+            soulBlastGlowActive = false;
+        }
+
         function showEnergyBlastPopup(callback = () => {}) {
             const modal = document.getElementById('energy-blast-popup');
             if (!modal) {
@@ -5667,6 +5806,82 @@
             highlightStep(0);
         }
 
+        function animateSoulBlastPath(pathSquares, callback) {
+            if (!pathSquares || !pathSquares.length) {
+                callback();
+                return;
+            }
+            const highlighted = [];
+            const stepDuration = 220;
+
+            const removeHighlights = () => {
+                highlighted.forEach(el => el.classList.remove('soul-blast-path'));
+                highlighted.length = 0;
+            };
+
+            const finishAnimation = () => {
+                removeHighlights();
+                callback();
+            };
+
+            const highlightStep = (index) => {
+                if (index >= pathSquares.length) {
+                    setTimeout(() => finishAnimation(), stepDuration);
+                    return;
+                }
+                const { row, col } = pathSquares[index];
+                const square = document.querySelector(`.square[data-row="${row}"][data-col="${col}"]`);
+                if (square) {
+                    square.classList.add('soul-blast-path');
+                    highlighted.push(square);
+                }
+                setTimeout(() => highlightStep(index + 1), stepDuration);
+            };
+
+            highlightStep(0);
+        }
+
+        function addSoulBlastResidualSquares(squares) {
+            if (!squares || !squares.length) return;
+            squares.forEach(({ row, col }) => {
+                const key = `${row},${col}`;
+                soulBlastResidualSquares.set(key, ENERGY_BLAST_RESIDUAL_DURATION);
+            });
+            refreshSoulBlastResidualHighlights();
+        }
+
+        function decaySoulBlastResiduals(player) {
+            if (!soulBlastResidualSquares.size) return;
+            if (player && player !== 'W') return;
+            let changed = false;
+            const updated = new Map();
+            soulBlastResidualSquares.forEach((value, key) => {
+                const next = value - 1;
+                if (next > 0) {
+                    updated.set(key, next);
+                    if (next !== value) changed = true;
+                } else {
+                    changed = true;
+                }
+            });
+            soulBlastResidualSquares = updated;
+            if (changed) {
+                refreshSoulBlastResidualHighlights();
+            }
+        }
+
+        function refreshSoulBlastResidualHighlights() {
+            const squares = document.querySelectorAll('.square');
+            squares.forEach(square => {
+                const key = `${square.dataset.row},${square.dataset.col}`;
+                if (soulBlastResidualSquares.has(key)) {
+                    square.classList.add('soul-blast-residual');
+                } else if (square.classList.contains('soul-blast-residual')) {
+                    square.classList.remove('soul-blast-residual');
+                }
+            });
+        }
+
         function applyWarcryActiveBackground() {
             const body = document.body;
             const boardDiv = document.getElementById('board');
@@ -5764,6 +5979,7 @@
             updateScoreDisplay();
             updateEndTurnButton();
             refreshEnergyBlastResidualHighlights();
+            refreshSoulBlastResidualHighlights();
             // Apply capture effects after rendering
             capturedSquares.forEach(([r, c]) => addCaptureEffect(r, c));
             capturedSquares = [];
@@ -10293,7 +10509,7 @@
             const pathSquares = getSoulBlastPath(originRow, originCol, row, col);
             const animationPath = pathSquares.length ? pathSquares : [{ row, col }];
             pauseGameForSoulBlast();
-            applyEnergyBlastGlow();
+            applySoulBlastGlow();
             lichSoulBlastResolving = true;
             const finalize = () => {
                 clearActiveControlButton(button);
@@ -10306,7 +10522,7 @@
                 updateStatus();
                 updateEndTurnButton();
                 updateGameLog();
-                removeEnergyBlastGlow();
+                removeSoulBlastGlow();
                 resumeGameAfterSoulBlast();
                 lichSoulBlastResolving = false;
                 checkGameOver();
@@ -10315,17 +10531,28 @@
                 }
             };
             const resolveTargets = () => {
-                resolveSpellTargetsSequentially(targets, piece.player, 'Soul Blast', (capturesHit) => {
-                    if (capturesHit === 0) {
-                        gameLog.push('Soul Blast was negated or the target was protected.');
-                    }
-                    if (animationPath.length) {
-                        addEnergyBlastResidualSquares(animationPath);
-                    }
-                    finalize();
-                });
+                const targetSquare = document.querySelector(`.square[data-row="${row}"][data-col="${col}"]`);
+                if (targetSquare) {
+                    targetSquare.classList.add('soul-blast-slow-motion');
+                    setTimeout(() => {
+                        if (targetSquare) {
+                            targetSquare.classList.remove('soul-blast-slow-motion');
+                        }
+                    }, 1500);
+                }
+                setTimeout(() => {
+                    resolveSpellTargetsSequentially(targets, piece.player, 'Soul Blast', (capturesHit) => {
+                        if (capturesHit === 0) {
+                            gameLog.push('Soul Blast was negated or the target was protected.');
+                        }
+                        if (animationPath.length) {
+                            addSoulBlastResidualSquares(animationPath);
+                        }
+                        setTimeout(() => finalize(), 500);
+                    });
+                }, 200);
             };
-            animateEnergyBlastPath(animationPath, () => {
+            animateSoulBlastPath(animationPath, () => {
                 resolveTargets();
             });
         }
