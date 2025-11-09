@@ -350,6 +350,38 @@
             color: #FFD700;
             font-weight: bold;
         }
+        #ai-reaction-emoji {
+            font-size: 48px;
+            text-align: center;
+            height: 60px;
+            line-height: 60px;
+            opacity: 0;
+            transform: scale(0);
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            margin-top: 5px;
+        }
+        #ai-reaction-emoji.show {
+            opacity: 1;
+            transform: scale(1);
+            animation: emojiPop 0.5s ease-out;
+        }
+        @keyframes emojiPop {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.3) rotate(10deg);
+            }
+            75% {
+                transform: scale(0.9) rotate(-5deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
         #info-box {
             width: 100%;
             padding: 15px;
@@ -1272,6 +1304,7 @@
             <div class="player-name" id="ai-name-label">Opponent</div>
             <div class="player-score" id="ai-score-value">Score: 0</div>
             <div class="timer-row ai" id="ai-timer-row">Turn Time: 00:00</div>
+            <div id="ai-reaction-emoji"></div>
             </div>
         </div>
         <div id="game-layout">
@@ -3300,6 +3333,144 @@
             }
             lastRandomAiProfileName = candidate;
             return candidate;
+        }
+
+        // AI Reaction Emoji System
+        const AI_REACTION_EMOJIS = {
+            'Berserker': {
+                highCapture: ['😈', '💪', '🔥', '⚔️', '💀'],
+                mediumCapture: ['😁', '😏', '😎', '👊'],
+                lowCapture: ['😤', '😠'],
+                playerHighCapture: ['😡', '😠', '🤬', '👿'],
+                playerMediumCapture: ['😒', '😤', '🙄'],
+                neutral: ['😏', '😈', '💪'],
+                winning: ['😈', '👑', '💀', '🔥'],
+                losing: ['😤', '😡', '🤬']
+            },
+            'Guardian': {
+                highCapture: ['😊', '🛡️', '✨', '😌'],
+                mediumCapture: ['🙂', '😇', '⚖️'],
+                lowCapture: ['😐', '🤔'],
+                playerHighCapture: ['😰', '😨', '😱', '🥺'],
+                playerMediumCapture: ['😟', '😕', '😔'],
+                neutral: ['😌', '🛡️', '😇'],
+                winning: ['😊', '✨', '🙏'],
+                losing: ['😰', '😨', '😱']
+            },
+            'Tactician': {
+                highCapture: ['🤓', '🎯', '💡', '✅', '👌'],
+                mediumCapture: ['😏', '🤔', '🧐'],
+                lowCapture: ['😐', '🤨'],
+                playerHighCapture: ['😬', '🤔', '😑', '🙃'],
+                playerMediumCapture: ['😐', '🤨', '😕'],
+                neutral: ['🤓', '🧐', '💡'],
+                winning: ['🤓', '🎯', '👑'],
+                losing: ['😬', '🤔', '😑']
+            },
+            'Sorcerer': {
+                highCapture: ['✨', '🔮', '⚡', '💫', '🌟'],
+                mediumCapture: ['😏', '🪄', '💜'],
+                lowCapture: ['🤨', '😑'],
+                playerHighCapture: ['😵', '🤯', '😖', '😣'],
+                playerMediumCapture: ['😕', '😟', '🙁'],
+                neutral: ['🔮', '✨', '🪄'],
+                winning: ['✨', '🔮', '🌟'],
+                losing: ['😵', '🤯', '😖']
+            },
+            'Nomad': {
+                highCapture: ['😄', '🎉', '🚀', '💨', '⭐'],
+                mediumCapture: ['😊', '🙂', '👍'],
+                lowCapture: ['😅', '😬'],
+                playerHighCapture: ['😅', '😬', '😓', '😰'],
+                playerMediumCapture: ['😐', '😕', '🤷'],
+                neutral: ['🙂', '😊', '👍'],
+                winning: ['😄', '🎉', '⭐'],
+                losing: ['😅', '😰', '😓']
+            }
+        };
+
+        let lastEmojiTime = 0;
+        const EMOJI_COOLDOWN = 1500; // Minimum time between emoji displays in ms
+
+        function shouldShowEmoji(captureValue, isPlayerMove) {
+            // Always show for high value captures (6+)
+            if (captureValue >= 6) return true;
+
+            // For medium captures (3-5), show 60% of the time
+            if (captureValue >= 3) return Math.random() < 0.6;
+
+            // For low captures (1-2), show 30% of the time
+            if (captureValue >= 1) return Math.random() < 0.3;
+
+            // For non-capture moves, show 15% of the time
+            return Math.random() < 0.15;
+        }
+
+        function displayAiReactionEmoji(captureValue, isPlayerMove, scoreDifference) {
+            // Check cooldown
+            const now = Date.now();
+            if (now - lastEmojiTime < EMOJI_COOLDOWN) return;
+
+            // Determine if we should show an emoji
+            if (!shouldShowEmoji(captureValue, isPlayerMove)) return;
+
+            lastEmojiTime = now;
+
+            const profile = currentAiProfile ? currentAiProfile.name : 'Tactician';
+            const emojiSet = AI_REACTION_EMOJIS[profile] || AI_REACTION_EMOJIS['Tactician'];
+
+            let emojiArray;
+
+            if (isPlayerMove) {
+                // Player made a move - AI reacts based on capture value
+                if (captureValue >= 6) {
+                    emojiArray = emojiSet.playerHighCapture;
+                } else if (captureValue >= 3) {
+                    emojiArray = emojiSet.playerMediumCapture;
+                } else if (captureValue > 0) {
+                    emojiArray = emojiSet.playerMediumCapture;
+                } else {
+                    // No capture by player - show neutral or winning/losing based on score
+                    if (scoreDifference > 10) {
+                        emojiArray = emojiSet.winning;
+                    } else if (scoreDifference < -10) {
+                        emojiArray = emojiSet.losing;
+                    } else {
+                        emojiArray = emojiSet.neutral;
+                    }
+                }
+            } else {
+                // AI made a move - show happy reactions
+                if (captureValue >= 6) {
+                    emojiArray = emojiSet.highCapture;
+                } else if (captureValue >= 3) {
+                    emojiArray = emojiSet.mediumCapture;
+                } else if (captureValue > 0) {
+                    emojiArray = emojiSet.lowCapture;
+                } else {
+                    emojiArray = emojiSet.neutral;
+                }
+            }
+
+            // Select random emoji from array
+            const emoji = emojiArray[Math.floor(Math.random() * emojiArray.length)];
+
+            // Display the emoji
+            const emojiElement = document.getElementById('ai-reaction-emoji');
+            if (emojiElement) {
+                emojiElement.textContent = emoji;
+                emojiElement.classList.remove('show');
+
+                // Trigger reflow to restart animation
+                void emojiElement.offsetWidth;
+
+                emojiElement.classList.add('show');
+
+                // Hide after 2 seconds
+                setTimeout(() => {
+                    emojiElement.classList.remove('show');
+                }, 2000);
+            }
         }
 
         // Current AI profile (selected randomly at game start)
@@ -11527,6 +11698,7 @@
             const opponent = player === 'W' ? 'B' : 'W';
             const directions = [[0,1], [0,-1], [1,0], [-1,0], [1,1], [1,-1], [-1,1], [-1,-1]];
             let capturedSomething = false;
+            let totalCaptureValue = 0; // Track total capture value for emoji reactions
 
             for (let d of directions) {
                 let nr = row + d[0], nc = col + d[1];
@@ -11538,6 +11710,7 @@
                         capturedSquares.push([nr, nc]);
                         capturedPieces[player].push(targetPiece);
                         const captureValue = pieceValues[targetPiece.type];
+                        totalCaptureValue += captureValue; // Add to total
                         scores[player] += captureValue;
                         registerScoreGain(player, captureValue);
                         registerPieceLoss(opponent, targetPiece.type);
@@ -11562,6 +11735,12 @@
                 updateGameLog();
                 updateCapturedPiecesDisplay();
                 updateScoreDisplay();
+
+                // Trigger AI emoji reaction for player special moves
+                if (player === 'W') { // Only react to player moves
+                    const scoreDifference = scores['B'] - scores['W']; // AI score - Player score
+                    displayAiReactionEmoji(totalCaptureValue, true, scoreDifference);
+                }
             }
         }
 
@@ -11570,6 +11749,7 @@
             const piece = board[fromRow][fromCol];
             const opponent = getOpponent(piece.player);
             let captured = false;
+            let captureValue = 0; // Track capture value for emoji reactions
             const opponentBackRow = piece.player === 'W' ? 0 : (gameVariant === 'ccb' ? 7 : 9);
             const ownBackRow = piece.player === 'W' ? (gameVariant === 'ccb' ? 7 : 9) : 0;
 
@@ -11588,7 +11768,7 @@
                 } else {
                     capturedSquares.push([jump[0], jump[1]]);
                     capturedPieces[piece.player].push(capturedPiece);
-                    const captureValue = pieceValues[capturedPiece.type];
+                    captureValue = pieceValues[capturedPiece.type];
                     scores[piece.player] += captureValue;
                     registerScoreGain(piece.player, captureValue);
                     registerPieceLoss(opponent, capturedPiece.type);
@@ -11634,7 +11814,7 @@
                     } else {
                         capturedSquares.push([toRow, toCol]);
                         capturedPieces[piece.player].push(capturedPiece);
-                        const captureValue = pieceValues[capturedPiece.type];
+                        captureValue = pieceValues[capturedPiece.type];
                         scores[piece.player] += captureValue;
                         registerScoreGain(piece.player, captureValue);
                         registerPieceLoss(opponent, capturedPiece.type);
@@ -11700,6 +11880,13 @@
 
             updateGameLog();
             updateCapturedPiecesDisplay();
+
+            // Trigger AI emoji reaction for player moves
+            if (piece.player === 'W') { // Only react to player moves
+                const scoreDifference = scores['B'] - scores['W']; // AI score - Player score
+                displayAiReactionEmoji(captureValue, true, scoreDifference);
+            }
+
             return { mercenaryBonusTurn, mercenaryFlipNeeded, mercenaryPiece: piece, mercenaryPos: { row: toRow, col: toCol } };
         }
 
@@ -11739,6 +11926,7 @@
         function shootPiece(fromRow, fromCol, toRow, toCol) {
             const piece = board[fromRow][fromCol];
             if (!piece) return;
+            let captureValue = 0; // Track capture value for emoji reactions
             if (piece.type === 'Fusilier') {
                 fusilierShotThisTurn[piece.player].add(piece);
                 fusilierShotLastTurn[piece.player].delete(piece);
@@ -11779,7 +11967,7 @@
             if (targetPiece) {
                 capturedSquares.push([toRow, toCol]);
                 capturedPieces[piece.player].push(targetPiece);
-                const captureValue = pieceValues[targetPiece.type];
+                captureValue = pieceValues[targetPiece.type];
                 scores[piece.player] += captureValue;
                 registerScoreGain(piece.player, captureValue);
                 registerPieceLoss(getOpponent(piece.player), targetPiece.type);
@@ -11809,6 +11997,12 @@
             }
             updateGameLog();
             updateCapturedPiecesDisplay();
+
+            // Trigger AI emoji reaction for player shoots
+            if (piece.player === 'W') { // Only react to player moves
+                const scoreDifference = scores['B'] - scores['W']; // AI score - Player score
+                displayAiReactionEmoji(captureValue, true, scoreDifference);
+            }
         }
 
         function applySpellCapture(attackerPlayer, targetRow, targetCol, options = {}) {
