@@ -298,7 +298,7 @@
             background-color: #2a2a2a;
             border: 1px solid #333;
             border-radius: 10px;
-            padding: 15px 20px;
+            padding: 10px 15px;
             display: flex;
             flex-direction: column;
             gap: 6px;
@@ -314,6 +314,11 @@
             flex: 1 1 280px;
             max-width: 340px;
             text-align: left;
+            height: 80px;
+            flex-direction: row;
+            padding: 8px 12px;
+            position: relative;
+            align-items: flex-end;
         }
         .round-panel {
             flex: 0 0 220px;
@@ -349,6 +354,38 @@
         .timer-row.low-time {
             color: #FFD700;
             font-weight: bold;
+        }
+        .turn-emoji {
+            font-size: 32px;
+            line-height: 1;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #player-panel .turn-emoji {
+            right: 12px;
+        }
+        #ai-panel .turn-emoji {
+            left: 12px;
+        }
+        .turn-emoji.active {
+            opacity: 1;
+        }
+        .player-info-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+        #player-panel .player-info-content {
+            align-items: flex-start;
+            text-align: left;
+        }
+        #ai-panel .player-info-content {
+            align-items: flex-end;
+            text-align: right;
         }
         #info-box {
             width: 100%;
@@ -1260,18 +1297,24 @@
     <div id="game-container">
         <div id="score-display">
             <div class="player-panel" id="player-panel">
-            <div class="player-name" id="player-name-label">Player</div>
-            <div class="player-score" id="player-score-value">Score: 0</div>
-            <div class="timer-row player" id="player-timer-row">Turn Time: 00:00</div>
+            <span class="turn-emoji" id="player-turn-emoji">🤔</span>
+            <div class="player-info-content">
+                <div class="player-name" id="player-name-label">Player</div>
+                <div class="player-score" id="player-score-value">Score: 0</div>
+                <div class="timer-row player" id="player-timer-row">Turn Time: 00:00</div>
+            </div>
             </div>
             <div class="round-panel">
                 <div id="round-number-display">Round 1</div>
                 <div class="timer-row game" id="game-timer-row">Game Time: 00:00</div>
             </div>
             <div class="player-panel" id="ai-panel">
-            <div class="player-name" id="ai-name-label">Opponent</div>
-            <div class="player-score" id="ai-score-value">Score: 0</div>
-            <div class="timer-row ai" id="ai-timer-row">Turn Time: 00:00</div>
+            <span class="turn-emoji" id="ai-turn-emoji">🤔</span>
+            <div class="player-info-content">
+                <div class="player-name" id="ai-name-label">Opponent</div>
+                <div class="player-score" id="ai-score-value">Score: 0</div>
+                <div class="timer-row ai" id="ai-timer-row">Turn Time: 00:00</div>
+            </div>
             </div>
         </div>
         <div id="game-layout">
@@ -14057,6 +14100,18 @@
 
         function updateStatus() {
             document.getElementById('status').textContent = `${currentPlayer === 'W' ? "Player" : "AI"}'s turn: ${movesLeft} moves remaining`;
+
+            // Update turn emoji visibility
+            const playerEmoji = document.getElementById('player-turn-emoji');
+            const aiEmoji = document.getElementById('ai-turn-emoji');
+
+            if (currentPlayer === 'W') {
+                playerEmoji.classList.add('active');
+                aiEmoji.classList.remove('active');
+            } else {
+                playerEmoji.classList.remove('active');
+                aiEmoji.classList.add('active');
+            }
 
             // Remove warcry active background when bonus moves are spent
             if (movesLeft <= baseMovesThisTurn) {
