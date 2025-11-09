@@ -234,8 +234,21 @@
             box-shadow: 0 0 16px rgba(0, 255, 255, 0.9) !important;
             animation: pulse-hint 1.2s ease-in-out infinite;
             position: relative;
-            z-index: 2;
+            z-index: 5;
             opacity: 1 !important;
+        }
+        .hint-highlight::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid rgba(0, 255, 255, 0.9);
+            border-radius: 0;
+            box-shadow: 0 0 14px rgba(0, 255, 255, 0.8), 0 0 8px rgba(0, 255, 255, 0.45) inset;
+            pointer-events: none;
+            z-index: 6;
         }
         #coin-toss-progress {
             display: none;
@@ -254,12 +267,33 @@
         }
         .energy-blast-path,
         .energy-blast-residual {
-            background-color: transparent !important;
-            box-shadow: 0 0 16px rgba(0, 255, 255, 0.9) !important;
-            animation: pulse-hint 1.2s ease-in-out infinite;
             position: relative;
-            z-index: 2;
-            opacity: 1 !important;
+            z-index: 4;
+        }
+        .energy-blast-path::after,
+        .energy-blast-residual::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid rgba(109, 204, 255, 0.95);
+            border-radius: 0;
+            box-shadow: 0 0 12px rgba(143, 212, 255, 0.9), 0 0 20px rgba(109, 204, 255, 0.45);
+            pointer-events: none;
+            z-index: 5;
+            animation: energyBlastRingPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes energyBlastRingPulse {
+            0%, 100% {
+                opacity: 1;
+                box-shadow: 0 0 12px rgba(143, 212, 255, 0.9), 0 0 20px rgba(109, 204, 255, 0.45);
+            }
+            50% {
+                opacity: 0.65;
+                box-shadow: 0 0 18px rgba(143, 212, 255, 0.8), 0 0 28px rgba(109, 204, 255, 0.35);
+            }
         }
         .piece-arrow {
             font-size: 12px;
@@ -438,59 +472,135 @@
             overflow-wrap: break-word;
         }
         #captured-pieces {
+            position: relative;
             width: 100%;
-            padding: 15px;
-            background-color: #fff;
-            border: 1px solid #333;
-            border-radius: 5px;
+            padding: 20px;
+            background: radial-gradient(circle at top, #31213f 0%, #1a1323 55%, #0d0a12 100%);
+            border: 1px solid #4c2b63;
+            border-radius: 12px;
             font-size: 14px;
             text-align: left;
             box-sizing: border-box;
             overflow-y: auto;
             overflow-x: hidden;
-            max-height: var(--board-panel-max-height, 400px);
+            max-height: var(--board-panel-max-height, 420px);
             display: flex;
-            gap: 15px;
+            flex-direction: column;
+            gap: 18px;
+            color: #f2e9ff;
+            box-shadow: 0 18px 45px rgba(9, 0, 20, 0.65);
+            isolation: isolate;
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
+        #captured-pieces::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(103, 80, 138, 0.15));
+            pointer-events: none;
+            border-radius: 12px;
+            z-index: -1;
+        }
+        .graveyard-header {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .graveyard-title {
+            font-size: 18px;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+        .graveyard-subtitle {
+            font-size: 13px;
+            color: #c9b7dd;
+        }
+        .graveyard-columns {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        @media (min-width: 768px) {
+            .graveyard-columns {
+                flex-direction: row;
+            }
+        }
         #captured-pieces h3 {
-            font-size: 14px;
-            font-weight: normal;
+            font-size: 13px;
+            font-weight: 600;
             margin: 0;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            color: #d3c3ef;
         }
         .captured-column {
             flex: 1 1 0;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            background: rgba(15, 10, 22, 0.45);
+            border: 1px solid rgba(126, 92, 168, 0.35);
+            border-radius: 10px;
+            padding: 14px;
+            box-shadow: inset 0 0 10px rgba(22, 8, 33, 0.6);
         }
         .captured-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
         }
         .captured-entry {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-weight: 600;
-            background-color: #f7f7f7;
-            border-radius: 4px;
-            padding: 6px;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: rgba(28, 20, 35, 0.85);
+            border: 1px solid rgba(120, 85, 160, 0.45);
+            box-shadow: 0 6px 12px rgba(5, 0, 12, 0.6);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .captured-entry:hover {
+            transform: translateY(-3px);
+            border-color: rgba(196, 160, 255, 0.8);
         }
         .captured-entry.empty {
             font-weight: 500;
-            color: #777;
+            color: #8c7aa5;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         .captured-entry .piece {
-            width: 30px;
-            height: 30px;
-            font-size: 20px;
-            flex: 0 0 30px;
+            width: 38px;
+            height: 38px;
+            font-size: 22px;
+            flex: 0 0 38px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .grave-piece {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+        }
+        .grave-meta {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+        .grave-name {
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+        .grave-count {
+            font-size: 11px;
+            color: #bca4d3;
+            letter-spacing: 0.5px;
         }
         #game-layout {
             display: grid;
@@ -610,7 +720,7 @@
                 gap: 10px;
             }
         }
-        #reinforce-modal, #turn-modal, #turn-move-modal, #turn-shoot-modal, #truce-modal, #coin-toss-modal, #king-summon-modal, #spell-direction-modal, #protection-modal {
+        #reinforce-modal, #turn-modal, #turn-move-modal, #turn-shoot-modal, #truce-modal, #coin-toss-modal, #spell-direction-modal, #protection-modal {
             display: none;
             position: fixed;
             top: 50%;
@@ -686,7 +796,7 @@
             font-size: 18px;
             font-weight: bold;
         }
-        #reinforce-modal select, #reinforce-modal button, #turn-modal select, #turn-modal button, #turn-move-modal select, #turn-move-modal button, #turn-shoot-modal select, #turn-shoot-modal button, #king-summon-modal select, #king-summon-modal button {
+        #reinforce-modal select, #reinforce-modal button, #turn-modal select, #turn-modal button, #turn-move-modal select, #turn-move-modal button, #turn-shoot-modal select, #turn-shoot-modal button {
             margin: 10px;
             padding: 5px;
             font-size: 14px;
@@ -900,6 +1010,11 @@
             box-sizing: border-box;
             min-height: 40px;
         }
+        button.control-button-active {
+            background-color: #FFD966 !important;
+            border-color: #D6A000 !important;
+            color: #1a1a1a !important;
+        }
         button:disabled {
             cursor: not-allowed;
             opacity: 0.5;
@@ -914,6 +1029,22 @@
             background-color: rgba(255, 0, 0, 0.5);
             animation: fadeOut 2s ease-in-out;
             z-index: 10;
+        }
+        .square.mercenary-highlight {
+            z-index: 5;
+        }
+        .square.mercenary-highlight::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid #FFD700;
+            border-radius: 0;
+            box-shadow: 0 0 14px rgba(255, 215, 0, 0.85), 0 0 8px rgba(255, 215, 0, 0.5) inset;
+            pointer-events: none;
+            z-index: 6;
         }
         .capture-background {
             background-color: rgb(223, 0, 0) !important;
@@ -1346,20 +1477,23 @@
             <div id="board-column">
                 <div id="board"></div>
                 <div id="controls">
-            <button id="turn-button" onclick="openTurnModal()" style="display: none;">Turn Piece</button>
-            <button id="turn-move-button" onclick="openTurnAndMoveModal()" style="display: none;">Turn and Move</button>
-            <button id="turn-shoot-button" onclick="openTurnAndShootModal()" style="display: none;">Turn and Shoot</button>
-            <button id="archer-move-diag-shoot-button" onclick="activateArcherMoveDiagShoot()" style="display: none;">Skirmish (Move+Diag Shot)</button>
-            <button id="archer-diag2-shoot-button" onclick="activateArcherDiag2Shoot()" style="display: none;">Longshot Diagonal</button>
-            <button id="guard-honour-button" onclick="activateGuardOfHonour()" style="display: none;">Guard of Honour</button>
-            <button id="teleport-button" onclick="activateTeleport()" style="display: none;">Teleport</button>
-            <button id="teleport-swap-button" onclick="activateTeleportSwap()" style="display: none;">Teleport Swap</button>
-            <button id="charge-button" onclick="activateCharge()" style="display: none;">Charge</button>
-            <button id="inferno-button" onclick="activateInferno()" style="display: none;">Inferno</button>
-            <button id="strafe-button" onclick="activateStrafe()" style="display: none;">Strafe</button>
-            <button id="summon-spectre-button" onclick="activateSummonSpectre()" style="display: none;">Summon Spectre</button>
-            <button id="energy-blast-button" onclick="activateEnergyBlast()" style="display: none;">Energy Blast</button>
-            <button id="sacrifice-button" onclick="activateSacrifice()" style="display: none;">Sacrifice</button>
+            <button id="turn-button" onclick="openTurnModal(this)" style="display: none;">Turn Piece</button>
+            <button id="turn-move-button" onclick="openTurnAndMoveModal(this)" style="display: none;">Turn and Move</button>
+            <button id="turn-shoot-button" onclick="openTurnAndShootModal(this)" style="display: none;">Turn and Shoot</button>
+            <button id="archer-move-diag-shoot-button" onclick="activateArcherMoveDiagShoot(this)" style="display: none;">Skirmish (Move+Diag Shot)</button>
+            <button id="archer-diag2-shoot-button" onclick="activateArcherDiag2Shoot(this)" style="display: none;">Longshot Diagonal</button>
+            <button id="guard-honour-button" onclick="activateGuardOfHonour(this)" style="display: none;">Guard of Honour</button>
+            <button id="king-summon-pistolier-button" onclick="requestKingSummon('Pistolier')" style="display: none;">Summon Pistolier</button>
+            <button id="king-summon-fusilier-button" onclick="requestKingSummon('Fusilier')" style="display: none;">Summon Fusilier</button>
+            <button id="teleport-button" onclick="activateTeleport(this)" style="display: none;">Teleport</button>
+            <button id="teleport-swap-button" onclick="activateTeleportSwap(this)" style="display: none;">Teleport Swap</button>
+            <button id="charge-button" onclick="activateCharge(this)" style="display: none;">Charge</button>
+            <button id="inferno-button" onclick="activateInferno(this)" style="display: none;">Inferno</button>
+            <button id="strafe-button" onclick="activateStrafe(this)" style="display: none;">Strafe</button>
+            <button id="summon-spectre-button" onclick="activateSummonSpectre(this)" style="display: none;">Summon Spectre</button>
+            <button id="energy-blast-button" onclick="activateEnergyBlast(this)" style="display: none;">Energy Blast</button>
+            <button id="lich-soul-blast-button" onclick="activateLichSoulBlast(this)" style="display: none;">Soul Blast</button>
+            <button id="sacrifice-button" onclick="activateSacrifice(this)" style="display: none;">Sacrifice</button>
             <button id="hint-button" onclick="showHint()" style="display: none;">Get Hint</button>
             <button id="end-turn-button" onclick="endTurn()" disabled>End Round</button>
                 </div>
@@ -1370,14 +1504,20 @@
                     <button id="ratix-brand-button" type="button">Ratix</button>
                 </div>
                 <div id="status">Player's turn: 3 moves remaining</div>
-                <div id="captured-pieces">
-                    <div class="captured-column">
-                        <h3>Player's Captured Pieces</h3>
-                        <div id="player-captured" class="captured-grid"></div>
+                <div id="captured-pieces" aria-label="Graveyard">
+                    <div class="graveyard-header">
+                        <div class="graveyard-title">The Graveyard</div>
+                        <div class="graveyard-subtitle">Where claimed souls linger until recalled</div>
                     </div>
-                    <div class="captured-column">
-                        <h3>Opponent's Captured Pieces</h3>
-                        <div id="ai-captured" class="captured-grid"></div>
+                    <div class="graveyard-columns">
+                        <div class="captured-column">
+                            <h3>Player's Graveyard</h3>
+                            <div id="player-captured" class="captured-grid"></div>
+                        </div>
+                        <div class="captured-column">
+                            <h3>AI's Graveyard</h3>
+                            <div id="ai-captured" class="captured-grid"></div>
+                        </div>
                     </div>
                 </div>
             </aside>
@@ -1388,11 +1528,6 @@
         <h3>Select Reinforcement Piece</h3>
         <select id="reinforce-select"></select>
         <button onclick="confirmReinforcement()">Confirm</button>
-    </div>
-    <div id="king-summon-modal">
-        <div class="modal-header"><span>Select Unit to Summon</span><button class="modal-close" onclick="closeKingSummonModal()" aria-label="Close">&times;</button></div>
-        <select id="king-summon-select"></select>
-        <button onclick="confirmKingSummon()">Summon (2 pts + coin flip)</button>
     </div>
     <div id="spell-direction-modal">
         <div class="modal-header"><span id="spell-direction-title">Select Direction</span><button class="modal-close" onclick="closeSpellDirectionModal()" aria-label="Close">&times;</button></div>
@@ -1593,6 +1728,10 @@
         let necromancerSummonMode = null; // Necromancer summon targeting state
         let kingShotMode = null; // King shot targeting mode
         let kingEvadeMode = null; // King evade destination selection
+        let pendingLichSoulBlast = null; // Tracks pending Soul Blast coin flip
+        let lichSoulBlastMode = null; // Soul Blast targeting context
+        let lichSoulBlastResolving = false; // Prevent inputs while blast resolves
+        let soulBlastPauseState = null; // Preserve timer state during Soul Blast resolution
         let moralBoostUses = { 'W': 0, 'B': 0 }; // Track Moral Boost activations
         let kingShotUsed = { 'W': false, 'B': false }; // Track King Shot usage
         let kingEvadeUsed = { 'W': false, 'B': false }; // Track King Evade usage
@@ -1612,7 +1751,7 @@
         const HUNTSMAN_MAX_ACTIVE = 2;
         const HUNTSMAN_SUMMON_LIMIT = 6;
         const HUNTSMAN_BURST_FLIP_COUNT = 4;
-        const HUNTSMAN_BURST_SUCCESS_PROBS = [0, 0.9375, 0.6875, 0.3125, 0.0625];
+        const HUNTSMAN_BURST_SUCCESS_PROBS = [1, 0.9375, 0.6875, 0.3125, 0.0625];
         const HUNTSMAN_BURST_AI_THRESHOLD = 3.5;
         const KING_SUMMON_AI_THRESHOLD = 4;
         const VARIANT_LABELS = {
@@ -1638,6 +1777,46 @@
                     info.classList.remove('visible');
                 }
             });
+        }
+
+        function setActiveControlButton(button) {
+            if (!button) return;
+            if (activeControlButton && activeControlButton !== button) {
+                activeControlButton.classList.remove('control-button-active');
+            }
+            activeControlButton = button;
+            button.classList.add('control-button-active');
+        }
+
+        function setActiveControlButtonById(id) {
+            const button = document.getElementById(id);
+            if (button) {
+                setActiveControlButton(button);
+            }
+            return button;
+        }
+
+        function clearActiveControlButton(button = null) {
+            const target = button || activeControlButton;
+            if (!target) return;
+            target.classList.remove('control-button-active');
+            if (!button || target === activeControlButton) {
+                activeControlButton = null;
+            }
+        }
+
+        function setMercenaryHighlight(position) {
+            if (position) {
+                mercenaryBonusHighlight = { row: position.row, col: position.col };
+            } else {
+                mercenaryBonusHighlight = null;
+            }
+        }
+
+        function deactivateMercenaryBonusTurn() {
+            mercenaryBonusTurnActive = false;
+            mercenaryBonusTurnPiece = null;
+            setMercenaryHighlight(null);
         }
 
         function handleVariantClick(variant) {
@@ -1707,8 +1886,7 @@
                 gamePaused = false;
 
                 // Reset mercenary bonus turn state
-                mercenaryBonusTurnActive = false;
-                mercenaryBonusTurnPiece = null;
+                deactivateMercenaryBonusTurn();
                 mercenaryBonusTurnUsed = { 'W': new Set(), 'B': new Set() };
                 mercenaryBonusTurnCount = { 'W': 0, 'B': 0 };
 
@@ -1841,6 +2019,7 @@
                     <li><strong>Dragon:</strong> 7 points</li>
                     <li><strong>Ogre:</strong> 8 points</li>
                     <li><strong>Wizard:</strong> 9 points</li>
+                    <li><strong>Lich:</strong> 9 points</li>
                     <li><strong>Mercenary:</strong> 10 points</li>
                     <li><strong>Necromancer:</strong> 10 points</li>
                     <li><strong>Elephantry:</strong> 11 points</li>
@@ -1855,6 +2034,7 @@
                     <li><strong>Wizard - Teleport Swap:</strong> Swap with enemy Wizard on same color (2 points, once per game)</li>
                     <li><strong>Cavalry - Charge:</strong> Move unlimited squares in one direction (2 points, once per game)</li>
                     <li><strong>Dragon - Inferno:</strong> Move 1 square and capture all adjacent enemies (2 points, once per game)</li>
+                    <li><strong>Lich - Soulstride &amp; Soul Blast:</strong> Soulstride lets them jump 2 squares (midpoint must be empty) once you’ve captured 2+ pieces, and Soul Blast spends 2 move points plus a coin flip to fire along any clear line, gaining 1 range per 3 captured souls (max 5). Liches ignore Inferno, Energy Blast, Sacrifice, and require a coin flip to capture unless the attacker is a Wizard, Necromancer, or Spectre.</li>
                     <li><strong>Archer - Skirmish:</strong> Move then shoot diagonally 1 square (2 points, twice per game)</li>
                     <li><strong>Archer - Longshot Diagonal:</strong> Shoot diagonally 2 squares (2 points, twice per game)</li>
                     <li><strong>Ballista - Extend Range:</strong> +1 shooting range this round (2 points, once per round)</li>
@@ -2385,7 +2565,7 @@
         }
 
         function isAnySpecialModeActive() {
-            return turnAndShootMode || turnAndMoveMode || guardOfHonourMode || teleportMode || teleportSwapMode || chargeMode || infernoMode || strafeMode || summonSpectreMode || archerMoveDiagMode || archerDiagShootSelectMode || archerDiag2ShootMode || elephantryChargeMode || elephantryExtendedRangeActive || elephantryMoveShootMode || pistolierMoveShootMode || fusilierCrackShotActive || fusilierStrafeActive || huntsmanBurstMode || pendingHuntsmanBurst || championSummonMode || necromancerSummonMode || kingShotMode || kingEvadeMode;
+            return turnAndShootMode || turnAndMoveMode || guardOfHonourMode || teleportMode || teleportSwapMode || chargeMode || infernoMode || strafeMode || summonSpectreMode || archerMoveDiagMode || archerDiagShootSelectMode || archerDiag2ShootMode || elephantryChargeMode || elephantryExtendedRangeActive || elephantryMoveShootMode || pistolierMoveShootMode || fusilierCrackShotActive || fusilierStrafeActive || huntsmanBurstMode || pendingHuntsmanBurst || championSummonMode || necromancerSummonMode || kingShotMode || kingEvadeMode || lichSoulBlastMode;
         }
 
         function cancelSpecialModes(options = {}) {
@@ -2421,6 +2601,8 @@
             necromancerSummonMode = null;
             kingShotMode = null;
             kingEvadeMode = null;
+            pendingLichSoulBlast = null;
+            lichSoulBlastMode = null;
             archerMoveDiagStart = null;
             const turnModalEl = document.getElementById('turn-modal');
             if (turnModalEl) turnModalEl.style.display = 'none';
@@ -2455,6 +2637,7 @@
             updateEndTurnButton();
             resumeGameForEnergyBlastFlips();
             removeEnergyBlastGlow();
+            clearActiveControlButton();
         }
 
         function applyEndTurnEffects(player) {
@@ -2492,8 +2675,7 @@
 
             // Clear mercenary bonus turn state to prevent it from carrying over to next round
             if (mercenaryBonusTurnActive && mercenaryBonusTurnPiece) {
-                mercenaryBonusTurnActive = false;
-                mercenaryBonusTurnPiece = null;
+                deactivateMercenaryBonusTurn();
             }
 
             if (logUpdated) {
@@ -2642,6 +2824,8 @@
         let coinTossEnergyBlastMode = null;
         let coinTossSpecialEffect = null;
         let pendingAiEnergyBlastResume = null;
+        let activeControlButton = null;
+        let mercenaryBonusHighlight = null;
         let protectionUsed = { 'W': false, 'B': false };
         let pendingProtection = null;
         let kingSpecialUsed = { 'W': false, 'B': false };
@@ -2692,6 +2876,7 @@
         // King summoning
         let pistoliersSummoned = { 'W': 0, 'B': 0 }; // Track summoned pistoliers (max 2 per player)
         let fusiliersSummoned = { 'W': 0, 'B': 0 }; // Track summoned fusiliers (max 2 per player)
+        let lichesSummoned = { 'W': 0, 'B': 0 }; // Track summoned liches (max 1 per player)
 
         function getMaxZombies(player) {
             return 3 + Math.min(zombieConversions[player] || 0, 2);
@@ -2893,6 +3078,30 @@
             const result = Math.random() < 0.5;
             enqueueZombieCoinFlip(result, title, message);
             return result;
+        }
+
+        function lichCoinFlip({ title = 'Lich Coin Flip', message = '' } = {}) {
+            const result = Math.random() < 0.5;
+            enqueueZombieCoinFlip(result, title, message);
+            return result;
+        }
+
+        function resolveLichCaptureAttempt({ attackerType, attackerPlayer, targetRow, targetCol, actionLabel }) {
+            if (!attackerType || LICH_CAPTURE_AUTO_TYPES.has(attackerType)) {
+                return true;
+            }
+            const playerLabel = attackerPlayer === 'W' ? 'Player' : getOpponentDisplayName();
+            const verb = actionLabel || 'capture';
+            const success = lichCoinFlip({
+                title: 'Lich Capture',
+                message: `${playerLabel} attempts to ${verb} the Lich at (${targetRow},${targetCol}).`
+            });
+            if (!success) {
+                gameLog.push(`${playerLabel} failed to ${verb} the Lich at (${targetRow},${targetCol}).`);
+                updateGameLog();
+                return false;
+            }
+            return true;
         }
 
         function mercenaryCoinFlip(player) {
@@ -3562,7 +3771,8 @@
         const pieceIcons = {
             'Cavalry': 'C', 'Troll': 'T', 'Dragon': 'D', 'Wizard': 'W', 'Guard': 'G',
             'King': 'K', 'Champion': '✠', 'Infantry': 'I', 'Archer': 'A', 'Ballista': 'B',
-            'Elephantry': 'E', 'Mercenary': 'M', 'Ogre': 'O', 'Spectre': 'S', 'Pistolier': 'P', 'Fusilier': 'F'
+            'Elephantry': 'E', 'Mercenary': 'M', 'Ogre': 'O', 'Spectre': 'S', 'Pistolier': 'P', 'Fusilier': 'F',
+            'Lich': 'L'
         };
         pieceIcons['Necromancer'] = 'N';
         pieceIcons['Zombie'] = 'Z';
@@ -3573,7 +3783,7 @@
         const basePieceValues = {
             'Infantry': 1, 'Archer': 2, 'Cavalry': 3, 'Pistolier': 3, 'Fusilier': 4, 'Guard': 4, 'Ballista': 5,
             'Troll': 6, 'Dragon': 7, 'Ogre': 8, 'Wizard': 9, 'Spectre': 5, 'Mercenary': 3,
-            'Elephantry': 11, 'Champion': 12, 'King': 13
+            'Elephantry': 11, 'Champion': 12, 'King': 13, 'Lich': 9
         };
         basePieceValues['Necromancer'] = 10;
         basePieceValues['Zombie'] = 3;
@@ -3629,6 +3839,13 @@
         const MORAL_BOOST_LIMIT = 2;
         const MORAL_BOOST_BONUS = 2;
         const KING_SHOT_RANGE = 3;
+        const LICH_SOULSTRIDE_THRESHOLD = 2;
+        const LICH_SUMMON_LIMIT = 1;
+        const LICH_SUMMON_SOUL_THRESHOLD = 1;
+        const LICH_SOUL_BLAST_COST = 2;
+        const LICH_SOUL_BLAST_SOULS_PER_RANGE = 3;
+        const LICH_SOUL_BLAST_MAX_RANGE = 5;
+        const LICH_CAPTURE_AUTO_TYPES = new Set(['Wizard', 'Necromancer', 'Spectre']);
         const KING_EVADE_RANGE = 2;
         const KING_SHOT_AI_THRESHOLD = 5; // Minimum target value before AI considers King Shot
         const KING_EVADE_CAPTURE_BONUS = 6; // Weight applied to captured piece value when evading
@@ -3638,7 +3855,6 @@
         const BOARD_ANCHORED_MODAL_IDS = [
             'modal-overlay',
             'reinforce-modal',
-            'king-summon-modal',
             'spell-direction-modal',
             'protection-modal',
             'turn-modal',
@@ -4157,13 +4373,17 @@
                 points: '1 point to move 1 square vertically or horizontally.',
                 extra: 'Cannot move into check. Capture ends the game. Can activate reinforcements. Special Move: Guard of Honour - once per game, swap positions with an adjacent Guard for 2 move points.'
             },
+            'Lich': {
+                points: '1 point to move 1 square in any direction; unlocks a 2-square Soulstride in the same line once you have captured 2+ enemy pieces (graveyard power).',
+                extra: 'Soulstride requires the midpoint square to be empty and still costs 1 move point. Soul Blast spends 2 move points plus a coin flip to fire along any clear straight/diagonal line, reaching 1 square per 3 captured enemy souls (max 5). Liches shrug off Inferno, Energy Blast, and Sacrifice, and only Wizards, Necromancers, or Spectres capture them without a coin flip.'
+            },
             'Mercenary': {
                 points: '1 point to move 1 square in any direction; 2 points for 2 squares in any direction.',
                 extra: 'Can move or capture in any direction. Special Move: After a successful capture, triggers a coin flip - if successful, the mercenary continues its round instantly without move point costs (once per round).'
             },
             'Necromancer': {
                 points: '1 point to move 1 square in any direction. Special actions cost 2 points: summon Zombie or Spectre (coin flip) or channel a 2-range shot.',
-                extra: 'Max 2 per player, arrives via Champion summoning. Shoots require a 1-round cooldown and always resolve captures with coin flips. Teleport twice per game.'
+                extra: 'Max 2 per player, arrives via Champion summoning. Shoots require a 1-round cooldown and always resolve captures with coin flips. Teleport twice per game. Can summon Zombies, Spectres, and—after capturing enough souls—a single Lich onto the back row (all via coin flips).'
             },
             'Huntsman': {
                 points: '1 point to move 1 square in any direction.',
@@ -4366,6 +4586,31 @@
                     let nr = r + d[0], nc = c + d[1];
                     if (isValid(nr, nc) && !isCheckAfterMove(r, c, nr, nc, player)) {
                         moves.push({ type: 'move', pos: [nr, nc], cost: 1 });
+                    }
+                }
+                return moves;
+            }},
+            'Lich': { move: (r, c, board, player) => {
+                let moves = [];
+                const directions = [[0,1], [0,-1], [1,0], [-1,0], [1,1], [1,-1], [-1,1], [-1,-1]];
+                for (let [dr, dc] of directions) {
+                    const nr = r + dr, nc = c + dc;
+                    if (!isValid(nr, nc)) continue;
+                    const target = board[nr][nc];
+                    if (!target || target.player !== player) {
+                        moves.push({ type: 'move', pos: [nr, nc], cost: 1 });
+                    }
+                }
+                const souls = (capturedPieces[player] || []).length;
+                if (souls >= LICH_SOULSTRIDE_THRESHOLD) {
+                    for (let [dr, dc] of directions) {
+                        const midr = r + dr, midc = c + dc;
+                        const nr = r + dr * 2, nc = c + dc * 2;
+                        if (!isValid(midr, midc) || !isValid(nr, nc)) continue;
+                        if (board[midr][midc]) continue;
+                        const target = board[nr][nc];
+                        if (target && target.player === player) continue;
+                        moves.push({ type: 'move', pos: [nr, nc], cost: 1, special: 'lichSoulstride' });
                     }
                 }
                 return moves;
@@ -5244,6 +5489,41 @@
             energyBlastFlipPauseState = null;
         }
 
+        function pauseGameForSoulBlast() {
+            if (!soulBlastPauseState) {
+                soulBlastPauseState = {
+                    wasPaused: gamePaused,
+                    gameRunning: !!gameTimerInterval,
+                    turnRunning: !!turnTimerInterval,
+                    turnPlayer: currentTurnTimerPlayer
+                };
+            }
+            stopGameTimer();
+            stopTurnTimer();
+            gamePaused = true;
+        }
+
+        function resumeGameAfterSoulBlast() {
+            if (!soulBlastPauseState) return;
+            const { wasPaused, gameRunning, turnRunning, turnPlayer } = soulBlastPauseState;
+            soulBlastPauseState = null;
+            if (!wasPaused) {
+                gamePaused = false;
+                if (gameRunning && gameTimeRemaining > 0) {
+                    startGameTimer();
+                }
+                if (turnRunning && turnPlayer) {
+                    if (turnPlayer === 'W' && playerTurnTimeRemaining > 0) {
+                        startTurnTimer('W', { reset: false });
+                    } else if (turnPlayer === 'B' && aiTurnTimeRemaining > 0) {
+                        startTurnTimer('B', { reset: false });
+                    }
+                }
+            } else {
+                gamePaused = true;
+            }
+        }
+
         function pauseGameForHuntsmanBurst() {
             if (!huntsmanBurstPauseState) {
                 huntsmanBurstPauseState = {
@@ -5328,7 +5608,7 @@
                 const key = `${square.dataset.row},${square.dataset.col}`;
                 if (energyBlastResidualSquares.has(key)) {
                     square.classList.add('energy-blast-residual');
-                } else {
+                } else if (square.classList.contains('energy-blast-residual')) {
                     square.classList.remove('energy-blast-residual');
                 }
             });
@@ -5451,6 +5731,9 @@
                     square.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
                     square.dataset.row = r;
                     square.dataset.col = c;
+                    if (mercenaryBonusHighlight && mercenaryBonusHighlight.row === r && mercenaryBonusHighlight.col === c) {
+                        square.classList.add('mercenary-highlight');
+                    }
                     if (board[r][c]) {
                         const pieceSpan = document.createElement('span');
                         pieceSpan.className = `piece ${board[r][c].player === 'W' ? 'white' : 'black'}`;
@@ -5515,6 +5798,9 @@
             const summonSpectreButton = document.getElementById('summon-spectre-button'); // Get Summon Spectre button
             const energyBlastButton = document.getElementById('energy-blast-button');
             const sacrificeButton = document.getElementById('sacrifice-button');
+            const lichSoulBlastButton = document.getElementById('lich-soul-blast-button');
+            const kingSummonPistolierButton = document.getElementById('king-summon-pistolier-button');
+            const kingSummonFusilierButton = document.getElementById('king-summon-fusilier-button');
             let huntsmanBurstButton = document.getElementById('huntsman-burst-button');
             // Ballista special buttons
             let ballistaRangeButton = document.getElementById('ballista-range-button');
@@ -5524,7 +5810,7 @@
                 ballistaRangeButton.id = 'ballista-range-button';
                 ballistaRangeButton.textContent = 'Extend Range';
                 ballistaRangeButton.style.display = 'none';
-                ballistaRangeButton.onclick = activateBallistaRange;
+                ballistaRangeButton.onclick = () => activateBallistaRange(ballistaRangeButton);
                 document.getElementById('controls').insertBefore(ballistaRangeButton, document.getElementById('guard-honour-button'));
             }
             if (!ballistaDoubleButton) {
@@ -5532,7 +5818,7 @@
                 ballistaDoubleButton.id = 'ballista-double-button';
                 ballistaDoubleButton.textContent = 'Double Time';
                 ballistaDoubleButton.style.display = 'none';
-                ballistaDoubleButton.onclick = activateBallistaDoubleTime;
+                ballistaDoubleButton.onclick = () => activateBallistaDoubleTime(ballistaDoubleButton);
                 document.getElementById('controls').insertBefore(ballistaDoubleButton, document.getElementById('guard-honour-button'));
             }
             // Elephantry special buttons
@@ -5544,7 +5830,7 @@
                 elephantryChargeButton.id = 'elephantry-charge-button';
                 elephantryChargeButton.textContent = 'Charge';
                 elephantryChargeButton.style.display = 'none';
-                elephantryChargeButton.onclick = activateElephantryCharge;
+                elephantryChargeButton.onclick = () => activateElephantryCharge(elephantryChargeButton);
                 document.getElementById('controls').insertBefore(elephantryChargeButton, document.getElementById('guard-honour-button'));
             }
             if (!elephantryExtendedButton) {
@@ -5552,7 +5838,7 @@
                 elephantryExtendedButton.id = 'elephantry-extended-button';
                 elephantryExtendedButton.textContent = 'Triple Shot';
                 elephantryExtendedButton.style.display = 'none';
-                elephantryExtendedButton.onclick = activateElephantryExtendedRange;
+                elephantryExtendedButton.onclick = () => activateElephantryExtendedRange(elephantryExtendedButton);
                 document.getElementById('controls').insertBefore(elephantryExtendedButton, document.getElementById('guard-honour-button'));
             }
             if (!elephantryMoveShootButton) {
@@ -5560,7 +5846,7 @@
                 elephantryMoveShootButton.id = 'elephantry-moveshoot-button';
                 elephantryMoveShootButton.textContent = 'Move+Shoot';
                 elephantryMoveShootButton.style.display = 'none';
-                elephantryMoveShootButton.onclick = activateElephantryMoveShoot;
+                elephantryMoveShootButton.onclick = () => activateElephantryMoveShoot(elephantryMoveShootButton);
                 document.getElementById('controls').insertBefore(elephantryMoveShootButton, document.getElementById('guard-honour-button'));
             }
             // Pistolier special buttons
@@ -5570,7 +5856,7 @@
                 pistolierMoveShootButton.id = 'pistolier-moveshoot-button';
                 pistolierMoveShootButton.textContent = 'Move+Shoot';
                 pistolierMoveShootButton.style.display = 'none';
-                pistolierMoveShootButton.onclick = activatePistolierMoveShoot;
+                pistolierMoveShootButton.onclick = () => activatePistolierMoveShoot(pistolierMoveShootButton);
                 document.getElementById('controls').insertBefore(pistolierMoveShootButton, document.getElementById('guard-honour-button'));
             }
             // Fusilier special buttons
@@ -5581,7 +5867,7 @@
                 fusilierCrackShotButton.id = 'fusilier-crackshot-button';
                 fusilierCrackShotButton.textContent = 'Crack Shot';
                 fusilierCrackShotButton.style.display = 'none';
-                fusilierCrackShotButton.onclick = activateFusilierCrackShot;
+                fusilierCrackShotButton.onclick = () => activateFusilierCrackShot(fusilierCrackShotButton);
                 document.getElementById('controls').insertBefore(fusilierCrackShotButton, document.getElementById('guard-honour-button'));
             }
             if (!fusilierStrafeButton) {
@@ -5589,18 +5875,8 @@
                 fusilierStrafeButton.id = 'fusilier-strafe-button';
                 fusilierStrafeButton.textContent = 'Strafe';
                 fusilierStrafeButton.style.display = 'none';
-                fusilierStrafeButton.onclick = activateFusilierStrafe;
+                fusilierStrafeButton.onclick = () => activateFusilierStrafe(fusilierStrafeButton);
                 document.getElementById('controls').insertBefore(fusilierStrafeButton, document.getElementById('guard-honour-button'));
-            }
-            // King summoning button
-            let kingSummonButton = document.getElementById('king-summon-button');
-            if (!kingSummonButton) {
-                kingSummonButton = document.createElement('button');
-                kingSummonButton.id = 'king-summon-button';
-                kingSummonButton.textContent = 'Summon Unit';
-                kingSummonButton.style.display = 'none';
-                kingSummonButton.onclick = openKingSummonModal;
-                document.getElementById('controls').insertBefore(kingSummonButton, document.getElementById('guard-honour-button'));
             }
             let moralBoostButton = document.getElementById('moral-boost-button');
             if (!moralBoostButton) {
@@ -5608,7 +5884,7 @@
                 moralBoostButton.id = 'moral-boost-button';
                 moralBoostButton.textContent = 'Moral Boost';
                 moralBoostButton.style.display = 'none';
-                moralBoostButton.onclick = activateMoralBoost;
+                moralBoostButton.onclick = () => activateMoralBoost(moralBoostButton);
                 document.getElementById('controls').insertBefore(moralBoostButton, document.getElementById('guard-honour-button'));
             }
             let kingShotButton = document.getElementById('king-shot-button');
@@ -5617,7 +5893,7 @@
                 kingShotButton.id = 'king-shot-button';
                 kingShotButton.textContent = 'King Shot';
                 kingShotButton.style.display = 'none';
-                kingShotButton.onclick = activateKingShot;
+                kingShotButton.onclick = () => activateKingShot(kingShotButton);
                 document.getElementById('controls').insertBefore(kingShotButton, document.getElementById('guard-honour-button'));
             }
             let kingEvadeButton = document.getElementById('king-evade-button');
@@ -5626,7 +5902,7 @@
                 kingEvadeButton.id = 'king-evade-button';
                 kingEvadeButton.textContent = 'Evade';
                 kingEvadeButton.style.display = 'none';
-                kingEvadeButton.onclick = activateKingEvade;
+                kingEvadeButton.onclick = () => activateKingEvade(kingEvadeButton);
                 document.getElementById('controls').insertBefore(kingEvadeButton, document.getElementById('guard-honour-button'));
             }
             let necromancerZombieButton = document.getElementById('necromancer-summon-zombie-button');
@@ -5635,7 +5911,7 @@
                 necromancerZombieButton.id = 'necromancer-summon-zombie-button';
                 necromancerZombieButton.textContent = 'Summon Zombie';
                 necromancerZombieButton.style.display = 'none';
-                necromancerZombieButton.onclick = () => activateNecromancerSummon('zombie');
+                necromancerZombieButton.onclick = () => activateNecromancerSummon('zombie', necromancerZombieButton);
                 document.getElementById('controls').insertBefore(necromancerZombieButton, document.getElementById('guard-honour-button'));
             }
             let necromancerSpectreButton = document.getElementById('necromancer-summon-spectre-button');
@@ -5644,8 +5920,17 @@
                 necromancerSpectreButton.id = 'necromancer-summon-spectre-button';
                 necromancerSpectreButton.textContent = 'Summon Spectre';
                 necromancerSpectreButton.style.display = 'none';
-                necromancerSpectreButton.onclick = () => activateNecromancerSummon('spectre');
+                necromancerSpectreButton.onclick = () => activateNecromancerSummon('spectre', necromancerSpectreButton);
                 document.getElementById('controls').insertBefore(necromancerSpectreButton, document.getElementById('guard-honour-button'));
+            }
+            let necromancerLichButton = document.getElementById('necromancer-summon-lich-button');
+            if (!necromancerLichButton) {
+                necromancerLichButton = document.createElement('button');
+                necromancerLichButton.id = 'necromancer-summon-lich-button';
+                necromancerLichButton.textContent = 'Summon Lich';
+                necromancerLichButton.style.display = 'none';
+                necromancerLichButton.onclick = () => activateNecromancerSummon('lich', necromancerLichButton);
+                document.getElementById('controls').insertBefore(necromancerLichButton, document.getElementById('guard-honour-button'));
             }
             let necromancerTeleportButton = document.getElementById('necromancer-teleport-button');
             if (!necromancerTeleportButton) {
@@ -5653,7 +5938,7 @@
                 necromancerTeleportButton.id = 'necromancer-teleport-button';
                 necromancerTeleportButton.textContent = 'Necro Teleport';
                 necromancerTeleportButton.style.display = 'none';
-                necromancerTeleportButton.onclick = activateTeleport;
+                necromancerTeleportButton.onclick = () => activateTeleport(necromancerTeleportButton);
                 document.getElementById('controls').insertBefore(necromancerTeleportButton, document.getElementById('guard-honour-button'));
             }
             let championSummonNecroButton = document.getElementById('champion-summon-necro-button');
@@ -5662,7 +5947,7 @@
                 championSummonNecroButton.id = 'champion-summon-necro-button';
                 championSummonNecroButton.textContent = 'Summon Necromancer';
                 championSummonNecroButton.style.display = 'none';
-                championSummonNecroButton.onclick = () => activateChampionSummon('Necromancer');
+                championSummonNecroButton.onclick = () => activateChampionSummon('Necromancer', championSummonNecroButton);
                 document.getElementById('controls').insertBefore(championSummonNecroButton, document.getElementById('guard-honour-button'));
             }
             let championSummonHuntsmanButton = document.getElementById('champion-summon-huntsman-button');
@@ -5671,7 +5956,7 @@
                 championSummonHuntsmanButton.id = 'champion-summon-huntsman-button';
                 championSummonHuntsmanButton.textContent = 'Summon Huntsman';
                 championSummonHuntsmanButton.style.display = 'none';
-                championSummonHuntsmanButton.onclick = () => activateChampionSummon('Huntsman');
+                championSummonHuntsmanButton.onclick = () => activateChampionSummon('Huntsman', championSummonHuntsmanButton);
                 document.getElementById('controls').insertBefore(championSummonHuntsmanButton, document.getElementById('guard-honour-button'));
             }
             if (!huntsmanBurstButton) {
@@ -5679,7 +5964,7 @@
                 huntsmanBurstButton.id = 'huntsman-burst-button';
                 huntsmanBurstButton.textContent = 'Stalking Burst';
                 huntsmanBurstButton.style.display = 'none';
-                huntsmanBurstButton.onclick = activateHuntsmanBurst;
+                huntsmanBurstButton.onclick = () => activateHuntsmanBurst(huntsmanBurstButton);
                 document.getElementById('controls').insertBefore(huntsmanBurstButton, document.getElementById('guard-honour-button'));
             }
 
@@ -5714,13 +5999,20 @@
             if (pistolierMoveShootButton) pistolierMoveShootButton.style.display = 'none';
             if (fusilierCrackShotButton) fusilierCrackShotButton.style.display = 'none';
             if (fusilierStrafeButton) fusilierStrafeButton.style.display = 'none';
-            if (kingSummonButton) kingSummonButton.style.display = 'none';
+            if (kingSummonPistolierButton) kingSummonPistolierButton.style.display = 'none';
+            if (kingSummonFusilierButton) kingSummonFusilierButton.style.display = 'none';
             if (necromancerZombieButton) necromancerZombieButton.style.display = 'none';
             if (necromancerSpectreButton) necromancerSpectreButton.style.display = 'none';
+            if (necromancerLichButton) necromancerLichButton.style.display = 'none';
             if (necromancerTeleportButton) necromancerTeleportButton.style.display = 'none';
             if (championSummonNecroButton) championSummonNecroButton.style.display = 'none';
             if (championSummonHuntsmanButton) championSummonHuntsmanButton.style.display = 'none';
             if (huntsmanBurstButton) huntsmanBurstButton.style.display = 'none';
+            if (lichSoulBlastButton) {
+                lichSoulBlastButton.style.display = 'none';
+                lichSoulBlastButton.disabled = true;
+                lichSoulBlastButton.removeAttribute('title');
+            }
 
             if (selectedPiece) {
                 const piece = board[selectedPiece.row][selectedPiece.col];
@@ -5770,13 +6062,24 @@
                             kingEvadeButton.disabled = false;
                         }
                     }
-                    // Show King summon button in Expert-tier modes
-                    if (piece.type === 'King' && (gameVariant === '36s-expert' || gameVariant === '36s-elite' || gameVariant === '36s-supreme') && movesLeft >= 2 && hasBackRowSpawnSlot(currentPlayer)) {
-                        const canSummonPistolier = pistoliersSummoned[currentPlayer] < 2;
-                        const canSummonFusilier = fusiliersSummoned[currentPlayer] < 2;
-                        if (canSummonPistolier || canSummonFusilier) {
-                            kingSummonButton.style.display = 'inline';
-                            kingSummonButton.disabled = false;
+                    // Show King summon buttons in Expert-tier modes
+                    if (piece.type === 'King' && (gameVariant === '36s-expert' || gameVariant === '36s-elite' || gameVariant === '36s-supreme')) {
+                        const hasSlot = hasBackRowSpawnSlot(currentPlayer);
+                        updateKingSummonButtons({ hasBackRowSlot: hasSlot, showButtons: true });
+                    }
+                    if (piece.type === 'Lich' && lichSoulBlastButton) {
+                        const range = getLichSoulBlastRange(currentPlayer);
+                        if (range > 0 && movesLeft >= LICH_SOUL_BLAST_COST) {
+                            const targets = getLichSoulBlastTargets(selectedPiece.row, selectedPiece.col, range);
+                            if (targets.length) {
+                                lichSoulBlastButton.style.display = 'inline';
+                                lichSoulBlastButton.disabled = false;
+                                lichSoulBlastButton.title = `Range ${range} Soul Blast`;
+                            } else {
+                                lichSoulBlastButton.style.display = 'inline';
+                                lichSoulBlastButton.disabled = true;
+                                lichSoulBlastButton.title = 'No valid Soul Blast targets.';
+                            }
                         }
                     }
                     if (piece.type === 'Champion' && (gameVariant === '36s-elite' || gameVariant === '36s-supreme')) {
@@ -5810,6 +6113,27 @@
                             if (spectresSummoned[currentPlayer] < 2 && availableBackRow) {
                                 necromancerSpectreButton.style.display = 'inline';
                                 necromancerSpectreButton.disabled = false;
+                            }
+                            if (necromancerLichButton) {
+                                const souls = (capturedPieces[currentPlayer] || []).length;
+                                let reason = '';
+                                if (!availableBackRow) {
+                                    reason = 'No open squares on the back row.';
+                                } else if (lichesSummoned[currentPlayer] >= LICH_SUMMON_LIMIT) {
+                                    reason = 'Lich already conjured.';
+                                } else if (souls < LICH_SUMMON_SOUL_THRESHOLD) {
+                                    const needed = LICH_SUMMON_SOUL_THRESHOLD - souls;
+                                    const captureLabel = needed === 1 ? 'one more captured enemy' : `${needed} more captured enemies`;
+                                    reason = `Need ${captureLabel}.`;
+                                }
+                                necromancerLichButton.style.display = 'inline';
+                                if (reason) {
+                                    necromancerLichButton.disabled = true;
+                                    necromancerLichButton.title = reason;
+                                } else {
+                                    necromancerLichButton.disabled = false;
+                                    necromancerLichButton.removeAttribute('title');
+                                }
                             }
                             if (teleportsUsed < 2) {
                                 necromancerTeleportButton.style.display = 'inline';
@@ -6345,11 +6669,12 @@
                     const piece = board[r][c];
                     if (!piece || piece.player !== player || piece.type !== 'Huntsman') continue;
                     if (movedSet.has(`${r},${c}`)) continue;
-                    const targets = getHuntsmanBurstReach(r, c, HUNTSMAN_BURST_FLIP_COUNT);
+                    const targets = getHuntsmanBurstReach(r, c, HUNTSMAN_BURST_FLIP_COUNT + 1);
                     if (!targets.length) continue;
                     let bestLocal = -Infinity;
                     for (const target of targets) {
-                        const prob = HUNTSMAN_BURST_SUCCESS_PROBS[target.steps] || 0;
+                        const successesRequired = Math.max(0, target.steps - 1);
+                        const prob = HUNTSMAN_BURST_SUCCESS_PROBS[successesRequired] || 0;
                         if (prob <= 0) continue;
                         const value = evaluateHuntsmanDestinationValue(target.row, target.col, player, target.occupant);
                         const score = prob * value - 2;
@@ -6442,7 +6767,7 @@
                 capturedPieceType = targetPiece.type;
                 const actorLabel = player === 'W' ? 'Player' : getOpponentDisplayName();
                 const logMessage = `${actorLabel} used ${abilityLabel} to capture ${targetPiece.type} at (${toRow},${toCol}).`;
-                if (!applySpellCapture(player, toRow, toCol, { logMessage, ability: abilityLabel })) {
+                if (!applySpellCapture(player, toRow, toCol, { logMessage, ability: abilityLabel, attackerType: teleportPiece.type })) {
                     return { success: false };
                 }
                 updateScoreDisplay();
@@ -6811,7 +7136,7 @@
                     logMessage,
                     onResolve: (shouldCapture) => {
                         if (shouldCapture) {
-                            const captured = applySpellCapture(attackerPlayer, target.row, target.col, { logMessage, ability });
+                            const captured = applySpellCapture(attackerPlayer, target.row, target.col, { logMessage, ability, attackerType: target.attackerType || null });
                             if (captured) captureCount++;
                         }
                         processNext(index + 1);
@@ -6824,17 +7149,18 @@
             processNext(0);
         }
 
-        function activateGuardOfHonour() {
+        function activateGuardOfHonour(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (piece.type === 'King' && !kingSpecialUsed[currentPlayer]) {
                 guardOfHonourMode = true;
+                setActiveControlButton(button || document.getElementById('guard-honour-button'));
                 validMoves = getValidMoves(selectedPiece.row, selectedPiece.col);
                 renderBoard();
             }
         }
 
-        function activateTeleport() {
+        function activateTeleport(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (!piece) return;
@@ -6847,54 +7173,59 @@
                 }
             }
             if (canTeleport) {
+                setActiveControlButton(button || document.getElementById('teleport-button'));
                 teleportMode = true;
                 validMoves = getValidMoves(selectedPiece.row, selectedPiece.col);
                 renderBoard();
             }
         }
 
-        function activateTeleportSwap() {
+        function activateTeleportSwap(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2 || wizardTeleportSwapUsed[currentPlayer]) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (piece.type === 'Wizard' && opponentHasWizards(currentPlayer)) {
+                setActiveControlButton(button || document.getElementById('teleport-swap-button'));
                 teleportSwapMode = true;
                 validMoves = getValidTeleportSwapMoves(selectedPiece.row, selectedPiece.col);
                 renderBoard();
             }
         }
 
-        function activateCharge() {
+        function activateCharge(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2 || cavalryChargeUsed[currentPlayer]) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (piece.type === 'Cavalry') {
+                setActiveControlButton(button || document.getElementById('charge-button'));
                 chargeMode = true;
                 validMoves = getValidChargeMoves(selectedPiece.row, selectedPiece.col);
                 renderBoard();
             }
         }
 
-        function activateInferno() {
+        function activateInferno(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2 || dragonInfernoUsed[currentPlayer]) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (piece.type === 'Dragon') {
+                setActiveControlButton(button || document.getElementById('inferno-button'));
                 infernoMode = true;
                 validMoves = getValidMoves(selectedPiece.row, selectedPiece.col); // This will now get Inferno moves
                 renderBoard();
             }
         }
 
-        function activateElephantryCharge() {
+        function activateElephantryCharge(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             const pieceKey = `${selectedPiece.row},${selectedPiece.col},${currentPlayer}`;
             if (piece.type === 'Elephantry' && !elephantryChargeUsed.has(pieceKey)) {
+                setActiveControlButton(button || document.getElementById('elephantry-charge-button'));
                 elephantryChargeMode = true;
                 validMoves = getElephantryChargeMoves(selectedPiece.row, selectedPiece.col);
                 renderBoard();
             }
         }
 
-        function activateElephantryExtendedRange() {
+        function activateElephantryExtendedRange(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             const pieceKey = `${selectedPiece.row},${selectedPiece.col},${currentPlayer}`;
@@ -6903,6 +7234,7 @@
                     elephantryExtendedRangeShotsRemaining[pieceKey] = 3;
                 }
                 if (elephantryExtendedRangeShotsRemaining[pieceKey] > 0) {
+                    setActiveControlButton(button || document.getElementById('elephantry-extended-button'));
                     // Deduct the 2 points immediately when activating Triple Shot
                     movesLeft -= 2;
                     lastAction = { move: true };
@@ -6910,9 +7242,10 @@
                     elephantryExtendedRangeActive = true;
                     validMoves = getElephantryExtendedRangeMoves(selectedPiece.row, selectedPiece.col);
                     if (!validMoves.length) {
-                        elephantryExtendedRangeActive = false;
-                        gameLog.push('No valid targets for Elephantry Triple Shot.');
-                        showPieceInfo(null);
+                    elephantryExtendedRangeActive = false;
+                    gameLog.push('No valid targets for Elephantry Triple Shot.');
+                    clearActiveControlButton();
+                    showPieceInfo(null);
                         renderBoard();
                         updateStatus();
                         updateEndTurnButton();
@@ -6926,27 +7259,29 @@
             }
         }
 
-        function activateElephantryMoveShoot() {
+        function activateElephantryMoveShoot(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (piece.type === 'Elephantry') {
                 // Filter valid moves to only show move+shoot positions
+                setActiveControlButton(button || document.getElementById('elephantry-moveshoot-button'));
                 validMoves = validMoves.filter(m => m.special === 'elephantryMoveShoot');
                 renderBoard();
             }
         }
 
-        function activatePistolierMoveShoot() {
+        function activatePistolierMoveShoot(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (piece.type === 'Pistolier') {
                 // Filter valid moves to only show move+shoot positions
+                setActiveControlButton(button || document.getElementById('pistolier-moveshoot-button'));
                 validMoves = validMoves.filter(m => m.special === 'pistolierMoveShoot');
                 renderBoard();
             }
         }
 
-        function activateFusilierCrackShot() {
+        function activateFusilierCrackShot(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             const pieceKey = `${selectedPiece.row},${selectedPiece.col},${currentPlayer}`;
@@ -6956,6 +7291,7 @@
                 fusilierCrackShotCount[pieceKey]--;
                 lastAction = { move: true };
                 movedPieces.add(pieceKey);
+                setActiveControlButton(button || document.getElementById('fusilier-crackshot-button'));
 
                 // Activate extended range shooting (temporarily increase range by +1)
                 fusilierCrackShotActive = piece;
@@ -6973,7 +7309,7 @@
             }
         }
 
-        function activateFusilierStrafe() {
+        function activateFusilierStrafe(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             const pieceKey = `${selectedPiece.row},${selectedPiece.col},${currentPlayer}`;
@@ -6983,6 +7319,7 @@
                 fusilierStrafeCount[pieceKey]--;
                 lastAction = { move: true };
                 movedPieces.add(pieceKey);
+                setActiveControlButton(button || document.getElementById('fusilier-strafe-button'));
 
                 // Show strafe move options (1 square orthogonal, no capture)
                 fusilierStrafeActive = true;
@@ -7010,7 +7347,7 @@
             return moves;
         }
 
-        function activateEnergyBlast() {
+        function activateEnergyBlast(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move) return;
             if (!isSpellVariant()) return;
             const row = selectedPiece.row;
@@ -7042,6 +7379,8 @@
             if (pendingEnergyBlast) return;
             const prepaid = Math.min(2, cost);
             pendingEnergyBlast = { row, col, prepaid, cost };
+            const controlButton = button || document.getElementById('energy-blast-button');
+            setActiveControlButton(controlButton);
             movesLeft -= prepaid;
             updateStatus();
             updateEndTurnButton();
@@ -7061,11 +7400,13 @@
                         gameLog.push('Energy Blast spellcasting failed.');
                         updateGameLog();
                         removeEnergyBlastGlow();
+                        clearActiveControlButton(controlButton);
                         return;
                     }
                     const currentPiece = board[row]?.[col];
                     if (!currentPiece || currentPiece.player !== currentPlayer) {
                         removeEnergyBlastGlow();
+                        clearActiveControlButton(controlButton);
                         return;
                     }
                     selectedPiece = { row, col };
@@ -7087,19 +7428,26 @@
 
         function performEnergyBlast(row, col, direction) {
             const piece = board[row]?.[col];
-            if (!piece || !isSpellCasterPiece(piece) || !isSpellVariant()) return;
+            const energyBlastButton = document.getElementById('energy-blast-button');
+            if (!piece || !isSpellCasterPiece(piece) || !isSpellVariant()) {
+                removeEnergyBlastGlow();
+                clearActiveControlButton(energyBlastButton);
+                return;
+            }
             if ((energyBlastUses[piece.player] || 0) >= 2) {
                 if (piece.player === 'W') {
                     gameLog.push('Energy Blast has already been used twice this game.');
                     updateGameLog();
                 }
                 removeEnergyBlastGlow();
+                clearActiveControlButton(energyBlastButton);
                 return;
             }
             const uses = energyBlastUsage.get(piece) || 0;
             if (uses >= 2) {
                 gameLog.push('Energy Blast already used twice by this spellcaster.');
                 updateGameLog();
+                clearActiveControlButton(energyBlastButton);
                 return;
             }
             const cost = uses === 0 ? 2 : 3;
@@ -7113,6 +7461,7 @@
                 gameLog.push('Not enough move points to sustain Energy Blast after spellcasting.');
                 updateGameLog();
                 removeEnergyBlastGlow();
+                clearActiveControlButton(energyBlastButton);
                 return;
             }
             if (additionalCost > 0) {
@@ -7166,6 +7515,7 @@
                 updateGameLog();
                 checkGameOver();
                 removeEnergyBlastGlow();
+                clearActiveControlButton(document.getElementById('energy-blast-button'));
                 if (movesLeft === 0 && !reinforcementPending) {
                     triggerAiTurn();
                 } else {
@@ -7207,7 +7557,8 @@
                     row: targetRow,
                     col: targetCol,
                     defender: occupant.player,
-                    logMessage: `${playerLabel} vaporized ${occupant.type} with Energy Blast at (${targetRow},${targetCol})`
+                    logMessage: `${playerLabel} vaporized ${occupant.type} with Energy Blast at (${targetRow},${targetCol})`,
+                    attackerType: piece.type
                 });
             }
 
@@ -7230,7 +7581,7 @@
             animateEnergyBlastPath(pathSquares, processTargets);
         }
 
-        function activateSacrifice() {
+        function activateSacrifice(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move) return;
             if (!isSpellVariant()) return;
             const row = selectedPiece.row;
@@ -7248,28 +7599,37 @@
                 return;
             }
             sacrificeAttemptedPieces.add(piece);
+            const controlButton = button || document.getElementById('sacrifice-button');
+            setActiveControlButton(controlButton);
             const playerLabel = 'Player';
             performCoinToss('Sacrifice', 'Attempting Sacrifice...', (success) => {
                 if (!success) {
                     gameLog.push(`${playerLabel} failed the Sacrifice coin flip.`);
                     updateGameLog();
+                    clearActiveControlButton(controlButton);
                     return;
                 }
                 if (movesLeft < 3) {
                     gameLog.push('Not enough move points remaining to complete Sacrifice.');
                     updateGameLog();
+                    clearActiveControlButton(controlButton);
                     return;
                 }
-                executeSacrifice(row, col);
+                executeSacrifice(row, col, { controlButton });
             }, false, false);
         }
 
         function executeSacrifice(row, col, options = {}) {
             const piece = board[row]?.[col];
-            if (!piece || !isSpellCasterPiece(piece) || !isSpellVariant()) return;
+            const controlButton = options.controlButton || document.getElementById('sacrifice-button');
+            if (!piece || !isSpellCasterPiece(piece) || !isSpellVariant()) {
+                clearActiveControlButton(controlButton);
+                return;
+            }
             if (movesLeft < 3) {
                 gameLog.push('Not enough move points to perform Sacrifice.');
                 updateGameLog();
+                clearActiveControlButton(controlButton);
                 return;
             }
             const player = piece.player;
@@ -7292,7 +7652,8 @@
                 row: targetRow,
                 col: targetCol,
                 defender: occupant.player,
-                logMessage: `${playerLabel}'s Sacrifice blast engulfed ${occupant.type} at (${targetRow},${targetCol})`
+                logMessage: `${playerLabel}'s Sacrifice blast engulfed ${occupant.type} at (${targetRow},${targetCol})`,
+                attackerType: piece.type
             }));
 
             const finishSacrifice = (capturesHit) => {
@@ -7315,6 +7676,7 @@
                 if (typeof options.onComplete === 'function') {
                     options.onComplete(capturesHit);
                 }
+                clearActiveControlButton(controlButton);
             };
 
             resolveSpellTargetsSequentially(targets, player, 'Sacrifice', (capturesHit) => {
@@ -7330,13 +7692,14 @@
                 successes: 0,
                 flips: 0,
                 automated: !!options.automated,
-                onComplete: typeof options.onComplete === 'function' ? options.onComplete : null
+                onComplete: typeof options.onComplete === 'function' ? options.onComplete : null,
+                controlButton: options.controlButton || null
             };
             pauseGameForHuntsmanBurst();
             runHuntsmanBurstFlip();
         }
 
-        function activateHuntsmanBurst() {
+        function activateHuntsmanBurst(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move) return;
             const row = selectedPiece.row;
             const col = selectedPiece.col;
@@ -7359,7 +7722,9 @@
             updateEndTurnButton();
             gameLog.push('Player Huntsman is attempting a Stalking Burst (2 move points spent).');
             updateGameLog();
-            beginHuntsmanBurstSequence(row, col, currentPlayer);
+            const controlButton = button || document.getElementById('huntsman-burst-button');
+            setActiveControlButton(controlButton);
+            beginHuntsmanBurstSequence(row, col, currentPlayer, { controlButton });
         }
 
         function runHuntsmanBurstFlip() {
@@ -7392,8 +7757,11 @@
         function finalizeHuntsmanBurst() {
             const ctx = pendingHuntsmanBurst;
             pendingHuntsmanBurst = null;
+            const controlButton = ctx?.controlButton || document.getElementById('huntsman-burst-button');
+            const clearBurstButton = () => clearActiveControlButton(controlButton);
             if (!ctx) {
                 resumeGameAfterHuntsmanBurst();
+                clearBurstButton();
                 return;
             }
             const finish = () => {
@@ -7405,28 +7773,12 @@
                 gameLog.push('Huntsman Burst fizzled because the piece is no longer available.');
                 updateGameLog();
                 finish();
+                clearBurstButton();
                 return;
             }
-            if (ctx.successes <= 0) {
-                gameLog.push('Huntsman failed to gain extra movement from Stalking Burst.');
-                updateGameLog();
-                lastAction = { move: true };
-                movedPieces.add(`${ctx.row},${ctx.col}`);
-                selectedPiece = null;
-                validMoves = [];
-                showPieceInfo(null);
-                renderBoard();
-                updateStatus();
-                updateEndTurnButton();
-                checkGameOver();
-                if (movesLeft === 0 && !reinforcementPending) {
-                    triggerAiTurn();
-                }
-                finish();
-                return;
-            }
+            const totalSteps = Math.max(1, ctx.successes + 1);
             if (ctx.player === 'B' && ctx.automated) {
-                const destination = chooseBestHuntsmanBurstDestination(ctx.row, ctx.col, ctx.successes, ctx.player);
+                const destination = chooseBestHuntsmanBurstDestination(ctx.row, ctx.col, totalSteps, ctx.player);
                 if (destination) {
                     movePiece(ctx.row, ctx.col, destination.row, destination.col);
                     lastAction = { move: true };
@@ -7444,14 +7796,16 @@
                     movedPieces.add(`${ctx.row},${ctx.col}`);
                 }
                 finish();
+                clearBurstButton();
                 return;
             }
-            huntsmanBurstMode = { row: ctx.row, col: ctx.col, steps: ctx.successes, player: ctx.player, onComplete: ctx.onComplete };
+            huntsmanBurstMode = { row: ctx.row, col: ctx.col, steps: totalSteps, player: ctx.player, onComplete: ctx.onComplete, controlButton };
             const playerLabel = ctx.player === 'W' ? 'Player' : getOpponentDisplayName();
-            gameLog.push(`${playerLabel} Huntsman gained ${ctx.successes} burst step${ctx.successes === 1 ? '' : 's'}. Select a destination.`);
+            const burstText = ctx.successes === 1 ? 'burst step' : 'burst steps';
+            gameLog.push(`${playerLabel} Huntsman may move ${totalSteps} square${totalSteps === 1 ? '' : 's'} this turn (1 base + ${ctx.successes} ${burstText}). Select a destination.`);
             updateGameLog();
             selectedPiece = { row: ctx.row, col: ctx.col };
-            validMoves = getHuntsmanBurstMoves(ctx.row, ctx.col, ctx.successes);
+            validMoves = getHuntsmanBurstMoves(ctx.row, ctx.col, huntsmanBurstMode.steps);
             if (!validMoves.length) {
                 huntsmanBurstMode = null;
                 lastAction = { move: true };
@@ -7466,6 +7820,7 @@
                     triggerAiTurn();
                 }
                 finish();
+                clearBurstButton();
                 return;
             }
             showPieceInfo(piece, ctx.player);
@@ -7698,7 +8053,7 @@
         function handleClick(row, col) {
             const huntsmanSelectionActive = !!(huntsmanBurstMode && selectedPiece && selectedPiece.row === huntsmanBurstMode.row && selectedPiece.col === huntsmanBurstMode.col);
             if (gameOver || currentPlayer !== 'W' || reinforcementPending || zombieAutoAdvanceInProgress) return;
-            if (gamePaused && !huntsmanSelectionActive) return;
+            if ((gamePaused || lichSoulBlastResolving) && !huntsmanSelectionActive) return;
             const piece = board[row][col];
 
             if (isAnySpecialModeActive() && !huntsmanSelectionActive) {
@@ -7743,6 +8098,7 @@
                     infernoMode = false;
                     
                     // 4. Re-render and check game state
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -7771,6 +8127,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     turnAndShootMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -7810,6 +8167,7 @@
                         archerDiagShootSelectMode = false;
                         selectedPiece = null;
                         validMoves = [];
+                        clearActiveControlButton();
                         showPieceInfo(null);
                         renderBoard();
                         updateStatus();
@@ -7850,6 +8208,7 @@
                     validMoves = [];
                     archerDiagShootSelectMode = false;
                     archerMoveDiagStart = null;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -7878,6 +8237,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     archerDiag2ShootMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -7936,6 +8296,7 @@
                             selectedPiece = null;
                             validMoves = [];
                             summonSpectreMode = false;
+                            clearActiveControlButton();
                             showPieceInfo(null);
                             renderBoard();
                             updateStatus();
@@ -8009,6 +8370,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     fusilierStrafeActive = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -8034,6 +8396,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     turnAndMoveMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -8064,6 +8427,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     guardOfHonourMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     checkSupremacy(currentPlayer);
@@ -8101,6 +8465,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     teleportMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -8132,6 +8497,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     teleportSwapMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -8158,6 +8524,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     chargeMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -8217,6 +8584,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     elephantryChargeMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -8247,6 +8615,7 @@
                     pistolierMoveShootPosition = null;
                     selectedPiece = null;
                     validMoves = [];
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -8275,6 +8644,7 @@
                     elephantryMoveShootPosition = null;
                     selectedPiece = null;
                     validMoves = [];
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -8349,6 +8719,7 @@
                                 if (!validMoves.length) {
                                     elephantryExtendedRangeActive = false;
                                     selectedPiece = null;
+                                    clearActiveControlButton();
                                     showPieceInfo(null);
                                     renderBoard();
                                     gameLog.push('No remaining targets for Elephantry Triple Shot.');
@@ -8361,6 +8732,7 @@
                                 elephantryExtendedRangeActive = false;
                                 selectedPiece = null;
                                 validMoves = [];
+                                clearActiveControlButton();
                                 showPieceInfo(null);
                                 renderBoard();
                             }
@@ -8396,6 +8768,7 @@
                     renderBoard();
                     updateStatus();
                     updateEndTurnButton();
+                    clearActiveControlButton(context?.controlButton || document.getElementById('huntsman-burst-button'));
                     resumeGameAfterHuntsmanBurst();
                     if (context && typeof context.onComplete === 'function') {
                         context.onComplete();
@@ -8410,6 +8783,16 @@
             }
 
             // Handle King Shot targeting
+            if (lichSoulBlastMode && selectedPiece) {
+                const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.special === 'lichSoulBlast');
+                if (move) {
+                    fireLichSoulBlastTarget(move.pos[0], move.pos[1]);
+                } else {
+                    cancelSpecialModes({ resetSelection: false });
+                }
+                return;
+            }
+
             if (kingShotMode && selectedPiece) {
                 const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.special === 'kingShot');
                 if (move) {
@@ -8578,7 +8961,7 @@
                     showPieceInfo(null);
                     renderBoard();
                     const playerLabel = currentPlayer === 'W' ? 'Player' : getOpponentDisplayName();
-                    const label = summonType === 'spectre' ? 'Spectre' : 'Zombie';
+                    const label = summonType === 'spectre' ? 'Spectre' : (summonType === 'lich' ? 'Lich' : 'Zombie');
                     performCoinToss(
                         `Summon ${label}`,
                         `${playerLabel} attempts to summon a ${label}...`,
@@ -8588,6 +8971,9 @@
                                     if (summonType === 'spectre') {
                                         board[targetRow][targetCol] = { type: 'Spectre', player: currentPlayer };
                                         spectresSummoned[currentPlayer]++;
+                                    } else if (summonType === 'lich') {
+                                        board[targetRow][targetCol] = { type: 'Lich', player: currentPlayer };
+                                        lichesSummoned[currentPlayer]++;
                                     } else {
                                         const zombiePiece = createZombiePiece(currentPlayer);
                                         board[targetRow][targetCol] = zombiePiece;
@@ -8711,10 +9097,11 @@
                             }
                             validMoves = filterShootMovesForPlayer(validMoves, currentPlayer);
                             if (!validMoves.length) {
-                                pistolierMoveShootMode = false;
-                                pistolierMoveShootPosition = null;
-                                selectedPiece = null;
-                                showPieceInfo(null);
+                            pistolierMoveShootMode = false;
+                            pistolierMoveShootPosition = null;
+                            selectedPiece = null;
+                            clearActiveControlButton();
+                            showPieceInfo(null);
                                 renderBoard();
                                 updateStatus();
                                 updateEndTurnButton();
@@ -8757,10 +9144,11 @@
                             }
                             validMoves = filterShootMovesForPlayer(validMoves, currentPlayer);
                             if (!validMoves.length) {
-                                elephantryMoveShootMode = false;
-                                elephantryMoveShootPosition = null;
-                                selectedPiece = null;
-                                showPieceInfo(null);
+                            elephantryMoveShootMode = false;
+                            elephantryMoveShootPosition = null;
+                            selectedPiece = null;
+                            clearActiveControlButton();
+                            showPieceInfo(null);
                                 renderBoard();
                                 updateStatus();
                                 updateEndTurnButton();
@@ -8839,8 +9227,7 @@
                                             }
 
                                             if (mercenaryBonusTurnActive) {
-                                                mercenaryBonusTurnActive = false;
-                                                mercenaryBonusTurnPiece = null;
+                                                deactivateMercenaryBonusTurn();
                                             }
                                             if (movesLeft === 0 && !reinforcementPending) {
                                                 triggerAiTurn();
@@ -8860,8 +9247,7 @@
 
                                     // If we were in mercenary bonus turn mode and didn't get another bonus turn, clear the state
                                     if (mercenaryBonusTurnActive) {
-                                        mercenaryBonusTurnActive = false;
-                                        mercenaryBonusTurnPiece = null;
+                                        deactivateMercenaryBonusTurn();
                                     }
                                     if (movesLeft === 0 && !reinforcementPending) {
                                         triggerAiTurn();
@@ -8882,6 +9268,7 @@
                                     // after moving, board[row][col] is the piece moved
                                 }
                                 ballistaDoubleTimeUsed[currentPlayer]++;
+                                clearActiveControlButton();
                             }
 
                             // Check if mercenary coin flip is needed
@@ -8905,8 +9292,7 @@
 
                                     // If we were in mercenary bonus turn mode and didn't get another bonus turn, clear the state
                                     if (mercenaryBonusTurnActive) {
-                                        mercenaryBonusTurnActive = false;
-                                        mercenaryBonusTurnPiece = null;
+                                        deactivateMercenaryBonusTurn();
                                     }
                                     if (movesLeft === 0 && !reinforcementPending) {
                                         triggerAiTurn();
@@ -8917,8 +9303,7 @@
 
                             // If we were in mercenary bonus turn mode and didn't get another bonus turn, clear the state
                             if (mercenaryBonusTurnActive) {
-                                mercenaryBonusTurnActive = false;
-                                mercenaryBonusTurnPiece = null;
+                                deactivateMercenaryBonusTurn();
                             }
                         }
                     } else if (move.type === 'shoot') {
@@ -8967,6 +9352,7 @@
                                     movedPieces.add(`${fromRow},${fromCol}`);
                                     selectedPiece = null;
                                     validMoves = [];
+                                    clearActiveControlButton();
                                     showPieceInfo(null);
                                     renderBoard();
                                     updateStatus();
@@ -9009,6 +9395,7 @@
                                     movedPieces.add(`${fromRow},${fromCol}`);
                                     selectedPiece = null;
                                     validMoves = [];
+                                    clearActiveControlButton();
                                     showPieceInfo(null);
                                     renderBoard();
                                     updateStatus();
@@ -9092,8 +9479,7 @@
                     checkGameOver();
                     // Clear mercenary bonus turn state after move completes
                     if (mercenaryBonusTurnActive) {
-                        mercenaryBonusTurnActive = false;
-                        mercenaryBonusTurnPiece = null;
+                        deactivateMercenaryBonusTurn();
                     }
                     if (movesLeft === 0 && !reinforcementPending) {
                         triggerAiTurn();
@@ -9104,10 +9490,11 @@
             }
         }
 
-        function openTurnModal() {
+        function openTurnModal(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (turnablePieces.includes(piece.type) && movesLeft >= turnCosts[piece.type]) {
+                setActiveControlButton(button || document.getElementById('turn-button'));
                 const validDirections = getValidTurnDirections(piece.facing);
                 const select = document.getElementById('turn-select');
                 select.innerHTML = validDirections.map(dir => `<option value="${dir}">${dir} (${facingIcons[dir]})</option>`).join('');
@@ -9115,10 +9502,12 @@
             }
         }
 
-        function activateBallistaRange() {
+        function activateBallistaRange(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2 || ballistaRangeBoostUsedThisTurn[currentPlayer]) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (piece.type === 'Ballista') {
+                const controlButton = button || document.getElementById('ballista-range-button');
+                setActiveControlButton(controlButton);
                 ballistaRangeBoostActive[currentPlayer] = true;
                 ballistaRangeBoostUsedThisTurn[currentPlayer] = true;
                 movesLeft -= 2;
@@ -9130,6 +9519,7 @@
                 updateEndTurnButton();
                 updateGameLog();
                 checkGameOver();
+                clearActiveControlButton(controlButton);
                 if (movesLeft === 0 && !reinforcementPending) {
                     triggerAiTurn();
                 }
@@ -9152,16 +9542,17 @@
             return filterShootMovesForPlayer(moves, player);
         }
 
-        function activateBallistaDoubleTime() {
+        function activateBallistaDoubleTime(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2 || ballistaDoubleTimeUsed[currentPlayer] >= 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (piece.type === 'Ballista') {
+                setActiveControlButton(button || document.getElementById('ballista-double-button'));
                 const options = getBallistaDoubleTimeMoves(selectedPiece.row, selectedPiece.col);
                 validMoves = options;
                 renderBoard();
             }
         }
-        function activateArcherMoveDiagShoot() {
+        function activateArcherMoveDiagShoot(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             if (archerMoveDiagMode || archerDiagShootSelectMode) {
                 cancelSpecialModes({ resetSelection: false });
@@ -9169,6 +9560,7 @@
             }
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (piece.type === 'Archer' && archerMoveDiagShootUsed[currentPlayer] < 2) {
+                setActiveControlButton(button || document.getElementById('archer-move-diag-shoot-button'));
                 archerMoveDiagMode = true;
                 archerMoveDiagStart = { row: selectedPiece.row, col: selectedPiece.col };
                 // Only allow the Archer's basic 1-square orthogonal moves for the first step
@@ -9178,7 +9570,7 @@
             }
         }
 
-        function activateArcherDiag2Shoot() {
+        function activateArcherDiag2Shoot(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             if (archerDiag2ShootMode) {
                 cancelSpecialModes({ resetSelection: false });
@@ -9186,6 +9578,7 @@
             }
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (piece.type === 'Archer' && archerDiag2ShootUsed[currentPlayer] < 2) {
+                setActiveControlButton(button || document.getElementById('archer-diag2-shoot-button'));
                 archerDiag2ShootMode = true;
                 // Compute diagonal 2-square shoot targets
                 const dirs = [[-1,-1],[ -1,1 ],[ 1,-1 ],[ 1,1 ]];
@@ -9202,6 +9595,7 @@
                     archerDiag2ShootMode = false;
                     selectedPiece = null;
                     validMoves = [];
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -9215,7 +9609,7 @@
             }
         }
 
-        function activateStrafe() {
+        function activateStrafe(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             if (strafeMode) {
                 cancelSpecialModes({ resetSelection: false });
@@ -9226,6 +9620,7 @@
 
             if ((piece.type === 'Wizard' || piece.type === 'Dragon') && usedCount < 2) {
                 strafeMode = true;
+                setActiveControlButton(button || document.getElementById('strafe-button'));
                 // Compute orthogonal 1-square moves to empty squares only
                 const dirs = [[0,1], [0,-1], [1,0], [-1,0]];
                 const row = selectedPiece.row, col = selectedPiece.col;
@@ -9241,7 +9636,7 @@
             }
         }
 
-        function activateSummonSpectre() {
+        function activateSummonSpectre(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             if (summonSpectreMode) {
                 cancelSpecialModes({ resetSelection: false });
@@ -9251,6 +9646,7 @@
             const totalCaptured = capturedPieces['W'].length + capturedPieces['B'].length;
 
             if (piece.type === 'Wizard' && spectresSummoned[currentPlayer] < 2 && !wizardSummonedThisTurn[currentPlayer] && totalCaptured >= 5) {
+                setActiveControlButton(button || document.getElementById('summon-spectre-button'));
                 summonSpectreMode = true;
                 // Compute adjacent squares (8 directions) for Spectre placement
                 const dirs = [[0,1], [0,-1], [1,0], [-1,0], [1,1], [1,-1], [-1,1], [-1,-1]];
@@ -9267,7 +9663,7 @@
             }
         }
 
-        function activateChampionSummon(type) {
+        function activateChampionSummon(type, button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             if (championSummonMode) {
                 cancelSpecialModes({ resetSelection: false });
@@ -9311,6 +9707,8 @@
                 return;
             }
             championSummonMode = { type, source: { row: selectedPiece.row, col: selectedPiece.col } };
+            const fallbackId = type === 'Huntsman' ? 'champion-summon-huntsman-button' : 'champion-summon-necro-button';
+            setActiveControlButton(button || document.getElementById(fallbackId));
             validMoves = options;
             renderBoard();
             updateStatus();
@@ -9319,7 +9717,7 @@
             updateGameLog();
         }
 
-        function activateNecromancerSummon(type) {
+        function activateNecromancerSummon(type, button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             if (necromancerSummonMode) {
                 cancelSpecialModes({ resetSelection: false });
@@ -9332,7 +9730,8 @@
             if (!piece || piece.type !== 'Necromancer' || (gameVariant !== '36s-elite' && gameVariant !== '36s-supreme')) return;
             const isZombieSummon = type === 'zombie';
             const isSpectreSummon = type === 'spectre';
-            if (!isZombieSummon && !isSpectreSummon) return;
+            const isLichSummon = type === 'lich';
+            if (!isZombieSummon && !isSpectreSummon && !isLichSummon) return;
             if (isZombieSummon) {
                 const maxZombies = getMaxZombies(currentPlayer);
                 if ((zombiesSummoned[currentPlayer] || 0) >= maxZombies) {
@@ -9340,10 +9739,24 @@
                     updateGameLog();
                     return;
                 }
-            } else if (spectresSummoned[currentPlayer] >= 2) {
+            } else if (isSpectreSummon && spectresSummoned[currentPlayer] >= 2) {
                 gameLog.push('Spectre limit reached. Cannot summon more.');
                 updateGameLog();
                 return;
+            } else if (isLichSummon) {
+                if (lichesSummoned[currentPlayer] >= LICH_SUMMON_LIMIT) {
+                    gameLog.push('Lich already conjured.');
+                    updateGameLog();
+                    return;
+                }
+                const souls = (capturedPieces[currentPlayer] || []).length;
+                if (souls < LICH_SUMMON_SOUL_THRESHOLD) {
+                    const needed = LICH_SUMMON_SOUL_THRESHOLD - souls;
+                    const captureLabel = needed === 1 ? 'one more captured enemy piece' : `${needed} more captured enemy pieces`;
+                    gameLog.push(`Capture ${captureLabel} before summoning a Lich.`);
+                    updateGameLog();
+                    return;
+                }
             }
             let options = [];
             if (isSpectreSummon) {
@@ -9382,17 +9795,23 @@
                 }
             }
             necromancerSummonMode = { type, source: { row: selectedPiece.row, col: selectedPiece.col } };
+            const fallbackId = type === 'spectre'
+                ? 'necromancer-summon-spectre-button'
+                : type === 'lich'
+                    ? 'necromancer-summon-lich-button'
+                    : 'necromancer-summon-zombie-button';
+            setActiveControlButton(button || document.getElementById(fallbackId));
             validMoves = options;
             renderBoard();
             updateStatus();
             updateEndTurnButton();
-            const label = type === 'spectre' ? 'Spectre' : 'Zombie';
+            const label = type === 'spectre' ? 'Spectre' : (type === 'lich' ? 'Lich' : 'Zombie');
             const placementLabel = isSpectreSummon ? 'an adjacent square' : 'a back row square';
             gameLog.push(`Select ${placementLabel} to summon a ${label}.`);
             updateGameLog();
         }
 
-        function activateMoralBoost() {
+        function activateMoralBoost(button = null) {
             if (!selectedPiece || reinforcementPending || movesLeft !== 1 || lastAction?.move) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (!piece || piece.type !== 'King') return;
@@ -9408,6 +9827,8 @@
             const fromRow = selectedPiece.row;
             const fromCol = selectedPiece.col;
             const actorLabel = currentPlayer === 'W' ? 'Player' : getOpponentDisplayName();
+            const controlButton = button || document.getElementById('moral-boost-button');
+            setActiveControlButton(controlButton);
             performCoinToss(
                 'Moral Boost',
                 'Attempting to rally the troops...',
@@ -9429,6 +9850,7 @@
                     updateEndTurnButton();
                     updateGameLog();
                     checkGameOver();
+                    clearActiveControlButton(controlButton);
                     if (movesLeft === 0 && !reinforcementPending) {
                         triggerAiTurn();
                     }
@@ -9438,7 +9860,7 @@
             );
         }
 
-        function activateKingShot() {
+        function activateKingShot(button = null) {
             if (!selectedPiece || reinforcementPending || lastAction?.move || movesLeft < 1) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (!hasKingShotAvailableForPiece(piece)) return;
@@ -9458,6 +9880,7 @@
                 return;
             }
             kingShotMode = { row: selectedPiece.row, col: selectedPiece.col };
+            setActiveControlButton(button || document.getElementById('king-shot-button'));
             validMoves = targets.map(([r, c]) => ({ type: 'shoot', pos: [r, c], cost: 1, special: 'kingShot' }));
             renderBoard();
             updateStatus();
@@ -9466,7 +9889,7 @@
             updateGameLog();
         }
 
-        function activateKingEvade() {
+        function activateKingEvade(button = null) {
             if (!selectedPiece || reinforcementPending) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (!piece || piece.type !== 'King' || kingEvadeUsed[currentPlayer]) return;
@@ -9486,6 +9909,7 @@
                 return;
             }
             kingEvadeMode = { row: selectedPiece.row, col: selectedPiece.col, player: currentPlayer };
+            setActiveControlButton(button || document.getElementById('king-evade-button'));
             validMoves = moves;
             renderBoard();
             updateStatus();
@@ -9500,6 +9924,7 @@
             const newFacing = document.getElementById('turn-select').value;
             turnPiece(selectedPiece.row, selectedPiece.col, newFacing);
             document.getElementById('turn-modal').style.display = 'none';
+            clearActiveControlButton(document.getElementById('turn-button'));
             movesLeft -= turnCosts[piece.type];
             movedPieces.add(`${selectedPiece.row},${selectedPiece.col}`);
             selectedPiece = null;
@@ -9515,10 +9940,11 @@
             }
         }
 
-        function openTurnAndMoveModal() {
+        function openTurnAndMoveModal(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (piece.type === 'Infantry' && movesLeft >= 2) {
+                setActiveControlButton(button || document.getElementById('turn-move-button'));
                 const validDirections = getValidTurnDirections(piece.facing);
                 const select = document.getElementById('turn-move-select');
                 select.innerHTML = validDirections.map(dir => `<option value="${dir}">${dir} (${facingIcons[dir]})</option>`).join('');
@@ -9545,66 +9971,106 @@
         function closeTurnModal() {
             const modal = document.getElementById('turn-modal');
             if (modal) modal.style.display = 'none';
+            clearActiveControlButton(document.getElementById('turn-button'));
         }
 
-        function openKingSummonModal() {
-            if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
+        function getKingSummonOptionConfig(player) {
+            return [
+                { type: 'Pistolier', used: pistoliersSummoned[player], limit: 2, requirementMet: true, requirementHint: '' },
+                { type: 'Fusilier', used: fusiliersSummoned[player], limit: 2, requirementMet: true, requirementHint: '' }
+            ];
+        }
+
+        function updateKingSummonButtons({ hasBackRowSlot = true, showButtons = false } = {}) {
+            const config = getKingSummonOptionConfig(currentPlayer);
+            let anyEnabled = false;
+            config.forEach(({ type, used, limit, requirementMet, requirementHint }) => {
+                const button = document.getElementById(`king-summon-${type.toLowerCase()}-button`);
+                if (!button) return;
+                const remaining = limit - used;
+                let reason = '';
+                if (!hasBackRowSlot) {
+                    reason = 'No open squares on the back row.';
+                } else if (remaining <= 0) {
+                    reason = `${type} limit reached.`;
+                } else if (!requirementMet && requirementHint) {
+                    reason = requirementHint;
+                } else if (movesLeft < 2) {
+                    reason = 'Need at least 2 move points.';
+                }
+                const canSummon = !reason;
+                button.textContent = `Summon ${type} (${used}/${limit})`;
+                if (showButtons) {
+                    button.style.display = 'inline';
+                } else {
+                    button.style.display = 'none';
+                }
+                button.disabled = !canSummon;
+                if (reason) {
+                    button.title = reason;
+                } else {
+                    button.removeAttribute('title');
+                    if (showButtons) {
+                        anyEnabled = true;
+                    }
+                }
+            });
+            return anyEnabled;
+        }
+
+        function getKingSummonAvailability(unitType) {
+            if (!selectedPiece || currentPlayer !== 'W') return { allowed: false };
             const piece = board[selectedPiece.row][selectedPiece.col];
-            if (piece.type === 'King' && (gameVariant === '36s-expert' || gameVariant === '36s-elite' || gameVariant === '36s-supreme')) {
-                if (!hasBackRowSpawnSlot(currentPlayer)) {
-                    gameLog.push('No open squares on the back row to summon a unit.');
-                    updateGameLog();
-                    return;
+            if (!piece || piece.type !== 'King') return { allowed: false };
+            if (reinforcementPending) {
+                return { allowed: false, message: 'Resolve reinforcements before summoning.' };
+            }
+            if (lastAction?.move) {
+                return { allowed: false, message: 'Finish your current action before summoning.' };
+            }
+            if (movesLeft < 2) {
+                return { allowed: false, message: 'Need at least 2 move points to summon.' };
+            }
+            if (!hasBackRowSpawnSlot(currentPlayer)) {
+                return { allowed: false, message: 'No open squares on the back row to place the summon.' };
+            }
+            if (unitType === 'Pistolier') {
+                if (pistoliersSummoned[currentPlayer] >= 2) {
+                    return { allowed: false, message: 'Pistolier limit reached.' };
                 }
-                const select = document.getElementById('king-summon-select');
-                select.innerHTML = '';
-
-                // Add available summon options
-                if (pistoliersSummoned[currentPlayer] < 2) {
-                    const option = document.createElement('option');
-                    option.value = 'Pistolier';
-                    option.textContent = `Pistolier (${pistoliersSummoned[currentPlayer]}/2 summoned)`;
-                    select.appendChild(option);
-                }
-                if (fusiliersSummoned[currentPlayer] < 2) {
-                    const option = document.createElement('option');
-                    option.value = 'Fusilier';
-                    option.textContent = `Fusilier (${fusiliersSummoned[currentPlayer]}/2 summoned)`;
-                    select.appendChild(option);
-                }
-
-                if (select.options.length > 0) {
-                    document.getElementById('king-summon-modal').style.display = 'block';
+            } else if (unitType === 'Fusilier') {
+                if (fusiliersSummoned[currentPlayer] >= 2) {
+                    return { allowed: false, message: 'Fusilier limit reached.' };
                 }
             }
+            return { allowed: true };
         }
 
-        function closeKingSummonModal() {
-            const modal = document.getElementById('king-summon-modal');
-            if (modal) modal.style.display = 'none';
+        function requestKingSummon(unitType) {
+            const availability = getKingSummonAvailability(unitType);
+            if (!availability.allowed) {
+                if (availability.message) {
+                    gameLog.push(availability.message);
+                    updateGameLog();
+                }
+                return;
+            }
+            confirmKingSummon(unitType);
         }
 
-        function confirmKingSummon() {
-            if (!selectedPiece || currentPlayer !== 'W') return;
+        function confirmKingSummon(unitType) {
+            if (!selectedPiece || currentPlayer !== 'W' || !unitType) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (piece.type !== 'King') return;
-
-            const select = document.getElementById('king-summon-select');
-            const unitType = select.value;
-
-            if (!unitType) return;
-
-            // Close modal
-            closeKingSummonModal();
 
             // Deduct points immediately
             movesLeft -= 2;
 
-        // Perform coin toss for summon
-        performCoinToss(
-            'Summon Unit',
-            `Attempting to summon ${unitType}...`,
-            (success) => {
+            // Perform coin toss for summon
+            performCoinToss(
+                'Summon Unit',
+                `Attempting to summon ${unitType}...`,
+                (success) => {
                     if (success) {
                         // Find empty square in back row
                         const backRow = currentPlayer === 'W' ? ROWS - 1 : 0;
@@ -9618,8 +10084,9 @@
                         if (emptySquares.length > 0) {
                             // Place unit in first available empty square
                             const col = emptySquares[0];
-                            const facing = currentPlayer === 'W' ? 'U' : 'D';
-                            board[backRow][col] = { type: unitType, player: currentPlayer, facing: facing };
+                            const needsFacing = turnablePieces.includes(unitType);
+                            const facing = needsFacing ? (currentPlayer === 'W' ? 'U' : 'D') : null;
+                            board[backRow][col] = { type: unitType, player: currentPlayer, facing };
 
                             // Update summon counter
                             if (unitType === 'Pistolier') {
@@ -9654,6 +10121,213 @@
                 false, // automated
                 false  // showOverlay
             );
+        }
+
+        function getLichSoulBlastRange(player) {
+            const souls = (capturedPieces[player] || []).length;
+            if (souls < LICH_SOUL_BLAST_SOULS_PER_RANGE) return 0;
+            return Math.min(
+                LICH_SOUL_BLAST_MAX_RANGE,
+                Math.floor(souls / LICH_SOUL_BLAST_SOULS_PER_RANGE)
+            );
+        }
+
+        function getLichSoulBlastTargets(row, col, rangeOverride = null) {
+            const piece = board[row]?.[col];
+            if (!piece || piece.type !== 'Lich') return [];
+            const player = piece.player;
+            const range = Math.min(
+                LICH_SOUL_BLAST_MAX_RANGE,
+                rangeOverride ?? getLichSoulBlastRange(player)
+            );
+            if (range < 1) return [];
+            const moves = [];
+            const directions = [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+            for (const [dr, dc] of directions) {
+                let r = row;
+                let c = col;
+                for (let step = 1; step <= range; step++) {
+                    r += dr;
+                    c += dc;
+                    if (!isValid(r, c)) break;
+                    const occupant = board[r]?.[c];
+                    if (occupant) {
+                        if (occupant.player !== player) {
+                            moves.push({ type: 'shoot', pos: [r, c], cost: 0, special: 'lichSoulBlast' });
+                        }
+                        break;
+                    }
+                }
+            }
+            return moves;
+        }
+
+        function getSoulBlastPath(fromRow, fromCol, toRow, toCol) {
+            const dr = Math.sign(toRow - fromRow);
+            const dc = Math.sign(toCol - fromCol);
+            if (dr === 0 && dc === 0) return [];
+            const path = [];
+            let currentRow = fromRow + dr;
+            let currentCol = fromCol + dc;
+            while (isValid(currentRow, currentCol)) {
+                path.push({ row: currentRow, col: currentCol });
+                if (currentRow === toRow && currentCol === toCol) {
+                    break;
+                }
+                currentRow += dr;
+                currentCol += dc;
+            }
+            return path;
+        }
+
+        function activateLichSoulBlast(button = null) {
+            if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move) return;
+            if (isAnySpecialModeActive()) return;
+            if (pendingLichSoulBlast || lichSoulBlastMode) return;
+            const row = selectedPiece.row;
+            const col = selectedPiece.col;
+            const piece = board[row]?.[col];
+            if (!piece || piece.type !== 'Lich') return;
+            const range = getLichSoulBlastRange(piece.player);
+            if (range < 1) {
+                gameLog.push('Soul Blast requires at least 3 captured enemy souls per range tier.');
+                updateGameLog();
+                return;
+            }
+            if (movesLeft < LICH_SOUL_BLAST_COST) {
+                gameLog.push('Not enough move points to channel Soul Blast.');
+                updateGameLog();
+                return;
+            }
+            const targets = getLichSoulBlastTargets(row, col, range);
+            if (!targets.length) {
+                gameLog.push('No valid Soul Blast targets are in range.');
+                updateGameLog();
+                return;
+            }
+            const controlButton = button || document.getElementById('lich-soul-blast-button');
+            pendingLichSoulBlast = { row, col, range, button: controlButton };
+            movesLeft -= LICH_SOUL_BLAST_COST;
+            updateStatus();
+            updateEndTurnButton();
+            gameLog.push('Channeling Soul Blast (2 move points spent).');
+            updateGameLog();
+            coinTossSpecialEffect = 'lich-soul-blast';
+            performCoinToss(
+                'Soul Blast',
+                'Attempting to channel captured souls...',
+                (success) => {
+                    const context = pendingLichSoulBlast;
+                    pendingLichSoulBlast = null;
+                    if (!context) return;
+                    const currentPiece = board[context.row]?.[context.col];
+                    if (!success) {
+                        gameLog.push('Soul Blast fizzled before it could be unleashed.');
+                        updateGameLog();
+                        clearActiveControlButton(context.button);
+                        return;
+                    }
+                    if (!currentPiece || currentPiece.player !== currentPlayer || currentPiece.type !== 'Lich') {
+                        clearActiveControlButton(context.button);
+                        return;
+                    }
+                    const availableTargets = getLichSoulBlastTargets(context.row, context.col, context.range);
+                    if (!availableTargets.length) {
+                        gameLog.push('No valid Soul Blast targets remained.');
+                        updateGameLog();
+                        clearActiveControlButton(context.button);
+                        renderBoard();
+                        updateStatus();
+                        updateEndTurnButton();
+                        return;
+                    }
+                    lichSoulBlastMode = { row: context.row, col: context.col, range: context.range, button: context.button };
+                    setActiveControlButton(context.button);
+                    selectedPiece = { row: context.row, col: context.col };
+                    validMoves = availableTargets;
+                    gameLog.push('Soul Blast is ready — select a target square.');
+                    updateGameLog();
+                    renderBoard();
+                },
+                false,
+                false
+            );
+        }
+
+        function fireLichSoulBlastTarget(row, col) {
+            if (!lichSoulBlastMode) return;
+            const { row: originRow, col: originCol, button } = lichSoulBlastMode;
+            const piece = board[originRow]?.[originCol];
+            if (!piece || piece.type !== 'Lich') {
+                lichSoulBlastMode = null;
+            }
+            if (!piece || piece.player !== currentPlayer) {
+                clearActiveControlButton(button);
+                cancelSpecialModes({ resetSelection: true });
+                return;
+            }
+            const targetPiece = board[row]?.[col];
+            if (!targetPiece || targetPiece.player === piece.player) {
+                lichSoulBlastMode = null;
+                clearActiveControlButton(button);
+                selectedPiece = null;
+                validMoves = [];
+                showPieceInfo(null);
+                renderBoard();
+                updateStatus();
+                updateEndTurnButton();
+                gameLog.push('Soul Blast target was no longer valid.');
+                updateGameLog();
+                return;
+            }
+            lichSoulBlastMode = null;
+            const playerLabel = piece.player === 'W' ? 'Player' : getOpponentDisplayName();
+            const logMessage = `${playerLabel}'s Lich unleashed Soul Blast on ${targetPiece.type} at (${row},${col}).`;
+            const targets = [{
+                row,
+                col,
+                defender: targetPiece.player,
+                logMessage,
+                attackerType: 'Lich'
+            }];
+            const pathSquares = getSoulBlastPath(originRow, originCol, row, col);
+            const animationPath = pathSquares.length ? pathSquares : [{ row, col }];
+            pauseGameForSoulBlast();
+            applyEnergyBlastGlow();
+            lichSoulBlastResolving = true;
+            const finalize = () => {
+                clearActiveControlButton(button);
+                lastAction = { move: true };
+                movedPieces.add(`${originRow},${originCol}`);
+                selectedPiece = null;
+                validMoves = [];
+                showPieceInfo(null);
+                renderBoard();
+                updateStatus();
+                updateEndTurnButton();
+                updateGameLog();
+                removeEnergyBlastGlow();
+                resumeGameAfterSoulBlast();
+                lichSoulBlastResolving = false;
+                checkGameOver();
+                if (movesLeft === 0 && !reinforcementPending) {
+                    triggerAiTurn();
+                }
+            };
+            const resolveTargets = () => {
+                resolveSpellTargetsSequentially(targets, piece.player, 'Soul Blast', (capturesHit) => {
+                    if (capturesHit === 0) {
+                        gameLog.push('Soul Blast was negated or the target was protected.');
+                    }
+                    if (animationPath.length) {
+                        addEnergyBlastResidualSquares(animationPath);
+                    }
+                    finalize();
+                });
+            };
+            animateEnergyBlastPath(animationPath, () => {
+                resolveTargets();
+            });
         }
 
         function getValidTeleportSwapMoves(row, col) {
@@ -9854,6 +10528,7 @@
                     infernoMode = false;
                     
                     // 4. Re-render and check game state
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -9882,6 +10557,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     turnAndShootMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -9921,6 +10597,7 @@
                         archerDiagShootSelectMode = false;
                         selectedPiece = null;
                         validMoves = [];
+                        clearActiveControlButton();
                         showPieceInfo(null);
                         renderBoard();
                         updateStatus();
@@ -9961,6 +10638,7 @@
                     validMoves = [];
                     archerDiagShootSelectMode = false;
                     archerMoveDiagStart = null;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -9989,6 +10667,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     archerDiag2ShootMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -10047,6 +10726,7 @@
                             selectedPiece = null;
                             validMoves = [];
                             summonSpectreMode = false;
+                            clearActiveControlButton();
                             showPieceInfo(null);
                             renderBoard();
                             updateStatus();
@@ -10120,6 +10800,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     fusilierStrafeActive = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -10145,6 +10826,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     turnAndMoveMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -10175,6 +10857,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     guardOfHonourMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     checkSupremacy(currentPlayer);
@@ -10212,6 +10895,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     teleportMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -10243,6 +10927,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     teleportSwapMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -10269,6 +10954,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     chargeMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -10328,6 +11014,7 @@
                     selectedPiece = null;
                     validMoves = [];
                     elephantryChargeMode = false;
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -10358,6 +11045,7 @@
                     pistolierMoveShootPosition = null;
                     selectedPiece = null;
                     validMoves = [];
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -10386,6 +11074,7 @@
                     elephantryMoveShootPosition = null;
                     selectedPiece = null;
                     validMoves = [];
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -10460,6 +11149,7 @@
                                 if (!validMoves.length) {
                                     elephantryExtendedRangeActive = false;
                                     selectedPiece = null;
+                                    clearActiveControlButton();
                                     showPieceInfo(null);
                                     renderBoard();
                                     gameLog.push('No remaining targets for Elephantry Triple Shot.');
@@ -10472,6 +11162,7 @@
                                 elephantryExtendedRangeActive = false;
                                 selectedPiece = null;
                                 validMoves = [];
+                                clearActiveControlButton();
                                 showPieceInfo(null);
                                 renderBoard();
                             }
@@ -10507,6 +11198,7 @@
                     renderBoard();
                     updateStatus();
                     updateEndTurnButton();
+                    clearActiveControlButton(context?.controlButton || document.getElementById('huntsman-burst-button'));
                     resumeGameAfterHuntsmanBurst();
                     if (context && typeof context.onComplete === 'function') {
                         context.onComplete();
@@ -10617,7 +11309,7 @@
                     showPieceInfo(null);
                     renderBoard();
                     const playerLabel = currentPlayer === 'W' ? 'Player' : getOpponentDisplayName();
-                    const label = summonType === 'spectre' ? 'Spectre' : 'Zombie';
+                    const label = summonType === 'spectre' ? 'Spectre' : (summonType === 'lich' ? 'Lich' : 'Zombie');
                     performCoinToss(
                         `Summon ${label}`,
                         `${playerLabel} attempts to summon a ${label}...`,
@@ -10627,6 +11319,9 @@
                                     if (summonType === 'spectre') {
                                         board[targetRow][targetCol] = { type: 'Spectre', player: currentPlayer };
                                         spectresSummoned[currentPlayer]++;
+                                    } else if (summonType === 'lich') {
+                                        board[targetRow][targetCol] = { type: 'Lich', player: currentPlayer };
+                                        lichesSummoned[currentPlayer]++;
                                     } else {
                                         const zombiePiece = createZombiePiece(currentPlayer);
                                         board[targetRow][targetCol] = zombiePiece;
@@ -10750,10 +11445,11 @@
                             }
                             validMoves = filterShootMovesForPlayer(validMoves, currentPlayer);
                             if (!validMoves.length) {
-                                pistolierMoveShootMode = false;
-                                pistolierMoveShootPosition = null;
-                                selectedPiece = null;
-                                showPieceInfo(null);
+                            pistolierMoveShootMode = false;
+                            pistolierMoveShootPosition = null;
+                            selectedPiece = null;
+                            clearActiveControlButton();
+                            showPieceInfo(null);
                                 renderBoard();
                                 updateStatus();
                                 updateEndTurnButton();
@@ -10796,10 +11492,11 @@
                             }
                             validMoves = filterShootMovesForPlayer(validMoves, currentPlayer);
                             if (!validMoves.length) {
-                                elephantryMoveShootMode = false;
-                                elephantryMoveShootPosition = null;
-                                selectedPiece = null;
-                                showPieceInfo(null);
+                            elephantryMoveShootMode = false;
+                            elephantryMoveShootPosition = null;
+                            selectedPiece = null;
+                            clearActiveControlButton();
+                            showPieceInfo(null);
                                 renderBoard();
                                 updateStatus();
                                 updateEndTurnButton();
@@ -10878,8 +11575,7 @@
                                             }
 
                                             if (mercenaryBonusTurnActive) {
-                                                mercenaryBonusTurnActive = false;
-                                                mercenaryBonusTurnPiece = null;
+                                                deactivateMercenaryBonusTurn();
                                             }
                                             if (movesLeft === 0 && !reinforcementPending) {
                                                 triggerAiTurn();
@@ -10899,8 +11595,7 @@
 
                                     // If we were in mercenary bonus turn mode and didn't get another bonus turn, clear the state
                                     if (mercenaryBonusTurnActive) {
-                                        mercenaryBonusTurnActive = false;
-                                        mercenaryBonusTurnPiece = null;
+                                        deactivateMercenaryBonusTurn();
                                     }
                                     if (movesLeft === 0 && !reinforcementPending) {
                                         triggerAiTurn();
@@ -10944,8 +11639,7 @@
 
                                     // If we were in mercenary bonus turn mode and didn't get another bonus turn, clear the state
                                     if (mercenaryBonusTurnActive) {
-                                        mercenaryBonusTurnActive = false;
-                                        mercenaryBonusTurnPiece = null;
+                                        deactivateMercenaryBonusTurn();
                                     }
                                     if (movesLeft === 0 && !reinforcementPending) {
                                         triggerAiTurn();
@@ -10956,8 +11650,7 @@
 
                             // If we were in mercenary bonus turn mode and didn't get another bonus turn, clear the state
                             if (mercenaryBonusTurnActive) {
-                                mercenaryBonusTurnActive = false;
-                                mercenaryBonusTurnPiece = null;
+                                deactivateMercenaryBonusTurn();
                             }
                         }
                     } else if (move.type === 'shoot') {
@@ -11131,8 +11824,7 @@
                     checkGameOver();
                     // Clear mercenary bonus turn state after move completes
                     if (mercenaryBonusTurnActive) {
-                        mercenaryBonusTurnActive = false;
-                        mercenaryBonusTurnPiece = null;
+                        deactivateMercenaryBonusTurn();
                     }
                     if (movesLeft === 0 && !reinforcementPending) {
                         triggerAiTurn();
@@ -11241,6 +11933,7 @@
                     archerDiag2ShootMode = false;
                     selectedPiece = null;
                     validMoves = [];
+                    clearActiveControlButton();
                     showPieceInfo(null);
                     renderBoard();
                     updateStatus();
@@ -11371,7 +12064,8 @@
             if (!piece || piece.type !== 'Necromancer' || (gameVariant !== '36s-elite' && gameVariant !== '36s-supreme')) return;
             const isZombieSummon = type === 'zombie';
             const isSpectreSummon = type === 'spectre';
-            if (!isZombieSummon && !isSpectreSummon) return;
+            const isLichSummon = type === 'lich';
+            if (!isZombieSummon && !isSpectreSummon && !isLichSummon) return;
             if (isZombieSummon) {
                 const maxZombies = getMaxZombies(currentPlayer);
                 if ((zombiesSummoned[currentPlayer] || 0) >= maxZombies) {
@@ -11379,10 +12073,24 @@
                     updateGameLog();
                     return;
                 }
-            } else if (spectresSummoned[currentPlayer] >= 2) {
+            } else if (isSpectreSummon && spectresSummoned[currentPlayer] >= 2) {
                 gameLog.push('Spectre limit reached. Cannot summon more.');
                 updateGameLog();
                 return;
+            } else if (isLichSummon) {
+                if (lichesSummoned[currentPlayer] >= LICH_SUMMON_LIMIT) {
+                    gameLog.push('Lich already conjured.');
+                    updateGameLog();
+                    return;
+                }
+                const souls = (capturedPieces[currentPlayer] || []).length;
+                if (souls < LICH_SUMMON_SOUL_THRESHOLD) {
+                    const needed = LICH_SUMMON_SOUL_THRESHOLD - souls;
+                    const captureLabel = needed === 1 ? 'one more captured enemy piece' : `${needed} more captured enemy pieces`;
+                    gameLog.push(`Capture ${captureLabel} before summoning a Lich.`);
+                    updateGameLog();
+                    return;
+                }
             }
             let options = [];
             if (isSpectreSummon) {
@@ -11425,7 +12133,7 @@
             renderBoard();
             updateStatus();
             updateEndTurnButton();
-            const label = type === 'spectre' ? 'Spectre' : 'Zombie';
+            const label = type === 'spectre' ? 'Spectre' : (type === 'lich' ? 'Lich' : 'Zombie');
             const placementLabel = isSpectreSummon ? 'an adjacent square' : 'a back row square';
             gameLog.push(`Select ${placementLabel} to summon a ${label}.`);
             updateGameLog();
@@ -11484,133 +12192,27 @@
             if (modal) modal.style.display = 'none';
         }
 
-        function openKingSummonModal() {
-            if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
-            const piece = board[selectedPiece.row][selectedPiece.col];
-            if (piece.type === 'King' && (gameVariant === '36s-expert' || gameVariant === '36s-elite' || gameVariant === '36s-supreme')) {
-                if (!hasBackRowSpawnSlot(currentPlayer)) {
-                    gameLog.push('No open squares on the back row to summon a unit.');
-                    updateGameLog();
-                    return;
-                }
-                const select = document.getElementById('king-summon-select');
-                select.innerHTML = '';
-
-                // Add available summon options
-                if (pistoliersSummoned[currentPlayer] < 2) {
-                    const option = document.createElement('option');
-                    option.value = 'Pistolier';
-                    option.textContent = `Pistolier (${pistoliersSummoned[currentPlayer]}/2 summoned)`;
-                    select.appendChild(option);
-                }
-                if (fusiliersSummoned[currentPlayer] < 2) {
-                    const option = document.createElement('option');
-                    option.value = 'Fusilier';
-                    option.textContent = `Fusilier (${fusiliersSummoned[currentPlayer]}/2 summoned)`;
-                    select.appendChild(option);
-                }
-
-                if (select.options.length > 0) {
-                    document.getElementById('king-summon-modal').style.display = 'block';
-                }
-            }
-        }
-
-        function closeKingSummonModal() {
-            const modal = document.getElementById('king-summon-modal');
-            if (modal) modal.style.display = 'none';
-        }
-
-        function confirmKingSummon() {
-            if (!selectedPiece || currentPlayer !== 'W') return;
-            const piece = board[selectedPiece.row][selectedPiece.col];
-            if (piece.type !== 'King') return;
-
-            const select = document.getElementById('king-summon-select');
-            const unitType = select.value;
-
-            if (!unitType) return;
-
-            // Close modal
-            closeKingSummonModal();
-
-            // Deduct points immediately
-            movesLeft -= 2;
-
-            // Perform coin toss for summon
-            performCoinToss(
-                'Summon Unit',
-                `Attempting to summon ${unitType}...`,
-                (success) => {
-                    if (success) {
-                        // Find empty square in back row
-                        const backRow = currentPlayer === 'W' ? ROWS - 1 : 0;
-                        let emptySquares = [];
-                        for (let c = 0; c < COLS; c++) {
-                            if (!board[backRow][c]) {
-                                emptySquares.push(c);
-                            }
-                        }
-
-                        if (emptySquares.length > 0) {
-                            // Place unit in first available empty square
-                            const col = emptySquares[0];
-                            const facing = currentPlayer === 'W' ? 'U' : 'D';
-                            board[backRow][col] = { type: unitType, player: currentPlayer, facing: facing };
-
-                            // Update summon counter
-                            if (unitType === 'Pistolier') {
-                                pistoliersSummoned[currentPlayer]++;
-                            } else if (unitType === 'Fusilier') {
-                                fusiliersSummoned[currentPlayer]++;
-                            }
-
-                            gameStats.summonCount[currentPlayer]++; // Track summon for statistics
-                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} successfully summoned ${unitType} at (${backRow},${col})!`);
-                        } else {
-                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} succeeded summon but no empty squares in back row!`);
-                        }
-                    } else {
-                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} failed to summon ${unitType}.`);
-                    }
-
-                    lastAction = { move: true };
-                    movedPieces.add(`${selectedPiece.row},${selectedPiece.col}`);
-                    selectedPiece = null;
-                    validMoves = [];
-                    showPieceInfo(null);
-                    renderBoard();
-                    updateStatus();
-                    updateEndTurnButton();
-                    updateGameLog();
-                    checkGameOver();
-                    if (movesLeft === 0 && !reinforcementPending) {
-                        triggerAiTurn();
-                    }
-                },
-                false, // automated
-                false  // showOverlay
-            );
-        }
-
         /* Legacy necromancer summon modal functions removed in favor of highlight-based placement */
 
         function closeTurnMoveModal() {
             const modal = document.getElementById('turn-move-modal');
             if (modal) modal.style.display = 'none';
+            clearActiveControlButton(document.getElementById('turn-move-button'));
             cancelSpecialModes({ resetSelection: false });
         }
 
         function closeTurnShootModal() {
             const modal = document.getElementById('turn-shoot-modal');
             if (modal) modal.style.display = 'none';
+            clearActiveControlButton(document.getElementById('turn-shoot-button'));
             cancelSpecialModes({ resetSelection: false });
         }
 
-        function openTurnAndShootModal() {
+        function openTurnAndShootModal(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (piece.type === 'Archer' && movesLeft >= 2) {
+                setActiveControlButton(button || document.getElementById('turn-shoot-button'));
                 const validDirections = getValidTurnDirections(piece.facing);
                 const select = document.getElementById('turn-shoot-select');
                 select.innerHTML = validDirections.map(dir => `<option value="${dir}">${dir} (${facingIcons[dir]})</option>`).join('');
@@ -11784,6 +12386,10 @@
                     const targetPiece = board[nr][nc];
                     // Dragons cannot capture other Dragons with Inferno
                     if (targetPiece && targetPiece.player === opponent && targetPiece.type !== 'Dragon') {
+                        if (targetPiece.type === 'Lich') {
+                            gameLog.push(`Dragon's Inferno could not harm the Lich at (${nr},${nc}).`);
+                            continue;
+                        }
                         capturedSomething = true;
                         capturedSquares.push([nr, nc]);
                         capturedPieces[player].push(targetPiece);
@@ -11850,6 +12456,18 @@
                     }
                     captured = true;
                 } else {
+                    if (capturedPiece.type === 'Lich') {
+                        const allowed = resolveLichCaptureAttempt({
+                            attackerType: piece.type,
+                            attackerPlayer: piece.player,
+                            targetRow: jump[0],
+                            targetCol: jump[1],
+                            actionLabel: 'capture'
+                        });
+                        if (!allowed) {
+                            return null;
+                        }
+                    }
                     capturedSquares.push([jump[0], jump[1]]);
                     capturedPieces[piece.player].push(capturedPiece);
                     captureValue = pieceValues[capturedPiece.type];
@@ -11896,6 +12514,18 @@
                         }
                         captured = true;
                     } else {
+                        if (capturedPiece.type === 'Lich') {
+                            const allowed = resolveLichCaptureAttempt({
+                                attackerType: piece.type,
+                                attackerPlayer: piece.player,
+                                targetRow: toRow,
+                                targetCol: toCol,
+                                actionLabel: 'capture'
+                            });
+                            if (!allowed) {
+                                return null;
+                            }
+                        }
                         capturedSquares.push([toRow, toCol]);
                         capturedPieces[piece.player].push(capturedPiece);
                         captureValue = pieceValues[capturedPiece.type];
@@ -11997,6 +12627,7 @@
                         // Set bonus turn state to restrict selection to this mercenary only
                         mercenaryBonusTurnActive = true;
                         mercenaryBonusTurnPiece = { row, col };
+                        setMercenaryHighlight({ row, col });
                         const remaining = 3 - mercenaryBonusTurnCount[player];
                         gameLog.push(`${playerLabel} Mercenary won the coin flip! Bonus turn granted - the mercenary can move again without cost. (${remaining} bonus turns remaining)`);
 
@@ -12054,6 +12685,18 @@
                 gameLog.push(`${attackerLabel} won the Huntsman defense coin flip at (${toRow},${toCol}).`);
                 updateGameLog();
             }
+            if (targetPiece && targetPiece.type === 'Lich') {
+                const allowed = resolveLichCaptureAttempt({
+                    attackerType: piece.type,
+                    attackerPlayer: piece.player,
+                    targetRow: toRow,
+                    targetCol: toCol,
+                    actionLabel: 'shoot'
+                });
+                if (!allowed) {
+                    return;
+                }
+            }
             if (targetPiece) {
                 capturedSquares.push([toRow, toCol]);
                 capturedPieces[piece.player].push(targetPiece);
@@ -12104,6 +12747,25 @@
         function applySpellCapture(attackerPlayer, targetRow, targetCol, options = {}) {
             const targetPiece = board[targetRow]?.[targetCol];
             if (!targetPiece) return false;
+            const attackerType = options.attackerType || null;
+            const ability = options.ability || null;
+            if (targetPiece.type === 'Lich') {
+                if (ability === 'Energy Blast' || ability === 'Sacrifice') {
+                    gameLog.push(`Liches are immune to ${ability}.`);
+                    updateGameLog();
+                    return false;
+                }
+                const allowed = resolveLichCaptureAttempt({
+                    attackerType,
+                    attackerPlayer,
+                    targetRow,
+                    targetCol,
+                    actionLabel: ability || 'capture'
+                });
+                if (!allowed) {
+                    return false;
+                }
+            }
 
             capturedSquares.push([targetRow, targetCol]);
             capturedPieces[attackerPlayer].push(targetPiece);
@@ -12701,6 +13363,25 @@
                                 }
                             }
 
+                            // Check for Necromancer Lich Summoning (Elite/Supreme)
+                            if (piece.type === 'Necromancer' && (gameVariant === '36s-elite' || gameVariant === '36s-supreme') && movesLeft >= 2) {
+                                if ((lichesSummoned[player] || 0) < LICH_SUMMON_LIMIT) {
+                                    const souls = (capturedPieces[player] || []).length;
+                                    if (souls >= LICH_SUMMON_SOUL_THRESHOLD) {
+                                        const backRow = player === 'W' ? ROWS - 1 : 0;
+                                        for (let col = 0; col < COLS; col++) {
+                                            if (aiTimeExpired()) break outerBuild;
+                                            if (!board[backRow][col]) {
+                                                let summonValue = 14;
+                                                if (aiDifficulty === 'Hard') summonValue *= 1.5;
+                                                else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                                allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'summonNecromancerLich', pieceType: 'Necromancer', targetValue: summonValue });
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             // Check for Necromancer Spectre Summoning (Elite/Supreme)
                             if (piece.type === 'Necromancer' && (gameVariant === '36s-elite' || gameVariant === '36s-supreme') && spectresSummoned[player] < 2 && movesLeft >= 2) {
                                 for (let dr = -1; dr <= 1; dr++) {
@@ -12964,6 +13645,8 @@
                             newBoard[pos[0]][pos[1]] = { type: 'Zombie', player, facing: player === 'W' ? 'U' : 'D' };
                         } else if (special === 'summonNecromancerSpectre') {
                             newBoard[pos[0]][pos[1]] = { type: 'Spectre', player };
+                        } else if (special === 'summonNecromancerLich') {
+                            newBoard[pos[0]][pos[1]] = { type: 'Lich', player };
                         }
                     } else {
                         continue; // Should not happen
@@ -13545,6 +14228,40 @@
                                 false // showOverlay
                             );
                             return; // Exit to wait for coin toss callback
+                        } else if (action.type === 'summon' && special === 'summonNecromancerLich') {
+                            // AI attempts to summon Lich (Necromancer)
+                            const necromancerRow = from[0], necromancerCol = from[1];
+                            const summonRow = pos[0], summonCol = pos[1];
+
+                            movesLeft -= cost;
+                            movedPieces.add(`${necromancerRow},${necromancerCol}`);
+
+                            performCoinToss(
+                                'Summon Lich',
+                                'AI is attempting to summon a Lich...',
+                                (success) => {
+                                    if (success) {
+                                        if (!board[summonRow][summonCol]) {
+                                            board[summonRow][summonCol] = { type: 'Lich', player: 'B' };
+                                            lichesSummoned['B'] = (lichesSummoned['B'] || 0) + 1;
+                                            gameStats.summonCount['B']++;
+                                            gameLog.push(`${getOpponentDisplayName()} summoned a Lich at (${summonRow},${summonCol}).`);
+                                        } else {
+                                            gameLog.push(`${getOpponentDisplayName()}'s Lich summon succeeded but the square was occupied.`);
+                                        }
+                                    } else {
+                                        gameLog.push(`${getOpponentDisplayName()} failed to summon a Lich.`);
+                                    }
+
+                                    renderBoard();
+                                    updateScoreDisplay();
+                                    updateGameLog();
+                                    setTimeout(() => makeNextMove(), 1200);
+                                },
+                                true,
+                                false
+                            );
+                            return;
                         } else if (action.type === 'summon' && special === 'summonNecromancerSpectre') {
                             // AI attempts to summon Spectre (Necromancer)
                             const necromancerRow = from[0], necromancerCol = from[1];
@@ -13688,17 +14405,19 @@
                             const summonRow = pos[0], summonCol = pos[1];
                             const summonType = action.summonType || 'Pistolier';
                             movesLeft -= cost;
-                            const attemptLabel = summonType === 'Pistolier' ? 'Summon Pistolier' : 'Summon Fusilier';
+                            const attemptLabel = `Summon ${summonType}`;
                             performCoinToss(
                                 attemptLabel,
                                 `AI attempts to summon a ${summonType}...`,
                                 (success) => {
                                     if (success) {
                                         if (!board[summonRow][summonCol]) {
-                                            board[summonRow][summonCol] = { type: summonType, player: 'B', facing: null };
+                                            const needsFacing = turnablePieces.includes(summonType);
+                                            const facing = needsFacing ? 'D' : null;
+                                            board[summonRow][summonCol] = { type: summonType, player: 'B', facing };
                                             if (summonType === 'Pistolier') {
                                                 pistoliersSummoned['B'] = (pistoliersSummoned['B'] || 0) + 1;
-                                            } else {
+                                            } else if (summonType === 'Fusilier') {
                                                 fusiliersSummoned['B'] = (fusiliersSummoned['B'] || 0) + 1;
                                             }
                                             gameStats.summonCount['B']++;
@@ -14215,12 +14934,14 @@
             dragonInfernoUsed = { 'W': false, 'B': false };
             wizardStrafeUsed = { 'W': 0, 'B': 0 };
             dragonStrafeUsed = { 'W': 0, 'B': 0 };
+            pistoliersSummoned = { 'W': 0, 'B': 0 };
+            fusiliersSummoned = { 'W': 0, 'B': 0 };
+            lichesSummoned = { 'W': 0, 'B': 0 };
             fusilierShotLastTurn = { 'W': new Set(), 'B': new Set() };
             fusilierShotThisTurn = { 'W': new Set(), 'B': new Set() };
             mercenaryBonusTurnUsed = { 'W': new Set(), 'B': new Set() };
             mercenaryBonusTurnCount = { 'W': 0, 'B': 0 };
-            mercenaryBonusTurnActive = false;
-            mercenaryBonusTurnPiece = null;
+            deactivateMercenaryBonusTurn();
             spectresSummoned = { 'W': 0, 'B': 0 };
             wizardSummonedThisTurn = { 'W': false, 'B': false };
             wizardCannotMoveNextTurn = { 'W': new Set(), 'B': new Set() };
@@ -14472,8 +15193,7 @@
             gamePaused = false;
 
             // Reset mercenary bonus turn state
-            mercenaryBonusTurnActive = false;
-            mercenaryBonusTurnPiece = null;
+            deactivateMercenaryBonusTurn();
 
             // Clear AI pending and other active game states
             aiPending = false;
@@ -14645,14 +15365,23 @@
                 counts[p.type] = (counts[p.type] || 0) + 1;
             });
             if (Object.keys(counts).length === 0) {
-                return '<div class="captured-entry empty">None</div>';
+                return '<div class="captured-entry empty">No souls claimed</div>';
             }
-            return Object.entries(counts).map(([type, count]) => `
-                <div class="captured-entry">
-                    <span class="piece ${player === 'W' ? 'white' : 'black'}" style="color: ${player === 'W' ? 'black' : 'white'}">${pieceIcons[type]}</span>
-                    <span class="captured-count">x${count}</span>
-                </div>
-            `).join('');
+            return Object.entries(counts)
+                .sort((a, b) => (pieceValues[b[0]] || 0) - (pieceValues[a[0]] || 0))
+                .map(([type, count]) => {
+                    const soulLabel = count === 1 ? 'soul' : 'souls';
+                    const textColor = player === 'W' ? 'black' : 'white';
+                    return `
+                        <div class="captured-entry grave-slot">
+                            <span class="piece grave-piece ${player === 'W' ? 'white' : 'black'}" style="color: ${textColor}">${pieceIcons[type]}</span>
+                            <div class="grave-meta">
+                                <span class="grave-name">${type}</span>
+                                <span class="grave-count">${count} ${soulLabel}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
         }
 
         // New function to add capture effects
