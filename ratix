@@ -335,7 +335,7 @@
             flex: 0 0 220px;
             align-items: center;
             text-align: center;
-            justify-content: center;
+            justify-content: flex-end;
         }
         .player-name {
             font-size: 14px;
@@ -8527,12 +8527,12 @@
                                         setNecromancerShotCooldown(necromancerPiece, 0);
                                     }
                                     gameStats.summonCount[championOwner]++;
-                                    gameLog.push(`${playerLabel} summoned a ${summonType} at (${targetRow},${targetCol}).`);
+                                    gameLog.push(`✨ ${playerLabel} summoned a ${summonType} at (${targetRow},${targetCol}).`);
                                 } else {
                                     gameLog.push(`${playerLabel}'s ${summonType} summon succeeded but the chosen square was occupied.`);
                                 }
                             } else {
-                                gameLog.push(`${playerLabel} failed to summon a ${summonType}.`);
+                                gameLog.push(`❌ ${playerLabel} failed to summon a ${summonType}.`);
                             }
                             lastAction = { move: true };
                             movedPieces.add(`${fromRow},${fromCol}`);
@@ -8594,12 +8594,12 @@
                                         zombiesSummoned[currentPlayer] = (zombiesSummoned[currentPlayer] || 0) + 1;
                                     }
                                     gameStats.summonCount[currentPlayer]++;
-                                    gameLog.push(`${playerLabel} summoned a ${label} at (${targetRow},${targetCol}).`);
+                                    gameLog.push(`✨ ${playerLabel} summoned a ${label} at (${targetRow},${targetCol}).`);
                                 } else {
                                     gameLog.push(`${playerLabel}'s ${label} summon succeeded but the chosen square was occupied.`);
                                 }
                             } else {
-                                gameLog.push(`${playerLabel} failed to summon a ${label}.`);
+                                gameLog.push(`❌ ${playerLabel} failed to summon a ${label}.`);
                             }
                             lastAction = { move: true };
                             movedPieces.add(`${fromRow},${fromCol}`);
@@ -9629,12 +9629,12 @@
                             }
 
                             gameStats.summonCount[currentPlayer]++; // Track summon for statistics
-                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} successfully summoned ${unitType} at (${backRow},${col})!`);
+                            gameLog.push(`✨ ${currentPlayer === 'W' ? 'Player' : 'AI'} successfully summoned ${unitType} at (${backRow},${col})!`);
                         } else {
                             gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} succeeded summon but no empty squares in back row!`);
                         }
                     } else {
-                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} failed to summon ${unitType}.`);
+                        gameLog.push(`❌ ${currentPlayer === 'W' ? 'Player' : 'AI'} failed to summon ${unitType}.`);
                     }
 
                     lastAction = { move: true };
@@ -10566,12 +10566,12 @@
                                         setNecromancerShotCooldown(necromancerPiece, 0);
                                     }
                                     gameStats.summonCount[championOwner]++;
-                                    gameLog.push(`${playerLabel} summoned a ${summonType} at (${targetRow},${targetCol}).`);
+                                    gameLog.push(`✨ ${playerLabel} summoned a ${summonType} at (${targetRow},${targetCol}).`);
                                 } else {
                                     gameLog.push(`${playerLabel}'s ${summonType} summon succeeded but the chosen square was occupied.`);
                                 }
                             } else {
-                                gameLog.push(`${playerLabel} failed to summon a ${summonType}.`);
+                                gameLog.push(`❌ ${playerLabel} failed to summon a ${summonType}.`);
                             }
                             lastAction = { move: true };
                             movedPieces.add(`${fromRow},${fromCol}`);
@@ -10633,12 +10633,12 @@
                                         zombiesSummoned[currentPlayer] = (zombiesSummoned[currentPlayer] || 0) + 1;
                                     }
                                     gameStats.summonCount[currentPlayer]++;
-                                    gameLog.push(`${playerLabel} summoned a ${label} at (${targetRow},${targetCol}).`);
+                                    gameLog.push(`✨ ${playerLabel} summoned a ${label} at (${targetRow},${targetCol}).`);
                                 } else {
                                     gameLog.push(`${playerLabel}'s ${label} summon succeeded but the chosen square was occupied.`);
                                 }
                             } else {
-                                gameLog.push(`${playerLabel} failed to summon a ${label}.`);
+                                gameLog.push(`❌ ${playerLabel} failed to summon a ${label}.`);
                             }
                             lastAction = { move: true };
                             movedPieces.add(`${fromRow},${fromCol}`);
@@ -11566,12 +11566,12 @@
                             }
 
                             gameStats.summonCount[currentPlayer]++; // Track summon for statistics
-                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} successfully summoned ${unitType} at (${backRow},${col})!`);
+                            gameLog.push(`✨ ${currentPlayer === 'W' ? 'Player' : 'AI'} successfully summoned ${unitType} at (${backRow},${col})!`);
                         } else {
                             gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} succeeded summon but no empty squares in back row!`);
                         }
                     } else {
-                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} failed to summon ${unitType}.`);
+                        gameLog.push(`❌ ${currentPlayer === 'W' ? 'Player' : 'AI'} failed to summon ${unitType}.`);
                     }
 
                     lastAction = { move: true };
