@@ -8258,18 +8258,25 @@
             const piece = board[row][col];
 
             if (isAnySpecialModeActive() && !huntsmanSelectionActive) {
-                if (selectedPiece && selectedPiece.row === row && selectedPiece.col === col) {
-                    cancelSpecialModes({ resetSelection: false });
-                    return;
+                // Soul blast targeting is mandatory - prevent canceling
+                if (lichSoulBlastMode) {
+                    // Don't allow clicking anywhere to cancel
+                    // Player must select a valid target - only valid targets will work below
+                    // Fall through to lichSoulBlastMode handler
+                } else {
+                    if (selectedPiece && selectedPiece.row === row && selectedPiece.col === col) {
+                        cancelSpecialModes({ resetSelection: false });
+                        return;
+                    }
+                    if (!selectedPiece) {
+                        cancelSpecialModes();
+                        return;
+                    }
+                    // Don't auto-cancel when clicking different squares - let mode handlers decide
+                    // if (selectedPiece && (selectedPiece.row !== row || selectedPiece.col !== col)) {
+                    //     cancelSpecialModes();
+                    // }
                 }
-                if (!selectedPiece) {
-                    cancelSpecialModes();
-                    return;
-                }
-                // Don't auto-cancel when clicking different squares - let mode handlers decide
-                // if (selectedPiece && (selectedPiece.row !== row || selectedPiece.col !== col)) {
-                //     cancelSpecialModes();
-                // }
             }
 
             // Handle Inferno Mode
@@ -8988,9 +8995,9 @@
                 const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.special === 'lichSoulBlast');
                 if (move) {
                     fireLichSoulBlastTarget(move.pos[0], move.pos[1]);
-                } else {
-                    cancelSpecialModes({ resetSelection: false });
                 }
+                // Don't allow canceling - player must select a valid target
+                // If invalid square clicked, do nothing (already prevented earlier)
                 return;
             }
 
