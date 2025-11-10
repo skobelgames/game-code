@@ -1690,8 +1690,8 @@
             <p id="coin-toss-description" style="font-size: 14px; margin-top: 10px;"></p>
         </div>
         <div class="modal-footer">
-            <button id="coin-toss-start" onclick="startCoinToss()" style="display: none; background-color: #2196F3;">Flip Coin</button>
-            <button id="coin-toss-continue" onclick="closeCoinToss()" style="display: none; background-color: #4CAF50;">Continue</button>
+            <button id="coin-toss-start" onclick="startCoinToss()" style="display: none; background-color: #2196F3; visibility: hidden;">Flip Coin</button>
+            <button id="coin-toss-continue" onclick="closeCoinToss()" style="display: none; background-color: #4CAF50; visibility: hidden;">Continue</button>
             <span id="coin-toss-progress" class="coin-progress">Successes: 0/0</span>
         </div>
     </div>
@@ -2389,12 +2389,8 @@
             if (continueBtn) continueBtn.style.display = 'none';
             updateCoinTossEnergyBlastProgress();
 
-            // If automated (AI action), hide the button and auto-start
-            if (automated) {
-                document.getElementById('coin-toss-start').style.display = 'none';
-            } else {
-                document.getElementById('coin-toss-start').style.display = 'inline-block';
-            }
+            // Always hide buttons and auto-start
+            document.getElementById('coin-toss-start').style.display = 'none';
 
             const coinResult = document.getElementById('coin-result');
             // Reset coin to initial state
@@ -2409,10 +2405,8 @@
             }
             document.getElementById('coin-toss-modal').style.display = 'block';
 
-            // Auto-start coin flip for AI
-            if (automated) {
-                setTimeout(() => startCoinToss(), 500);
-            }
+            // Always auto-start coin flip after a short delay
+            setTimeout(() => startCoinToss(), 500);
         }
 
         function startCoinToss() {
@@ -2473,12 +2467,10 @@
                     updateCoinTossEnergyBlastProgress();
                 }
 
-                // Show continue button after result is displayed
+                // Never show continue button - always auto-close
                 const showDelay = isEnergyBlastFlip ? 0 : 500;
                 setTimeout(() => {
-                    if (!isEnergyBlastFlip && continueBtn) {
-                        continueBtn.style.display = 'inline-block';
-                    }
+                    // Continue button is now always hidden
 
                     // Auto-close after a delay
                     const autoCloseDelay = isEnergyBlastFlip ? 800 : 2000;
