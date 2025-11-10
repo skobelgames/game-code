@@ -2552,7 +2552,7 @@
         }
 
         function triggerAiTurn() {
-            if (gameOver || gamePaused || aiPending || reinforcementPending || currentPlayer !== 'W') return;
+            if (gameOver || gamePaused || aiPending || reinforcementPending || currentPlayer !== 'W' || lichSoulBlastResolving) return;
             stopTurnTimer();
             // Remove warcry active background when switching to AI turn
             removeWarcryActiveBackground();
@@ -10466,6 +10466,9 @@
             gameLog.push('Channeling Soul Blast (2 move points spent).');
             updateGameLog();
             coinTossSpecialEffect = 'lich-soul-blast';
+
+            // Set lichSoulBlastResolving = true at the START to block AI during entire sequence
+            lichSoulBlastResolving = true;
             pauseGameForSoulBlast();
             coinTossSoulBlastHold = true;
             performCoinToss(
@@ -10475,6 +10478,7 @@
                     const context = pendingLichSoulBlast;
                     pendingLichSoulBlast = null;
                     if (!context) {
+                        lichSoulBlastResolving = false;
                         resumeGameAfterSoulBlast();
                         return;
                     }
@@ -10483,11 +10487,13 @@
                         gameLog.push('Soul Blast fizzled before it could be unleashed.');
                         updateGameLog();
                         clearActiveControlButton(context.button);
+                        lichSoulBlastResolving = false;
                         resumeGameAfterSoulBlast();
                         return;
                     }
                     if (!currentPiece || currentPiece.player !== currentPlayer || currentPiece.type !== 'Lich') {
                         clearActiveControlButton(context.button);
+                        lichSoulBlastResolving = false;
                         resumeGameAfterSoulBlast();
                         return;
                     }
@@ -10500,6 +10506,7 @@
                         renderBoard();
                         updateStatus();
                         updateEndTurnButton();
+                        lichSoulBlastResolving = false;
                         resumeGameAfterSoulBlast();
                         return;
                     }
@@ -10554,6 +10561,8 @@
                 updateGameLog();
                 lichSoulBlastPendingCompletion = false;
                 lichSoulBlastTargetInfo = null;
+                lichSoulBlastResolving = false;
+                resumeGameAfterSoulBlast();
                 return;
             }
             lichSoulBlastMode = null;
@@ -10580,7 +10589,7 @@
             pauseGameForSoulBlast();
             applyEnergyBlastGlow({ variant: 'soul-blast' });
             applySoulBlastSlowMo();
-            lichSoulBlastResolving = true;
+            // lichSoulBlastResolving already set to true at start of activateLichSoulBlast
             // Match energy blast's finishEnergyBlast structure
             const finishSoulBlast = () => {
                 selectedPiece = null;
@@ -14211,6 +14220,9 @@
 
             let plannedActions = [];
 
+            // Add 1-2 second delay buffer before AI starts making moves
+            const aiStartDelay = 1000 + Math.random() * 1000; // Random delay between 1000-2000ms
+
             function makeNextMove() {
                 try {
                     // If game is paused (e.g., warcry animation), reschedule and wait
@@ -15179,7 +15191,8 @@
                     completeAiTurn({ reason: 'AI move error. Player resumes round.' });
                 }
             }
-            setTimeout(() => makeNextMove(), 1500); // Start after brief delay for player to see board state
+            // Use variable delay (1-2 seconds) before AI starts making moves
+            setTimeout(() => makeNextMove(), aiStartDelay);
         }
 
         function resetGame() {
