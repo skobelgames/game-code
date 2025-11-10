@@ -10503,6 +10503,10 @@
                         resumeGameAfterSoulBlast();
                         return;
                     }
+                    // Mark piece as moved immediately after coin flip succeeds (like energy blast)
+                    lastAction = { move: true };
+                    movedPieces.add(`${context.row},${context.col}`);
+
                     const prepareSoulBlastTargeting = () => {
                         lichSoulBlastMode = { row: context.row, col: context.col, range: context.range, button: context.button };
                         setActiveControlButton(context.button);
@@ -10577,27 +10581,31 @@
             applyEnergyBlastGlow({ variant: 'soul-blast' });
             applySoulBlastSlowMo();
             lichSoulBlastResolving = true;
-            const finalize = () => {
-                clearActiveControlButton(button);
-                lastAction = { move: true };
-                movedPieces.add(`${originRow},${originCol}`);
+            // Match energy blast's finishEnergyBlast structure
+            const finishSoulBlast = () => {
                 selectedPiece = null;
                 validMoves = [];
                 showPieceInfo(null);
                 renderBoard();
+                updateScoreDisplay();
+                updateCapturedPiecesDisplay();
                 updateStatus();
                 updateEndTurnButton();
                 updateGameLog();
+                checkGameOver();
                 removeSoulBlastSlowMo(true); // Remove slow-mo immediately for faster resume
                 removeEnergyBlastGlow();
                 clearSoulBlastPreview();
-                resumeGameAfterSoulBlast();
-                restoreSoulBlastInteractionState();
-                lichSoulBlastResolving = false;
-                checkGameOver();
+                clearActiveControlButton(button);
                 if (movesLeft === 0 && !reinforcementPending) {
                     triggerAiTurn();
                 }
+            };
+            const finalizeSoulBlast = () => {
+                finishSoulBlast();
+                resumeGameAfterSoulBlast();
+                restoreSoulBlastInteractionState();
+                lichSoulBlastResolving = false;
             };
             const resolveTargets = () => {
                 resolveSpellTargetsSequentially(targets, piece.player, 'Soul Blast', (capturesHit) => {
@@ -10617,7 +10625,7 @@
                     }
                     lichSoulBlastPendingCompletion = false;
                     lichSoulBlastTargetInfo = null;
-                    finalize();
+                    finalizeSoulBlast();
                 });
             };
             animateEnergyBlastPath(
