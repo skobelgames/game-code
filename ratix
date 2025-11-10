@@ -10588,7 +10588,7 @@
                 updateStatus();
                 updateEndTurnButton();
                 updateGameLog();
-                removeSoulBlastSlowMo();
+                removeSoulBlastSlowMo(true); // Remove slow-mo immediately for faster resume
                 removeEnergyBlastGlow();
                 clearSoulBlastPreview();
                 resumeGameAfterSoulBlast();
