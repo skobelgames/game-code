@@ -266,7 +266,8 @@
             }
         }
         .energy-blast-path,
-        .energy-blast-residual {
+        .energy-blast-residual,
+        .soul-blast-residual {
             position: relative;
             z-index: 4;
         }
@@ -293,6 +294,30 @@
             50% {
                 opacity: 0.65;
                 box-shadow: 0 0 18px rgba(143, 212, 255, 0.8), 0 0 28px rgba(109, 204, 255, 0.35);
+            }
+        }
+        .soul-blast-residual::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid rgba(138, 43, 226, 0.95);
+            border-radius: 0;
+            box-shadow: 0 0 12px rgba(148, 0, 211, 0.9), 0 0 20px rgba(138, 43, 226, 0.45);
+            pointer-events: none;
+            z-index: 5;
+            animation: soulBlastRingPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes soulBlastRingPulse {
+            0%, 100% {
+                opacity: 1;
+                box-shadow: 0 0 12px rgba(148, 0, 211, 0.9), 0 0 20px rgba(138, 43, 226, 0.45);
+            }
+            50% {
+                opacity: 0.65;
+                box-shadow: 0 0 18px rgba(148, 0, 211, 0.8), 0 0 28px rgba(138, 43, 226, 0.35);
             }
         }
         .soul-blast-preview {
@@ -1295,11 +1320,13 @@
             opacity: 0.65;
         }
         body.soul-blast-slowmo .energy-blast-path::after,
-        body.soul-blast-slowmo .energy-blast-residual::after {
+        body.soul-blast-slowmo .energy-blast-residual::after,
+        body.soul-blast-slowmo .soul-blast-residual::after {
             animation-duration: 2.1s !important;
         }
         body.soul-blast-overlay .energy-blast-path::after,
-        body.soul-blast-overlay .energy-blast-residual::after {
+        body.soul-blast-overlay .energy-blast-residual::after,
+        body.soul-blast-overlay .soul-blast-residual::after {
             border-color: rgba(228, 149, 255, 0.95);
             box-shadow: 0 0 16px rgba(228, 149, 255, 0.95), 0 0 28px rgba(149, 92, 255, 0.5);
         }
@@ -1843,6 +1870,7 @@
 
         const ENERGY_BLAST_FLIP_COUNT = 4;
         const ENERGY_BLAST_RESIDUAL_DURATION = 6; // 3 full rounds (both players' turns)
+        const SOUL_BLAST_RESIDUAL_DURATION = 6; // 3 full rounds (both players' turns)
         const ENERGY_BLAST_STEP_PROBABILITIES = [0, 0.9375, 0.6875, 0.3125, 0.0625];
         const ENERGY_BLAST_AI_THRESHOLD = 6;
         const SACRIFICE_SUCCESS_PROBABILITY = 0.5;
@@ -2885,6 +2913,7 @@
             roundLosses[opponent] = {};
             decrementNecromancerCooldown(player);
             decayEnergyBlastResiduals(player);
+            decaySoulBlastResiduals(player);
             let turnStartHandled = false;
             const finalizeTurnStart = () => {
                 if (turnStartHandled) return;
@@ -2933,6 +2962,7 @@
         let energyBlastGlowVariant = null;
         let energyBlastGlowRemovalTimeout = null;
         let energyBlastResidualSquares = new Map();
+        let soulBlastResidualSquares = new Map();
         let energyBlastFlipPauseState = null;
         let coinTossEnergyBlastMode = null;
         let coinTossSpecialEffect = null;
@@ -5798,6 +5828,46 @@
                     square.classList.add('energy-blast-residual');
                 } else if (square.classList.contains('energy-blast-residual')) {
                     square.classList.remove('energy-blast-residual');
+                }
+            });
+        }
+
+        function addSoulBlastResidualSquares(squares) {
+            if (!squares || !squares.length) return;
+            squares.forEach(({ row, col }) => {
+                const key = `${row},${col}`;
+                soulBlastResidualSquares.set(key, SOUL_BLAST_RESIDUAL_DURATION);
+            });
+            refreshSoulBlastResidualHighlights();
+        }
+
+        function decaySoulBlastResiduals(player) {
+            if (!soulBlastResidualSquares.size) return;
+            let changed = false;
+            const updated = new Map();
+            soulBlastResidualSquares.forEach((value, key) => {
+                const next = value - 1;
+                if (next > 0) {
+                    updated.set(key, next);
+                    if (next !== value) changed = true;
+                } else {
+                    changed = true;
+                }
+            });
+            soulBlastResidualSquares = updated;
+            if (changed) {
+                refreshSoulBlastResidualHighlights();
+            }
+        }
+
+        function refreshSoulBlastResidualHighlights() {
+            const squares = document.querySelectorAll('.square');
+            squares.forEach(square => {
+                const key = `${square.dataset.row},${square.dataset.col}`;
+                if (soulBlastResidualSquares.has(key)) {
+                    square.classList.add('soul-blast-residual');
+                } else if (square.classList.contains('soul-blast-residual')) {
+                    square.classList.remove('soul-blast-residual');
                 }
             });
         }
@@ -10621,7 +10691,7 @@
                         gameLog.push('Soul Blast dissipated before claiming its target.');
                     }
                     if (animationPath.length) {
-                        addEnergyBlastResidualSquares(animationPath);
+                        addSoulBlastResidualSquares(animationPath);
                     }
                     lichSoulBlastPendingCompletion = false;
                     lichSoulBlastTargetInfo = null;
