@@ -295,6 +295,33 @@
                 box-shadow: 0 0 18px rgba(143, 212, 255, 0.8), 0 0 28px rgba(109, 204, 255, 0.35);
             }
         }
+        .soul-blast-preview {
+            position: relative;
+            z-index: 4;
+        }
+        .soul-blast-preview::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid rgba(228, 149, 255, 0.9);
+            border-radius: 0;
+            box-shadow: 0 0 18px rgba(228, 149, 255, 0.95), 0 0 24px rgba(132, 58, 255, 0.55);
+            pointer-events: none;
+            z-index: 6;
+            animation: soulBlastPreviewPulse 1.2s ease-in-out infinite;
+        }
+        @keyframes soulBlastPreviewPulse {
+            0%, 100% {
+                opacity: 0.9;
+            }
+            50% {
+                opacity: 0.55;
+                box-shadow: 0 0 26px rgba(239, 189, 255, 0.95), 0 0 34px rgba(150, 72, 255, 0.7);
+            }
+        }
         .piece-arrow {
             font-size: 12px;
             position: absolute;
@@ -1136,7 +1163,11 @@
             animation: energyBlastOverlay 6s ease-in-out infinite;
             position: relative;
         }
-        @keyframes energyBlastOverlay {
+        .energy-blast-overlay.soul-blast-overlay {
+            background: linear-gradient(135deg, #1b021f 0%, #380042 45%, #120019 100%) !important;
+            animation: soulBlastOverlay 7s ease-in-out infinite;
+        }
+@keyframes energyBlastOverlay {
             0% {
                 background-position: 0% 50%;
             }
@@ -1145,6 +1176,17 @@
             }
             100% {
                 background-position: 0% 50%;
+            }
+        }
+        @keyframes soulBlastOverlay {
+            0% {
+                background-position: 0% 0%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 100%;
             }
         }
         .energy-blast-overlay::after {
@@ -1162,7 +1204,14 @@
             z-index: 0;
             opacity: 0.4;
         }
-        @keyframes energyBlastRipple {
+        .energy-blast-overlay.soul-blast-overlay::after {
+            background: radial-gradient(circle at 25% 30%, rgba(214, 101, 255, 0.25), transparent 65%),
+                        radial-gradient(circle at 80% 10%, rgba(168, 92, 255, 0.25), transparent 55%),
+                        radial-gradient(circle at 60% 85%, rgba(116, 46, 255, 0.2), transparent 70%);
+            opacity: 0.5;
+            animation: soulBlastOverlayParticles 10s linear infinite;
+        }
+@keyframes energyBlastRipple {
             0% {
                 transform: translate3d(0, 0, 0);
                 opacity: 0.5;
@@ -1174,6 +1223,20 @@
             100% {
                 transform: translate3d(2%, 1%, 0);
                 opacity: 0.5;
+            }
+        }
+        @keyframes soulBlastOverlayParticles {
+            0% {
+                transform: scale(1) translate3d(0, 0, 0);
+                opacity: 0.45;
+            }
+            50% {
+                transform: scale(1.05) translate3d(-1%, 1%, 0);
+                opacity: 0.6;
+            }
+            100% {
+                transform: scale(1) translate3d(1%, -1%, 0);
+                opacity: 0.45;
             }
         }
         #energy-blast-popup {
@@ -1208,6 +1271,11 @@
             box-shadow: 0 0 20px #6a80ff;
             animation: energyBlastGlow 1.6s ease-in-out infinite !important;
         }
+        #board.energy-blast-glow.soul-blast-glow {
+            border-color: #c166ff !important;
+            box-shadow: 0 0 24px rgba(193, 102, 255, 0.9), 0 0 36px rgba(115, 63, 255, 0.65);
+            animation: soulBlastGlow 2s ease-in-out infinite !important;
+        }
         @keyframes energyBlastGlow {
             0% {
                 box-shadow: 0 0 10px #4b5dff;
@@ -1217,6 +1285,33 @@
             }
             100% {
                 box-shadow: 0 0 10px #4b5dff;
+            }
+        }
+        body.soul-blast-slowmo #board.energy-blast-glow {
+            animation-duration: 3.2s !important;
+        }
+        body.energy-blast-overlay.soul-blast-overlay.soul-blast-slowmo::after {
+            animation-duration: 18s !important;
+            opacity: 0.65;
+        }
+        body.soul-blast-slowmo .energy-blast-path::after,
+        body.soul-blast-slowmo .energy-blast-residual::after {
+            animation-duration: 2.1s !important;
+        }
+        body.soul-blast-overlay .energy-blast-path::after,
+        body.soul-blast-overlay .energy-blast-residual::after {
+            border-color: rgba(228, 149, 255, 0.95);
+            box-shadow: 0 0 16px rgba(228, 149, 255, 0.95), 0 0 28px rgba(149, 92, 255, 0.5);
+        }
+        @keyframes soulBlastGlow {
+            0% {
+                box-shadow: 0 0 16px rgba(193, 102, 255, 0.8), 0 0 26px rgba(115, 63, 255, 0.55);
+            }
+            50% {
+                box-shadow: 0 0 32px rgba(209, 148, 255, 0.95), 0 0 44px rgba(139, 71, 255, 0.8);
+            }
+            100% {
+                box-shadow: 0 0 16px rgba(193, 102, 255, 0.8), 0 0 26px rgba(115, 63, 255, 0.55);
             }
         }
         /* Active warcry bonus background */
@@ -1731,7 +1826,11 @@
         let pendingLichSoulBlast = null; // Tracks pending Soul Blast coin flip
         let lichSoulBlastMode = null; // Soul Blast targeting context
         let lichSoulBlastResolving = false; // Prevent inputs while blast resolves
+        let lichSoulBlastPendingCompletion = false; // True once a target must be captured
+        let lichSoulBlastTargetInfo = null; // Stores info about the current blast target
+        let soulBlastPreviewSquares = new Set(); // Squares highlighted while aiming Soul Blast
         let soulBlastPauseState = null; // Preserve timer state during Soul Blast resolution
+        let coinTossSoulBlastHold = false; // Keep game paused while Soul Blast coin flip is pending
         let moralBoostUses = { 'W': 0, 'B': 0 }; // Track Moral Boost activations
         let kingShotUsed = { 'W': false, 'B': false }; // Track King Shot usage
         let kingEvadeUsed = { 'W': false, 'B': false }; // Track King Evade usage
@@ -1743,7 +1842,7 @@
         let pausedTimers = { game: null, turn: null, turnPlayer: null }; // Store timer states when paused
 
         const ENERGY_BLAST_FLIP_COUNT = 4;
-        const ENERGY_BLAST_RESIDUAL_DURATION = 3;
+        const ENERGY_BLAST_RESIDUAL_DURATION = 6; // 3 full rounds (both players' turns)
         const ENERGY_BLAST_STEP_PROBABILITIES = [0, 0.9375, 0.6875, 0.3125, 0.0625];
         const ENERGY_BLAST_AI_THRESHOLD = 6;
         const SACRIFICE_SUCCESS_PROBABILITY = 0.5;
@@ -2383,39 +2482,44 @@
 
                     // Auto-close after a delay
                     const autoCloseDelay = isEnergyBlastFlip ? 800 : 2000;
-                    setTimeout(() => {
-                        // Close overlay and modal
-                        if (window.coinTossShowOverlay) {
-                            document.getElementById('modal-overlay').style.display = 'none';
-                        }
-                        document.getElementById('coin-toss-modal').style.display = 'none';
-
-                        // Wait for modal to be completely hidden before starting game
                         setTimeout(() => {
-                            // Execute callback which will handle game initialization
-                            if (coinTossCallback) {
-                                const callback = coinTossCallback;
-                                coinTossCallback = null;
-                                callback(result);
+                            // Close overlay and modal
+                            if (window.coinTossShowOverlay) {
+                                document.getElementById('modal-overlay').style.display = 'none';
                             }
+                            document.getElementById('coin-toss-modal').style.display = 'none';
 
-                            // Unpause game and resume timers after callback completes
-                            gamePaused = false;
-
-                            // Resume timers if they were running before the coin toss
-                            if (pausedTimers.game && gameTimeRemaining > 0) {
-                                startGameTimer();
-                            }
-                            if (pausedTimers.turn && pausedTimers.turnPlayer) {
-                                if (pausedTimers.turnPlayer === 'W' && playerTurnTimeRemaining > 0) {
-                                    startTurnTimer('W', { reset: false });
-                                } else if (pausedTimers.turnPlayer === 'B' && aiTurnTimeRemaining > 0) {
-                                    startTurnTimer('B', { reset: false });
+                            // Wait for modal to be completely hidden before starting game
+                            setTimeout(() => {
+                                // Execute callback which will handle game initialization
+                                if (coinTossCallback) {
+                                    const callback = coinTossCallback;
+                                    coinTossCallback = null;
+                                    callback(result);
                                 }
-                            }
-                            pausedTimers = { game: null, turn: null, turnPlayer: null };
-                        }, 300);
-                    }, autoCloseDelay);
+
+                                const skipResume = coinTossSoulBlastHold;
+                                if (skipResume) {
+                                    coinTossSoulBlastHold = false;
+                                } else {
+                                    // Unpause game and resume timers after callback completes
+                                    gamePaused = false;
+
+                                    // Resume timers if they were running before the coin toss
+                                    if (pausedTimers.game && gameTimeRemaining > 0) {
+                                        startGameTimer();
+                                    }
+                                    if (pausedTimers.turn && pausedTimers.turnPlayer) {
+                                        if (pausedTimers.turnPlayer === 'W' && playerTurnTimeRemaining > 0) {
+                                            startTurnTimer('W', { reset: false });
+                                        } else if (pausedTimers.turnPlayer === 'B' && aiTurnTimeRemaining > 0) {
+                                            startTurnTimer('B', { reset: false });
+                                        }
+                                    }
+                                }
+                                pausedTimers = { game: null, turn: null, turnPlayer: null };
+                            }, 300);
+                        }, autoCloseDelay);
                 }, showDelay);
             }, 2000);
         }
@@ -2603,6 +2707,13 @@
             kingEvadeMode = null;
             pendingLichSoulBlast = null;
             lichSoulBlastMode = null;
+            clearSoulBlastPreview();
+            lichSoulBlastResolving = false;
+            lichSoulBlastPendingCompletion = false;
+            lichSoulBlastTargetInfo = null;
+            soulBlastPauseState = null;
+            removeSoulBlastSlowMo(true);
+            resumeGameAfterSoulBlast();
             archerMoveDiagStart = null;
             const turnModalEl = document.getElementById('turn-modal');
             if (turnModalEl) turnModalEl.style.display = 'none';
@@ -2819,11 +2930,14 @@
         let pendingEnergyBlast = null;
         let activeEnergyBlastCost = null;
         let energyBlastGlowActive = false;
+        let energyBlastGlowVariant = null;
+        let energyBlastGlowRemovalTimeout = null;
         let energyBlastResidualSquares = new Map();
         let energyBlastFlipPauseState = null;
         let coinTossEnergyBlastMode = null;
         let coinTossSpecialEffect = null;
         let pendingAiEnergyBlastResume = null;
+        let soulBlastSlowMoTimeout = null;
         let activeControlButton = null;
         let mercenaryBonusHighlight = null;
         let protectionUsed = { 'W': false, 'B': false };
@@ -3087,7 +3201,7 @@
         }
 
         function resolveLichCaptureAttempt({ attackerType, attackerPlayer, targetRow, targetCol, actionLabel }) {
-            if (!attackerType || LICH_CAPTURE_AUTO_TYPES.has(attackerType)) {
+            if (!attackerType || LICH_CAPTURE_AUTO_TYPES.has(attackerType) || actionLabel === 'Soul Blast') {
                 return true;
             }
             const playerLabel = attackerPlayer === 'W' ? 'Player' : getOpponentDisplayName();
@@ -5255,14 +5369,18 @@
         function applyCoinFlipSuccessEffect(theme = null) {
             const boardDiv = document.getElementById('board');
             if (!boardDiv) return;
-            const effectClass = theme === 'energy-blast' ? 'coin-flip-success-energy' : 'coin-flip-success';
+            const energyTheme = theme === 'energy-blast' || theme === 'lich-soul-blast';
+            const effectClass = energyTheme ? 'coin-flip-success-energy' : 'coin-flip-success';
             boardDiv.classList.remove('coin-flip-success', 'coin-flip-success-energy');
             boardDiv.classList.add(effectClass);
 
-            // Apply purple body overlay for energy blast theme
+            // Apply purple body overlay for energy blast or Soul Blast themed success
             const body = document.body;
-            if (theme === 'energy-blast' && body) {
+            if (energyTheme && body) {
                 body.classList.add('energy-blast-overlay');
+                if (theme === 'lich-soul-blast') {
+                    body.classList.add('soul-blast-overlay');
+                }
             }
 
             let cleanupApplied = false;
@@ -5271,14 +5389,16 @@
                 if (cleanupApplied) return;
                 cleanupApplied = true;
                 boardDiv.classList.remove(effectClass);
-                // For energy blast, only remove overlay if energy blast glow is not active
-                // This allows seamless transition from activation to energy blast mode
-                if (theme === 'energy-blast' && body && !energyBlastGlowActive) {
+                // For energy/soul blast theme, only remove overlay if energy blast glow is not active
+                if (energyTheme && body && !energyBlastGlowActive) {
                     body.classList.remove('energy-blast-overlay');
+                    if (theme === 'lich-soul-blast') {
+                        body.classList.remove('soul-blast-overlay');
+                    }
                 }
             };
 
-            if (theme === 'energy-blast') {
+            if (energyTheme) {
                 const settleDelay = 400;
                 const pollInterval = 120;
                 const minDuration = 3400;
@@ -5401,37 +5521,93 @@
             pausedTimers = { game: null, turn: null, turnPlayer: null };
         }
 
-        function applyEnergyBlastGlow() {
+        function applyEnergyBlastGlow(options = {}) {
+            const variant = options.variant || 'energy';
+            if (energyBlastGlowRemovalTimeout) {
+                clearTimeout(energyBlastGlowRemovalTimeout);
+                energyBlastGlowRemovalTimeout = null;
+            }
             const board = document.getElementById('board');
             if (board) {
                 board.classList.add('energy-blast-glow');
+                if (variant === 'soul-blast') {
+                    board.classList.add('soul-blast-glow');
+                } else {
+                    board.classList.remove('soul-blast-glow');
+                }
             }
             const body = document.body;
             if (body) {
                 body.classList.add('energy-blast-overlay');
+                if (variant === 'soul-blast') {
+                    body.classList.add('soul-blast-overlay');
+                } else {
+                    body.classList.remove('soul-blast-overlay');
+                }
             }
+            energyBlastGlowVariant = variant;
             energyBlastGlowActive = true;
+        }
+        function applySoulBlastSlowMo() {
+            if (soulBlastSlowMoTimeout) {
+                clearTimeout(soulBlastSlowMoTimeout);
+                soulBlastSlowMoTimeout = null;
+            }
+            const body = document.body;
+            if (body) {
+                body.classList.add('soul-blast-slowmo');
+            }
+        }
+
+        function removeSoulBlastSlowMo(immediate = false) {
+            if (!immediate) {
+                if (soulBlastSlowMoTimeout) {
+                    clearTimeout(soulBlastSlowMoTimeout);
+                }
+                soulBlastSlowMoTimeout = setTimeout(() => removeSoulBlastSlowMo(true), 900);
+                return;
+            }
+            const body = document.body;
+            if (body) {
+                body.classList.remove('soul-blast-slowmo');
+            }
+            if (soulBlastSlowMoTimeout) {
+                clearTimeout(soulBlastSlowMoTimeout);
+            }
+            soulBlastSlowMoTimeout = null;
         }
 
         function removeEnergyBlastGlow() {
             if (!energyBlastGlowActive) return;
+            if (energyBlastGlowRemovalTimeout) {
+                clearTimeout(energyBlastGlowRemovalTimeout);
+                energyBlastGlowRemovalTimeout = null;
+            }
             const board = document.getElementById('board');
             if (board) {
                 board.classList.remove('energy-blast-glow');
+                board.classList.remove('soul-blast-glow');
             }
             const body = document.body;
             if (body) {
                 body.classList.remove('energy-blast-overlay');
+                body.classList.remove('soul-blast-overlay');
             }
+            energyBlastGlowVariant = null;
             energyBlastGlowActive = false;
         }
 
-        function showEnergyBlastPopup(callback = () => {}) {
+        function showEnergyBlastPopup(callback = () => {}, options = {}) {
+            const { title = 'ENERGY BLAST', subtitle = 'Spell Unleashed', keepPaused = false } = options;
             const modal = document.getElementById('energy-blast-popup');
             if (!modal) {
                 callback();
                 return;
             }
+            const titleEl = modal.querySelector('h1');
+            const subtitleEl = modal.querySelector('p');
+            if (titleEl) titleEl.textContent = title;
+            if (subtitleEl) subtitleEl.textContent = subtitle;
             pausedTimers.game = gameTimerInterval;
             pausedTimers.turn = turnTimerInterval;
             pausedTimers.turnPlayer = currentTurnTimerPlayer;
@@ -5441,18 +5617,20 @@
             modal.style.display = 'block';
             setTimeout(() => {
                 modal.style.display = 'none';
-                if (pausedTimers.game && gameTimeRemaining > 0) {
-                    startGameTimer();
-                }
-                if (pausedTimers.turn && pausedTimers.turnPlayer) {
-                    if (pausedTimers.turnPlayer === 'W' && playerTurnTimeRemaining > 0) {
-                        startTurnTimer('W', { reset: false });
-                    } else if (pausedTimers.turnPlayer === 'B' && aiTurnTimeRemaining > 0) {
-                        startTurnTimer('B', { reset: false });
+                if (!keepPaused) {
+                    if (pausedTimers.game && gameTimeRemaining > 0) {
+                        startGameTimer();
                     }
+                    if (pausedTimers.turn && pausedTimers.turnPlayer) {
+                        if (pausedTimers.turnPlayer === 'W' && playerTurnTimeRemaining > 0) {
+                            startTurnTimer('W', { reset: false });
+                        } else if (pausedTimers.turnPlayer === 'B' && aiTurnTimeRemaining > 0) {
+                            startTurnTimer('B', { reset: false });
+                        }
+                    }
+                    gamePaused = false;
                 }
                 pausedTimers = { game: null, turn: null, turnPlayer: null };
-                gamePaused = false;
                 callback();
             }, 2000);
         }
@@ -5524,6 +5702,17 @@
             }
         }
 
+        function restoreSoulBlastInteractionState() {
+            const overlay = document.getElementById('modal-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+            if (gamePaused) {
+                gamePaused = false;
+            }
+            pausedTimers = { game: null, turn: null, turnPlayer: null };
+        }
+
         function pauseGameForHuntsmanBurst() {
             if (!huntsmanBurstPauseState) {
                 huntsmanBurstPauseState = {
@@ -5584,7 +5773,6 @@
 
         function decayEnergyBlastResiduals(player) {
             if (!energyBlastResidualSquares.size) return;
-            if (player && player !== 'W') return;
             let changed = false;
             const updated = new Map();
             energyBlastResidualSquares.forEach((value, key) => {
@@ -5614,7 +5802,19 @@
             });
         }
 
-        function animateEnergyBlastPath(pathSquares, callback) {
+        function refreshSoulBlastPreviewHighlights() {
+            const squares = document.querySelectorAll('.square');
+            squares.forEach(square => {
+                const key = `${square.dataset.row},${square.dataset.col}`;
+                if (soulBlastPreviewSquares.has(key)) {
+                    square.classList.add('soul-blast-preview');
+                } else if (square.classList.contains('soul-blast-preview')) {
+                    square.classList.remove('soul-blast-preview');
+                }
+            });
+        }
+
+        function animateEnergyBlastPath(pathSquares, callback, options = {}) {
             if (!pathSquares || !pathSquares.length) {
                 callback();
                 return;
@@ -5627,7 +5827,8 @@
                 gamePaused = true;
             }
             const highlighted = [];
-            const stepDuration = 220;
+            const stepDuration = options.stepDuration || 220;
+            const finalDelay = options.finalDelay !== undefined ? options.finalDelay : stepDuration;
 
             const removeHighlights = () => {
                 highlighted.forEach(el => el.classList.remove('energy-blast-path'));
@@ -5652,7 +5853,7 @@
 
             const highlightStep = (index) => {
                 if (index >= pathSquares.length) {
-                    setTimeout(() => finishAnimation(), stepDuration);
+                    setTimeout(() => finishAnimation(), finalDelay);
                     return;
                 }
                 const { row, col } = pathSquares[index];
@@ -5752,6 +5953,9 @@
                     if (energyBlastResidualSquares.has(squareKey)) {
                         square.classList.add('energy-blast-residual');
                     }
+                    if (soulBlastPreviewSquares.has(squareKey)) {
+                        square.classList.add('soul-blast-preview');
+                    }
                     square.addEventListener('click', () => handleClick(r, c));
                     boardDiv.appendChild(square);
                     if (currentPlayer === 'B' && highlightSquares.some(([hr, hc]) => hr == r && hc == c)) {
@@ -5764,6 +5968,7 @@
             updateScoreDisplay();
             updateEndTurnButton();
             refreshEnergyBlastResidualHighlights();
+            refreshSoulBlastPreviewHighlights();
             // Apply capture effects after rendering
             capturedSquares.forEach(([r, c]) => addCaptureEffect(r, c));
             capturedSquares = [];
@@ -6991,6 +7196,10 @@
                 onResolve(true);
                 return 'resolved';
             }
+            if (ability === 'Soul Blast') {
+                onResolve(true);
+                return 'resolved';
+            }
             const targetPiece = board[targetRow]?.[targetCol];
             if (!targetPiece || targetPiece.type !== 'King') {
                 onResolve(true);
@@ -8053,7 +8262,7 @@
         function handleClick(row, col) {
             const huntsmanSelectionActive = !!(huntsmanBurstMode && selectedPiece && selectedPiece.row === huntsmanBurstMode.row && selectedPiece.col === huntsmanBurstMode.col);
             if (gameOver || currentPlayer !== 'W' || reinforcementPending || zombieAutoAdvanceInProgress) return;
-            if ((gamePaused || lichSoulBlastResolving) && !huntsmanSelectionActive) return;
+            if ((gamePaused || lichSoulBlastResolving) && !huntsmanSelectionActive && !lichSoulBlastMode) return;
             const piece = board[row][col];
 
             if (isAnySpecialModeActive() && !huntsmanSelectionActive) {
@@ -8870,17 +9079,24 @@
                 if (move) {
                     const summonType = move.summonType;
                     const source = championSummonMode.source || selectedPiece;
+                    const expectedOwner = championSummonMode.player || null;
                     const fromRow = source.row;
                     const fromCol = source.col;
                     const champion = board[fromRow]?.[fromCol];
                     championSummonMode = null;
-                    if (!champion || champion.type !== 'Champion' || champion.player !== currentPlayer) {
+                    if (!champion || champion.type !== 'Champion') {
                         validMoves = [];
                         selectedPiece = null;
                         renderBoard();
                         return;
                     }
                     const championOwner = champion.player;
+                    if ((expectedOwner && championOwner !== expectedOwner) || championOwner !== currentPlayer) {
+                        validMoves = [];
+                        selectedPiece = null;
+                        renderBoard();
+                        return;
+                    }
                     movesLeft = Math.max(0, movesLeft - move.cost);
                     updateStatus();
                     updateEndTurnButton();
@@ -8941,11 +9157,19 @@
                 if (move) {
                     const summonType = move.summonType;
                     const source = necromancerSummonMode.source || selectedPiece;
+                    const expectedPlayer = necromancerSummonMode.player || null;
                     const fromRow = source.row;
                     const fromCol = source.col;
                     const necromancer = board[fromRow]?.[fromCol];
                     necromancerSummonMode = null;
-                    if (!necromancer || necromancer.type !== 'Necromancer' || necromancer.player !== currentPlayer) {
+                    if (!necromancer || necromancer.type !== 'Necromancer') {
+                        validMoves = [];
+                        selectedPiece = null;
+                        renderBoard();
+                        return;
+                    }
+                    const necromancerOwner = necromancer.player;
+                    if ((expectedPlayer && necromancerOwner !== expectedPlayer) || necromancerOwner !== currentPlayer) {
                         validMoves = [];
                         selectedPiece = null;
                         renderBoard();
@@ -8960,7 +9184,7 @@
                     validMoves = [];
                     showPieceInfo(null);
                     renderBoard();
-                    const playerLabel = currentPlayer === 'W' ? 'Player' : getOpponentDisplayName();
+                    const playerLabel = necromancerOwner === 'W' ? 'Player' : getOpponentDisplayName();
                     const label = summonType === 'spectre' ? 'Spectre' : (summonType === 'lich' ? 'Lich' : 'Zombie');
                     performCoinToss(
                         `Summon ${label}`,
@@ -8969,17 +9193,17 @@
                             if (success) {
                                 if (!board[targetRow][targetCol]) {
                                     if (summonType === 'spectre') {
-                                        board[targetRow][targetCol] = { type: 'Spectre', player: currentPlayer };
-                                        spectresSummoned[currentPlayer]++;
+                                        board[targetRow][targetCol] = { type: 'Spectre', player: necromancerOwner };
+                                        spectresSummoned[necromancerOwner]++;
                                     } else if (summonType === 'lich') {
-                                        board[targetRow][targetCol] = { type: 'Lich', player: currentPlayer };
-                                        lichesSummoned[currentPlayer]++;
+                                        board[targetRow][targetCol] = { type: 'Lich', player: necromancerOwner };
+                                        lichesSummoned[necromancerOwner]++;
                                     } else {
-                                        const zombiePiece = createZombiePiece(currentPlayer);
+                                        const zombiePiece = createZombiePiece(necromancerOwner);
                                         board[targetRow][targetCol] = zombiePiece;
-                                        zombiesSummoned[currentPlayer] = (zombiesSummoned[currentPlayer] || 0) + 1;
+                                        zombiesSummoned[necromancerOwner] = (zombiesSummoned[necromancerOwner] || 0) + 1;
                                     }
-                                    gameStats.summonCount[currentPlayer]++;
+                                    gameStats.summonCount[necromancerOwner]++;
                                     gameLog.push(`${playerLabel} summoned a ${label} at (${targetRow},${targetCol}).`);
                                 } else {
                                     gameLog.push(`${playerLabel}'s ${label} summon succeeded but the chosen square was occupied.`);
@@ -8994,7 +9218,7 @@
                             updateEndTurnButton();
                             updateGameLog();
                             checkGameOver();
-                            if (movesLeft === 0 && !reinforcementPending) {
+                            if (movesLeft === 0 && !reinforcementPending && currentPlayer === 'W') {
                                 triggerAiTurn();
                             }
                         },
@@ -9674,14 +9898,15 @@
             }
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (!piece || piece.type !== 'Champion' || (gameVariant !== '36s-elite' && gameVariant !== '36s-supreme')) return;
+            const owner = piece.player;
             if (type === 'Necromancer') {
-                if (!canChampionSummonNecromancer(currentPlayer)) {
+                if (!canChampionSummonNecromancer(owner)) {
                     gameLog.push('No Necromancer summons remaining.');
                     updateGameLog();
                     return;
                 }
             } else if (type === 'Huntsman') {
-                if (!canChampionSummonHuntsman(currentPlayer)) {
+                if (!canChampionSummonHuntsman(owner)) {
                     gameLog.push('No Huntsman summons remaining.');
                     updateGameLog();
                     return;
@@ -9689,12 +9914,12 @@
             } else {
                 return;
             }
-            if (!hasBackRowSpawnSlot(currentPlayer)) {
+            if (!hasBackRowSpawnSlot(owner)) {
                 gameLog.push('No open squares on the back row to summon a unit.');
                 updateGameLog();
                 return;
             }
-            const backRow = currentPlayer === 'W' ? ROWS - 1 : 0;
+            const backRow = getBackRow(owner);
             const options = [];
             for (let c = 0; c < COLS; c++) {
                 if (!board[backRow][c]) {
@@ -9706,7 +9931,7 @@
                 updateGameLog();
                 return;
             }
-            championSummonMode = { type, source: { row: selectedPiece.row, col: selectedPiece.col } };
+            championSummonMode = { type, player: owner, source: { row: selectedPiece.row, col: selectedPiece.col } };
             const fallbackId = type === 'Huntsman' ? 'champion-summon-huntsman-button' : 'champion-summon-necro-button';
             setActiveControlButton(button || document.getElementById(fallbackId));
             validMoves = options;
@@ -9728,28 +9953,29 @@
             }
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (!piece || piece.type !== 'Necromancer' || (gameVariant !== '36s-elite' && gameVariant !== '36s-supreme')) return;
+            const owner = piece.player;
             const isZombieSummon = type === 'zombie';
             const isSpectreSummon = type === 'spectre';
             const isLichSummon = type === 'lich';
             if (!isZombieSummon && !isSpectreSummon && !isLichSummon) return;
             if (isZombieSummon) {
-                const maxZombies = getMaxZombies(currentPlayer);
-                if ((zombiesSummoned[currentPlayer] || 0) >= maxZombies) {
+                const maxZombies = getMaxZombies(owner);
+                if ((zombiesSummoned[owner] || 0) >= maxZombies) {
                     gameLog.push('Zombie limit reached. Cannot summon more.');
                     updateGameLog();
                     return;
                 }
-            } else if (isSpectreSummon && spectresSummoned[currentPlayer] >= 2) {
+            } else if (isSpectreSummon && spectresSummoned[owner] >= 2) {
                 gameLog.push('Spectre limit reached. Cannot summon more.');
                 updateGameLog();
                 return;
             } else if (isLichSummon) {
-                if (lichesSummoned[currentPlayer] >= LICH_SUMMON_LIMIT) {
+                if (lichesSummoned[owner] >= LICH_SUMMON_LIMIT) {
                     gameLog.push('Lich already conjured.');
                     updateGameLog();
                     return;
                 }
-                const souls = (capturedPieces[currentPlayer] || []).length;
+                const souls = (capturedPieces[owner] || []).length;
                 if (souls < LICH_SUMMON_SOUL_THRESHOLD) {
                     const needed = LICH_SUMMON_SOUL_THRESHOLD - souls;
                     const captureLabel = needed === 1 ? 'one more captured enemy piece' : `${needed} more captured enemy pieces`;
@@ -9777,12 +10003,12 @@
                     return;
                 }
             } else {
-                if (!hasBackRowSpawnSlot(currentPlayer)) {
+                if (!hasBackRowSpawnSlot(owner)) {
                     gameLog.push('No open squares on the back row to place a summon.');
                     updateGameLog();
                     return;
                 }
-                const backRow = currentPlayer === 'W' ? ROWS - 1 : 0;
+                const backRow = getBackRow(owner);
                 for (let c = 0; c < COLS; c++) {
                     if (!board[backRow][c]) {
                         options.push({ type: 'summon', pos: [backRow, c], cost: 2, special: 'necromancerSummon', summonType: type });
@@ -9794,7 +10020,7 @@
                     return;
                 }
             }
-            necromancerSummonMode = { type, source: { row: selectedPiece.row, col: selectedPiece.col } };
+            necromancerSummonMode = { type, player: owner, source: { row: selectedPiece.row, col: selectedPiece.col } };
             const fallbackId = type === 'spectre'
                 ? 'necromancer-summon-spectre-button'
                 : type === 'lich'
@@ -10180,6 +10406,41 @@
             return path;
         }
 
+        function updateSoulBlastPreview(originRow, originCol, targetMoves = []) {
+            soulBlastPreviewSquares.clear();
+            if (!Number.isInteger(originRow) || !Number.isInteger(originCol) || !targetMoves?.length) {
+                refreshSoulBlastPreviewHighlights();
+                return;
+            }
+            targetMoves.forEach(move => {
+                if (!move || move.special !== 'lichSoulBlast' || !move.pos) return;
+                const [targetRow, targetCol] = move.pos;
+                const path = getSoulBlastPath(originRow, originCol, targetRow, targetCol);
+                path.forEach(({ row, col }) => {
+                    soulBlastPreviewSquares.add(`${row},${col}`);
+                });
+            });
+            refreshSoulBlastPreviewHighlights();
+        }
+
+        function clearSoulBlastPreview() {
+            if (!soulBlastPreviewSquares.size) return;
+            soulBlastPreviewSquares.clear();
+            refreshSoulBlastPreviewHighlights();
+        }
+
+        function lockSoulBlastPreviewToPath(pathSquares = []) {
+            soulBlastPreviewSquares.clear();
+            if (!pathSquares || !pathSquares.length) {
+                refreshSoulBlastPreviewHighlights();
+                return;
+            }
+            pathSquares.forEach(({ row, col }) => {
+                soulBlastPreviewSquares.add(`${row},${col}`);
+            });
+            refreshSoulBlastPreviewHighlights();
+        }
+
         function activateLichSoulBlast(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move) return;
             if (isAnySpecialModeActive()) return;
@@ -10213,22 +10474,29 @@
             gameLog.push('Channeling Soul Blast (2 move points spent).');
             updateGameLog();
             coinTossSpecialEffect = 'lich-soul-blast';
+            pauseGameForSoulBlast();
+            coinTossSoulBlastHold = true;
             performCoinToss(
                 'Soul Blast',
                 'Attempting to channel captured souls...',
                 (success) => {
                     const context = pendingLichSoulBlast;
                     pendingLichSoulBlast = null;
-                    if (!context) return;
+                    if (!context) {
+                        resumeGameAfterSoulBlast();
+                        return;
+                    }
                     const currentPiece = board[context.row]?.[context.col];
                     if (!success) {
                         gameLog.push('Soul Blast fizzled before it could be unleashed.');
                         updateGameLog();
                         clearActiveControlButton(context.button);
+                        resumeGameAfterSoulBlast();
                         return;
                     }
                     if (!currentPiece || currentPiece.player !== currentPlayer || currentPiece.type !== 'Lich') {
                         clearActiveControlButton(context.button);
+                        resumeGameAfterSoulBlast();
                         return;
                     }
                     const availableTargets = getLichSoulBlastTargets(context.row, context.col, context.range);
@@ -10236,18 +10504,25 @@
                         gameLog.push('No valid Soul Blast targets remained.');
                         updateGameLog();
                         clearActiveControlButton(context.button);
+                        clearSoulBlastPreview();
                         renderBoard();
                         updateStatus();
                         updateEndTurnButton();
+                        resumeGameAfterSoulBlast();
                         return;
                     }
-                    lichSoulBlastMode = { row: context.row, col: context.col, range: context.range, button: context.button };
-                    setActiveControlButton(context.button);
-                    selectedPiece = { row: context.row, col: context.col };
-                    validMoves = availableTargets;
-                    gameLog.push('Soul Blast is ready — select a target square.');
-                    updateGameLog();
-                    renderBoard();
+                    const prepareSoulBlastTargeting = () => {
+                        lichSoulBlastMode = { row: context.row, col: context.col, range: context.range, button: context.button };
+                        setActiveControlButton(context.button);
+                        selectedPiece = { row: context.row, col: context.col };
+                        validMoves = availableTargets;
+                        updateSoulBlastPreview(context.row, context.col, availableTargets);
+                        gameLog.push('Soul Blast is ready - select a target square.');
+                        updateGameLog();
+                        renderBoard();
+                    };
+                    applyEnergyBlastGlow({ variant: 'soul-blast' });
+                    showEnergyBlastPopup(prepareSoulBlastTargeting, { title: 'SOUL BLAST', subtitle: 'Spell Unleashed', keepPaused: true });
                 },
                 false,
                 false
@@ -10266,18 +10541,23 @@
                 cancelSpecialModes({ resetSelection: true });
                 return;
             }
+            const originKey = `${originRow},${originCol}`;
+            movedPieces.add(originKey);
             const targetPiece = board[row]?.[col];
             if (!targetPiece || targetPiece.player === piece.player) {
                 lichSoulBlastMode = null;
                 clearActiveControlButton(button);
                 selectedPiece = null;
                 validMoves = [];
+                clearSoulBlastPreview();
                 showPieceInfo(null);
                 renderBoard();
                 updateStatus();
                 updateEndTurnButton();
                 gameLog.push('Soul Blast target was no longer valid.');
                 updateGameLog();
+                lichSoulBlastPendingCompletion = false;
+                lichSoulBlastTargetInfo = null;
                 return;
             }
             lichSoulBlastMode = null;
@@ -10292,8 +10572,18 @@
             }];
             const pathSquares = getSoulBlastPath(originRow, originCol, row, col);
             const animationPath = pathSquares.length ? pathSquares : [{ row, col }];
+            lichSoulBlastPendingCompletion = true;
+            lichSoulBlastTargetInfo = { row, col, type: targetPiece.type };
+            lockSoulBlastPreviewToPath(animationPath);
+            selectedPiece = null;
+            validMoves = [];
+            showPieceInfo(null);
+            renderBoard();
+            updateStatus();
+            updateEndTurnButton();
             pauseGameForSoulBlast();
-            applyEnergyBlastGlow();
+            applyEnergyBlastGlow({ variant: 'soul-blast' });
+            applySoulBlastSlowMo();
             lichSoulBlastResolving = true;
             const finalize = () => {
                 clearActiveControlButton(button);
@@ -10306,8 +10596,11 @@
                 updateStatus();
                 updateEndTurnButton();
                 updateGameLog();
+                removeSoulBlastSlowMo();
                 removeEnergyBlastGlow();
+                clearSoulBlastPreview();
                 resumeGameAfterSoulBlast();
+                restoreSoulBlastInteractionState();
                 lichSoulBlastResolving = false;
                 checkGameOver();
                 if (movesLeft === 0 && !reinforcementPending) {
@@ -10316,18 +10609,32 @@
             };
             const resolveTargets = () => {
                 resolveSpellTargetsSequentially(targets, piece.player, 'Soul Blast', (capturesHit) => {
-                    if (capturesHit === 0) {
-                        gameLog.push('Soul Blast was negated or the target was protected.');
+                    if (capturesHit > 0) {
+                        applySoulBlastSlowMo();
+                        const details = lichSoulBlastTargetInfo;
+                        if (details) {
+                            gameLog.push(`Soul Blast completed: the Lich captured ${details.type} at (${details.row},${details.col}).`);
+                        } else {
+                            gameLog.push('Soul Blast completed: the Lich captured its target.');
+                        }
+                    } else if (lichSoulBlastPendingCompletion) {
+                        gameLog.push('Soul Blast dissipated before claiming its target.');
                     }
                     if (animationPath.length) {
                         addEnergyBlastResidualSquares(animationPath);
                     }
+                    lichSoulBlastPendingCompletion = false;
+                    lichSoulBlastTargetInfo = null;
                     finalize();
                 });
             };
-            animateEnergyBlastPath(animationPath, () => {
-                resolveTargets();
-            });
+            animateEnergyBlastPath(
+                animationPath,
+                () => {
+                    resolveTargets();
+                },
+                { stepDuration: 420, finalDelay: 700 }
+            );
         }
 
         function getValidTeleportSwapMoves(row, col) {
@@ -10483,7 +10790,7 @@
         function handleClick(row, col) {
             const huntsmanSelectionActive = !!(huntsmanBurstMode && selectedPiece && selectedPiece.row === huntsmanBurstMode.row && selectedPiece.col === huntsmanBurstMode.col);
             if (gameOver || currentPlayer !== 'W' || reinforcementPending || zombieAutoAdvanceInProgress) return;
-            if (gamePaused && !huntsmanSelectionActive) return;
+            if (gamePaused && !huntsmanSelectionActive && !lichSoulBlastMode) return;
             const piece = board[row][col];
 
             if (isAnySpecialModeActive() && !huntsmanSelectionActive) {
@@ -11212,27 +11519,34 @@
                 return;
             }
 
-            // Handle Champion summon targeting
-            if (championSummonMode && selectedPiece) {
-                const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.special === 'championSummon');
-                if (move) {
-                    const summonType = move.summonType;
-                    const source = championSummonMode.source || selectedPiece;
-                    const fromRow = source.row;
-                    const fromCol = source.col;
-                    const champion = board[fromRow]?.[fromCol];
-                    championSummonMode = null;
-                    if (!champion || champion.type !== 'Champion' || champion.player !== currentPlayer) {
-                        validMoves = [];
-                        selectedPiece = null;
-                        renderBoard();
-                        return;
-                    }
-                    const championOwner = champion.player;
-                    movesLeft = Math.max(0, movesLeft - move.cost);
-                    updateStatus();
-                    updateEndTurnButton();
-                    const targetRow = move.pos[0];
+        // Handle Champion summon targeting
+        if (championSummonMode && selectedPiece) {
+            const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.special === 'championSummon');
+            if (move) {
+                const summonType = move.summonType;
+                const source = championSummonMode.source || selectedPiece;
+                const expectedOwner = championSummonMode.player || null;
+                const fromRow = source.row;
+                const fromCol = source.col;
+                const champion = board[fromRow]?.[fromCol];
+                championSummonMode = null;
+                if (!champion || champion.type !== 'Champion') {
+                    validMoves = [];
+                    selectedPiece = null;
+                    renderBoard();
+                    return;
+                }
+                const championOwner = champion.player;
+                if ((expectedOwner && championOwner !== expectedOwner) || championOwner !== currentPlayer) {
+                    validMoves = [];
+                    selectedPiece = null;
+                    renderBoard();
+                    return;
+                }
+                movesLeft = Math.max(0, movesLeft - move.cost);
+                updateStatus();
+                updateEndTurnButton();
+                const targetRow = move.pos[0];
                     const targetCol = move.pos[1];
                     selectedPiece = null;
                     validMoves = [];
@@ -11283,69 +11597,77 @@
                 return;
             }
 
-            // Handle Necromancer summon targeting
-            if (necromancerSummonMode && selectedPiece) {
-                const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.special === 'necromancerSummon');
-                if (move) {
-                    const summonType = move.summonType;
-                    const source = necromancerSummonMode.source || selectedPiece;
-                    const fromRow = source.row;
-                    const fromCol = source.col;
-                    const necromancer = board[fromRow]?.[fromCol];
-                    necromancerSummonMode = null;
-                    if (!necromancer || necromancer.type !== 'Necromancer' || necromancer.player !== currentPlayer) {
-                        validMoves = [];
-                        selectedPiece = null;
-                        renderBoard();
-                        return;
-                    }
-                    movesLeft = Math.max(0, movesLeft - move.cost);
-                    updateStatus();
-                    updateEndTurnButton();
-                    const targetRow = move.pos[0];
-                    const targetCol = move.pos[1];
+        // Handle Necromancer summon targeting
+        if (necromancerSummonMode && selectedPiece) {
+            const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.special === 'necromancerSummon');
+            if (move) {
+                const summonType = move.summonType;
+                const source = necromancerSummonMode.source || selectedPiece;
+                const expectedPlayer = necromancerSummonMode.player || null;
+                const fromRow = source.row;
+                const fromCol = source.col;
+                const necromancer = board[fromRow]?.[fromCol];
+                necromancerSummonMode = null;
+                if (!necromancer || necromancer.type !== 'Necromancer') {
+                    validMoves = [];
+                    selectedPiece = null;
+                    renderBoard();
+                    return;
+                }
+                const necromancerOwner = necromancer.player;
+                if ((expectedPlayer && necromancerOwner !== expectedPlayer) || necromancerOwner !== currentPlayer) {
+                    validMoves = [];
+                    selectedPiece = null;
+                    renderBoard();
+                    return;
+                }
+                movesLeft = Math.max(0, movesLeft - move.cost);
+                updateStatus();
+                updateEndTurnButton();
+                const targetRow = move.pos[0];
+                const targetCol = move.pos[1];
                     selectedPiece = null;
                     validMoves = [];
                     showPieceInfo(null);
                     renderBoard();
-                    const playerLabel = currentPlayer === 'W' ? 'Player' : getOpponentDisplayName();
-                    const label = summonType === 'spectre' ? 'Spectre' : (summonType === 'lich' ? 'Lich' : 'Zombie');
-                    performCoinToss(
-                        `Summon ${label}`,
-                        `${playerLabel} attempts to summon a ${label}...`,
-                        (success) => {
-                            if (success) {
-                                if (!board[targetRow][targetCol]) {
-                                    if (summonType === 'spectre') {
-                                        board[targetRow][targetCol] = { type: 'Spectre', player: currentPlayer };
-                                        spectresSummoned[currentPlayer]++;
-                                    } else if (summonType === 'lich') {
-                                        board[targetRow][targetCol] = { type: 'Lich', player: currentPlayer };
-                                        lichesSummoned[currentPlayer]++;
-                                    } else {
-                                        const zombiePiece = createZombiePiece(currentPlayer);
-                                        board[targetRow][targetCol] = zombiePiece;
-                                        zombiesSummoned[currentPlayer] = (zombiesSummoned[currentPlayer] || 0) + 1;
-                                    }
-                                    gameStats.summonCount[currentPlayer]++;
-                                    gameLog.push(`${playerLabel} summoned a ${label} at (${targetRow},${targetCol}).`);
+                const playerLabel = necromancerOwner === 'W' ? 'Player' : getOpponentDisplayName();
+                const label = summonType === 'spectre' ? 'Spectre' : (summonType === 'lich' ? 'Lich' : 'Zombie');
+                performCoinToss(
+                    `Summon ${label}`,
+                    `${playerLabel} attempts to summon a ${label}...`,
+                    (success) => {
+                        if (success) {
+                            if (!board[targetRow][targetCol]) {
+                                if (summonType === 'spectre') {
+                                    board[targetRow][targetCol] = { type: 'Spectre', player: necromancerOwner };
+                                    spectresSummoned[necromancerOwner]++;
+                                } else if (summonType === 'lich') {
+                                    board[targetRow][targetCol] = { type: 'Lich', player: necromancerOwner };
+                                    lichesSummoned[necromancerOwner]++;
                                 } else {
-                                    gameLog.push(`${playerLabel}'s ${label} summon succeeded but the chosen square was occupied.`);
+                                    const zombiePiece = createZombiePiece(necromancerOwner);
+                                    board[targetRow][targetCol] = zombiePiece;
+                                    zombiesSummoned[necromancerOwner] = (zombiesSummoned[necromancerOwner] || 0) + 1;
                                 }
+                                gameStats.summonCount[necromancerOwner]++;
+                                gameLog.push(`${playerLabel} summoned a ${label} at (${targetRow},${targetCol}).`);
                             } else {
+                                gameLog.push(`${playerLabel}'s ${label} summon succeeded but the chosen square was occupied.`);
+                            }
+                        } else {
                                 gameLog.push(`${playerLabel} failed to summon a ${label}.`);
                             }
                             lastAction = { move: true };
                             movedPieces.add(`${fromRow},${fromCol}`);
-                            renderBoard();
-                            updateStatus();
-                            updateEndTurnButton();
-                            updateGameLog();
-                            checkGameOver();
-                            if (movesLeft === 0 && !reinforcementPending) {
-                                triggerAiTurn();
-                            }
-                        },
+                        renderBoard();
+                        updateStatus();
+                        updateEndTurnButton();
+                        updateGameLog();
+                        checkGameOver();
+                        if (movesLeft === 0 && !reinforcementPending && currentPlayer === 'W') {
+                            triggerAiTurn();
+                        }
+                    },
                         false,
                         false
                     );
@@ -12010,14 +12332,15 @@
             }
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (!piece || piece.type !== 'Champion' || (gameVariant !== '36s-elite' && gameVariant !== '36s-supreme')) return;
+            const owner = piece.player;
             if (type === 'Necromancer') {
-                if (!canChampionSummonNecromancer(currentPlayer)) {
+                if (!canChampionSummonNecromancer(owner)) {
                     gameLog.push('No Necromancer summons remaining.');
                     updateGameLog();
                     return;
                 }
             } else if (type === 'Huntsman') {
-                if (!canChampionSummonHuntsman(currentPlayer)) {
+                if (!canChampionSummonHuntsman(owner)) {
                     gameLog.push('No Huntsman summons remaining.');
                     updateGameLog();
                     return;
@@ -12025,12 +12348,12 @@
             } else {
                 return;
             }
-            if (!hasBackRowSpawnSlot(currentPlayer)) {
+            if (!hasBackRowSpawnSlot(owner)) {
                 gameLog.push('No open squares on the back row to summon a unit.');
                 updateGameLog();
                 return;
             }
-            const backRow = currentPlayer === 'W' ? ROWS - 1 : 0;
+            const backRow = getBackRow(owner);
             const options = [];
             for (let c = 0; c < COLS; c++) {
                 if (!board[backRow][c]) {
@@ -12042,7 +12365,7 @@
                 updateGameLog();
                 return;
             }
-            championSummonMode = { type, source: { row: selectedPiece.row, col: selectedPiece.col } };
+            championSummonMode = { type, player: owner, source: { row: selectedPiece.row, col: selectedPiece.col } };
             validMoves = options;
             renderBoard();
             updateStatus();
@@ -12062,28 +12385,29 @@
             }
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (!piece || piece.type !== 'Necromancer' || (gameVariant !== '36s-elite' && gameVariant !== '36s-supreme')) return;
+            const owner = piece.player;
             const isZombieSummon = type === 'zombie';
             const isSpectreSummon = type === 'spectre';
             const isLichSummon = type === 'lich';
             if (!isZombieSummon && !isSpectreSummon && !isLichSummon) return;
             if (isZombieSummon) {
-                const maxZombies = getMaxZombies(currentPlayer);
-                if ((zombiesSummoned[currentPlayer] || 0) >= maxZombies) {
+                const maxZombies = getMaxZombies(owner);
+                if ((zombiesSummoned[owner] || 0) >= maxZombies) {
                     gameLog.push('Zombie limit reached. Cannot summon more.');
                     updateGameLog();
                     return;
                 }
-            } else if (isSpectreSummon && spectresSummoned[currentPlayer] >= 2) {
+            } else if (isSpectreSummon && spectresSummoned[owner] >= 2) {
                 gameLog.push('Spectre limit reached. Cannot summon more.');
                 updateGameLog();
                 return;
             } else if (isLichSummon) {
-                if (lichesSummoned[currentPlayer] >= LICH_SUMMON_LIMIT) {
+                if (lichesSummoned[owner] >= LICH_SUMMON_LIMIT) {
                     gameLog.push('Lich already conjured.');
                     updateGameLog();
                     return;
                 }
-                const souls = (capturedPieces[currentPlayer] || []).length;
+                const souls = (capturedPieces[owner] || []).length;
                 if (souls < LICH_SUMMON_SOUL_THRESHOLD) {
                     const needed = LICH_SUMMON_SOUL_THRESHOLD - souls;
                     const captureLabel = needed === 1 ? 'one more captured enemy piece' : `${needed} more captured enemy pieces`;
@@ -12111,12 +12435,12 @@
                     return;
                 }
             } else {
-                if (!hasBackRowSpawnSlot(currentPlayer)) {
+                if (!hasBackRowSpawnSlot(owner)) {
                     gameLog.push('No open squares on the back row to place a summon.');
                     updateGameLog();
                     return;
                 }
-                const backRow = currentPlayer === 'W' ? ROWS - 1 : 0;
+                const backRow = getBackRow(owner);
                 for (let c = 0; c < COLS; c++) {
                     if (!board[backRow][c]) {
                         options.push({ type: 'summon', pos: [backRow, c], cost: 2, special: 'necromancerSummon', summonType: type });
@@ -12128,7 +12452,7 @@
                     return;
                 }
             }
-            necromancerSummonMode = { type, source: { row: selectedPiece.row, col: selectedPiece.col } };
+            necromancerSummonMode = { type, player: owner, source: { row: selectedPiece.row, col: selectedPiece.col } };
             validMoves = options;
             renderBoard();
             updateStatus();
