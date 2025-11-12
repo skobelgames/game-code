@@ -4280,9 +4280,9 @@
         
         // AI Difficulty
         let aiDifficulty = 'Medium';
-        let baseAiDepth = 44; // Track difficulty selection (defaults to Medium, increased by 80% intelligence + 30% general difficulty: 19 * 1.8 * 1.3)
-        let aiMaxDepth = 44; // Effective depth after variant adjustments - allows AI to plan 3+ moves ahead
-        let pieceValueScale = 11.74238208; // Defaults to Medium (increased by 80% intelligence + 30% general difficulty: 5.018112 * 1.8 * 1.3)
+        let baseAiDepth = 53; // Track difficulty selection (defaults to Medium, increased by additional 20% intelligence)
+        let aiMaxDepth = 53; // Effective depth after variant adjustments - allows AI to plan 3+ moves ahead
+        let pieceValueScale = 12.9166202; // Defaults to Medium (increased by additional 10% difficulty)
 
         // Opponent Selection
         let selectedOpponent = 'Random'; // Default to random selection
@@ -4291,8 +4291,8 @@
         let hintModeEnabled = false; // Default to off
         const AI_LEFTOVER_PENALTY = 0.75;
         const AI_TIE_EPSILON = 0.0001;
-        const AI_TIME_LIMIT_DEFAULT = 3600; // Increased to 3600ms to support deeper search and 3+ move planning (tripled from 1200ms)
-        const AI_TIME_LIMIT_LARGE = 1200; // Increased to 1200ms for large boards to support deeper search (tripled from 400ms)
+        const AI_TIME_LIMIT_DEFAULT = 5400; // Increased to 5400ms to give AI more thinking time (50% increase from 3600ms)
+        const AI_TIME_LIMIT_LARGE = 1800; // Increased to 1800ms for large boards to give AI more thinking time (50% increase from 1200ms)
 
         // AI Player Profiles - Different strategies and play styles (invisible to player)
         const AI_PROFILES = {
@@ -4304,7 +4304,7 @@
                 mobilityWeight: 0.25,        // Lower mobility concern
                 centerWeight: 0.15,          // Lower center control concern
                 captureBonus: 1.4,           // +40% bonus to capture values
-                specialAbilityBonus: 1.3,    // +30% bonus to special abilities
+                specialAbilityBonus: 1.6,    // Increased from 1.3 to encourage special abilities
                 aggressionLevel: 1.5         // Highly aggressive
             },
             'Guardian': {
@@ -4315,7 +4315,7 @@
                 mobilityWeight: 0.7,         // Values having options
                 centerWeight: 0.6,           // Strongly values center control
                 captureBonus: 0.8,           // -20% capture bonus (more cautious)
-                specialAbilityBonus: 0.9,    // -10% special ability usage
+                specialAbilityBonus: 1.2,    // Increased from 0.9 to encourage special abilities
                 aggressionLevel: 0.6         // Defensive playstyle
             },
             'Tactician': {
@@ -4326,7 +4326,7 @@
                 mobilityWeight: 0.55,        // Moderate mobility value
                 centerWeight: 0.35,          // Moderate center control
                 captureBonus: 1.0,           // Normal capture values
-                specialAbilityBonus: 1.1,    // Slightly favors special abilities
+                specialAbilityBonus: 1.4,    // Increased from 1.1 to encourage special abilities
                 aggressionLevel: 1.0         // Balanced approach
             },
             'Sorcerer': {
@@ -4337,7 +4337,7 @@
                 mobilityWeight: 0.6,         // Values positioning for abilities
                 centerWeight: 0.25,          // Lower center concern
                 captureBonus: 0.95,          // Slightly lower capture priority
-                specialAbilityBonus: 1.7,    // +70% bonus to special abilities
+                specialAbilityBonus: 2.1,    // Increased from 1.7 to strongly encourage special abilities
                 aggressionLevel: 1.1         // Slightly aggressive
             },
             'Nomad': {
@@ -4348,7 +4348,7 @@
                 mobilityWeight: 0.85,        // Highly values movement options
                 centerWeight: 0.4,           // Moderate center value
                 captureBonus: 0.9,           // Slightly cautious on captures
-                specialAbilityBonus: 1.0,    // Normal special ability usage
+                specialAbilityBonus: 1.3,    // Increased from 1.0 to encourage special abilities
                 aggressionLevel: 0.85        // Moderately cautious, prefers mobility
             }
         };
@@ -4610,11 +4610,11 @@
         function getAiTimeBudget() {
             let base = isLargeBoardVariant() ? AI_TIME_LIMIT_LARGE : AI_TIME_LIMIT_DEFAULT;
             if (aiDifficulty === 'Hard') {
-                base += isLargeBoardVariant() ? 600 : 1800; // Increased for depth 65 planning: allows extensive multi-move lookahead
+                base += isLargeBoardVariant() ? 1200 : 3600; // Increased significantly for depth 91 planning: allows extensive multi-move lookahead (doubled from 600/1800)
             } else if (aiDifficulty === 'Medium') {
-                base += isLargeBoardVariant() ? 400 : 1200; // Increased for depth 44 planning: allows significant multi-move lookahead
+                base += isLargeBoardVariant() ? 800 : 2400; // Increased significantly for depth 53 planning: allows deeper tactical analysis (doubled from 400/1200)
             } else if (aiDifficulty === 'Easy') {
-                base += isLargeBoardVariant() ? 200 : 600; // Increased for depth 25 planning: allows 3+ move lookahead
+                base += isLargeBoardVariant() ? 400 : 1200; // Increased for depth 25 planning: allows better 3+ move lookahead (doubled from 200/600)
             }
             return base;
         }
@@ -6133,11 +6133,11 @@
                 baseAiDepth = 25; // Increased by 60% intelligence + 30% general difficulty (12 * 1.6 * 1.3 ≈ 25) - plans 3+ moves ahead
                 pieceValueScale = 8.0031744; // Increased by 60% intelligence + 30% general difficulty (3.84768 * 1.6 * 1.3)
             } else if (level === 'Medium') {
-                baseAiDepth = 44; // Increased by 80% intelligence + 30% general difficulty (19 * 1.8 * 1.3 ≈ 44) - plans 3+ moves ahead
-                pieceValueScale = 11.74238208; // Increased by 80% intelligence + 30% general difficulty (5.018112 * 1.8 * 1.3)
+                baseAiDepth = 53; // Increased by additional 20% intelligence (44 * 1.2 ≈ 53) - deeper search for better tactical planning
+                pieceValueScale = 12.9166202; // Increased by additional 10% difficulty (11.74238208 * 1.1) - better piece evaluation
             } else if (level === 'Hard') {
-                baseAiDepth = 65; // Increased by 100% intelligence + 30% general difficulty (25 * 2.0 * 1.3 = 65) - plans 3+ moves ahead
-                pieceValueScale = 16.6053888; // Increased by 100% intelligence + 30% general difficulty (6.386688 * 2.0 * 1.3)
+                baseAiDepth = 91; // Increased by additional 40% intelligence (65 * 1.4 = 91) - extensive multi-move lookahead
+                pieceValueScale = 19.9264666; // Increased by additional 20% difficulty (16.6053888 * 1.2) - superior piece evaluation
             }
             applyAiDepthForVariant();
         }
@@ -14895,11 +14895,11 @@
             const centerRow = (ROWS - 1) / 2;
             const centerCol = (COLS - 1) / 2;
             const BACKROW_SUMMON_BONUSES = {
-                Necromancer: 6,
-                Zombie: 5,
-                Fusilier: 5,
-                Pistolier: 5,
-                Lich: 8
+                Necromancer: 9, // Increased from 6 to encourage summoning
+                Zombie: 7, // Increased from 5
+                Fusilier: 7, // Increased from 5
+                Pistolier: 7, // Increased from 5
+                Lich: 12 // Increased from 8
             };
 
             // Use AI profile weights (if AI is playing, adjust weights based on profile)
@@ -15480,14 +15480,14 @@
                         const darkVoidTargets = getDarkVoidTargets(r, c);
                         if (darkVoidTargets.length) {
                             for (let [nr, nc] of darkVoidTargets) {
-                                let targetValue = 1.8;
+                                let targetValue = 5.5; // Increased from 1.8 to encourage Dark Void usage
                                 const occupant = board[nr][nc];
                                 if (occupant) {
-                                    const multiplier = occupant.player === player ? -0.35 : 1.1;
+                                    const multiplier = occupant.player === player ? -0.35 : 1.5; // Increased from 1.1 to 1.5
                                     targetValue += (aiPieceValues[occupant.type] || 0) * multiplier;
                                 }
-                                if (aiDifficulty === 'Hard') targetValue *= 1.3;
-                                else if (aiDifficulty === 'Medium') targetValue *= 1.15;
+                                if (aiDifficulty === 'Hard') targetValue *= 1.5; // Increased from 1.3
+                                else if (aiDifficulty === 'Medium') targetValue *= 1.35; // Increased from 1.15
                                 allPossibleActions.push({
                                     type: 'move',
                                     pos: [nr, nc],
