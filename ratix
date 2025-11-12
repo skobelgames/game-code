@@ -1052,16 +1052,16 @@
         #how-to-play-modal {
             display: none;
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            inset: 0;
+            margin: auto;
             background-color: #fff;
             padding: 0;
             border: 2px solid #333;
             border-radius: 10px;
             z-index: 2005;
-            width: 90%;
+            width: 90vw;
             max-width: 800px;
+            height: fit-content;
             max-height: 90vh;
             overflow: hidden;
             box-sizing: border-box;
