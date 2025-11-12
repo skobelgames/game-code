@@ -1031,11 +1031,11 @@
         }
         #modal-overlay {
             display: none;
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
-            width: 0;
-            height: 0;
+            width: 100vw;
+            height: 100vh;
             background-color: rgba(50, 50, 50, 0.8);
             z-index: 2001;
         }
@@ -1051,7 +1051,7 @@
         }
         #how-to-play-modal {
             display: none;
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -1065,6 +1065,7 @@
             max-height: 90vh;
             overflow: hidden;
             box-sizing: border-box;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
         }
         #how-to-play-modal .modal-header {
             background-color: #333;
@@ -2444,11 +2445,15 @@
 
             // Generate and display rules content
             generateRulesContent();
+            const overlay = document.getElementById('modal-overlay');
+            if (overlay) overlay.style.display = 'block';
             document.getElementById('how-to-play-modal').style.display = 'block';
         }
 
         function closeHowToPlay() {
             document.getElementById('how-to-play-modal').style.display = 'none';
+            const overlay = document.getElementById('modal-overlay');
+            if (overlay) overlay.style.display = 'none';
             gamePaused = false;
 
             // Resume timers if they were running
@@ -2506,10 +2511,28 @@
                 </ul>
 
                 <h2>Reinforcements</h2>
-                <p>When Infantry, Champion, or King reaches the opponent's back row without capturing, you can reinforce a captured piece to your back row.</p>
+                <p>When Infantry, Champion, or King reaches the opponent's back row without capturing, you can drop one of your captured pieces back on the board.</p>
                 <ul>
-                    <li><strong>36's (Expert):</strong> Champion/King can reinforce Ballista, Elephantry, or Mercenary</li>
+                    <li><strong>36's (Expert):</strong> Champion/King reinforcements can be Ballista, Elephantry, or Mercenary for pressure in the next round.</li>
                 </ul>
+
+                <h2>Special Actions &amp; Spell Tech</h2>
+                <ul>
+                    <li><strong>Energy Blast:</strong> Spell-variant Wizards and Dragons can spend 2–3 moves to fire along a straight line; each step after the first is resolved through probability, so positioning and pre-paid costs matter.</li>
+                    <li><strong>Sacrifice:</strong> Exchange a friendly piece to instantly clear adjacent enemies; it costs 2 move points but can turn the tide in cramped lines.</li>
+                    <li><strong>Elephantry Specials:</strong> Every Elephantry can perform Move+Shoot combos (2 points), a one-time 3-space Charge that captures along its path, and Triple Shot (2 points) that fires three coin-flip attacks at 2-square range without moving.</li>
+                    <li><strong>Pistoliers &amp; Fusiliers:</strong> Pistolier can move then shoot diagonally; Fusilier enjoys Crack Shot (3 flipped shots, 2 points) and Strafe repositioning. Neither can normally make two captures in a single resolution.</li>
+                    <li><strong>Dragon &amp; Wizard Mobility:</strong> Dragons wield Inferno once per game and Strafe twice per game; Wizards teleport twice a match and may swap with enemy Wizards at range via Teleport Swap.</li>
+                    <li><strong>Huntsman Burst &amp; Necromancer Shots:</strong> Huntsman Burst (2 points) flips multiple coins to reach far-off goals, while Necromancer shots/leaps and Lich Soul Blasts all obey the same coin-promissory capture rules.</li>
+                    <li><strong>Mercenary Bonus Turn:</strong> After a successful Mercenary capture, win a coin flip to keep moving instantly and ignore remaining move point costs for that piece (tracks once per round).</li>
+                </ul>
+
+                <h2>Summoning &amp; Dark Void</h2>
+                <p>Champion and King summons always cost 2 points: Champions can spawn Pistoliers or Fusiliers, and Kings can summon the same to reinforce tempo on their next turn. Necromancers (and Liches in Elite/Supreme) spend 2 points per attempt to call Zombies, Spectres, or Undead next to Dark Void tiles; Lich summoning also requires collecting enough souls and may spawn new Dark Void squares. Summoning uses a coin flip, Spectres cost extra risk, and failed attempts leave the caster in place.</p>
+                <p>Dark Void itself costs 2 points to call via Necromancer or Lich, removing the occupant (if present) and leaving a cursed square that demands coin flips for adjacent captures or attacks. Any Neuromancer/Spectre summoned onto or near Dark Void must respect its rooted rules: failed captures root the attacker while successes still reward their value.</p>
+
+                <h2>Barrage, Moral Boost &amp; Warcry</h2>
+                <p>Each player starts with zero Moral Boosts, but once you succeed in enough coin flips (+2 moves for the next round), you can spend 2 points with a Champion/King to fire <strong>Barrage</strong> (requires champion alive). Barrage chooses six random squares, each with independent coin-flip capture resolution, and it can even hurt friendly pieces, so plan around friendly fire. AI opponents obey the exact same requirements and can chain Barrage after a streak of Moral Boosts.</p>
 
                 <h2>Piece Information</h2>
             `;
@@ -4280,9 +4303,9 @@
         
         // AI Difficulty
         let aiDifficulty = 'Medium';
-        let baseAiDepth = 44; // Track difficulty selection (defaults to Medium, increased by 80% intelligence + 30% general difficulty: 19 * 1.8 * 1.3)
-        let aiMaxDepth = 44; // Effective depth after variant adjustments - allows AI to plan 3+ moves ahead
-        let pieceValueScale = 11.74238208; // Defaults to Medium (increased by 80% intelligence + 30% general difficulty: 5.018112 * 1.8 * 1.3)
+        let baseAiDepth = 53; // Track difficulty selection (defaults to Medium, increased by additional 20% intelligence)
+        let aiMaxDepth = 53; // Effective depth after variant adjustments - allows AI to plan 3+ moves ahead
+        let pieceValueScale = 12.9166202; // Defaults to Medium (increased by additional 10% difficulty)
 
         // Opponent Selection
         let selectedOpponent = 'Random'; // Default to random selection
@@ -4291,8 +4314,8 @@
         let hintModeEnabled = false; // Default to off
         const AI_LEFTOVER_PENALTY = 0.75;
         const AI_TIE_EPSILON = 0.0001;
-        const AI_TIME_LIMIT_DEFAULT = 3600; // Increased to 3600ms to support deeper search and 3+ move planning (tripled from 1200ms)
-        const AI_TIME_LIMIT_LARGE = 1200; // Increased to 1200ms for large boards to support deeper search (tripled from 400ms)
+        const AI_TIME_LIMIT_DEFAULT = 5400; // Increased to 5400ms to give AI more thinking time (50% increase from 3600ms)
+        const AI_TIME_LIMIT_LARGE = 1800; // Increased to 1800ms for large boards to give AI more thinking time (50% increase from 1200ms)
 
         // AI Player Profiles - Different strategies and play styles (invisible to player)
         const AI_PROFILES = {
@@ -4304,7 +4327,7 @@
                 mobilityWeight: 0.25,        // Lower mobility concern
                 centerWeight: 0.15,          // Lower center control concern
                 captureBonus: 1.4,           // +40% bonus to capture values
-                specialAbilityBonus: 1.3,    // +30% bonus to special abilities
+                specialAbilityBonus: 1.6,    // Increased from 1.3 to encourage special abilities
                 aggressionLevel: 1.5         // Highly aggressive
             },
             'Guardian': {
@@ -4315,7 +4338,7 @@
                 mobilityWeight: 0.7,         // Values having options
                 centerWeight: 0.6,           // Strongly values center control
                 captureBonus: 0.8,           // -20% capture bonus (more cautious)
-                specialAbilityBonus: 0.9,    // -10% special ability usage
+                specialAbilityBonus: 1.2,    // Increased from 0.9 to encourage special abilities
                 aggressionLevel: 0.6         // Defensive playstyle
             },
             'Tactician': {
@@ -4326,7 +4349,7 @@
                 mobilityWeight: 0.55,        // Moderate mobility value
                 centerWeight: 0.35,          // Moderate center control
                 captureBonus: 1.0,           // Normal capture values
-                specialAbilityBonus: 1.1,    // Slightly favors special abilities
+                specialAbilityBonus: 1.4,    // Increased from 1.1 to encourage special abilities
                 aggressionLevel: 1.0         // Balanced approach
             },
             'Sorcerer': {
@@ -4337,7 +4360,7 @@
                 mobilityWeight: 0.6,         // Values positioning for abilities
                 centerWeight: 0.25,          // Lower center concern
                 captureBonus: 0.95,          // Slightly lower capture priority
-                specialAbilityBonus: 1.7,    // +70% bonus to special abilities
+                specialAbilityBonus: 2.1,    // Increased from 1.7 to strongly encourage special abilities
                 aggressionLevel: 1.1         // Slightly aggressive
             },
             'Nomad': {
@@ -4348,7 +4371,7 @@
                 mobilityWeight: 0.85,        // Highly values movement options
                 centerWeight: 0.4,           // Moderate center value
                 captureBonus: 0.9,           // Slightly cautious on captures
-                specialAbilityBonus: 1.0,    // Normal special ability usage
+                specialAbilityBonus: 1.3,    // Increased from 1.0 to encourage special abilities
                 aggressionLevel: 0.85        // Moderately cautious, prefers mobility
             }
         };
@@ -4594,6 +4617,8 @@
             'Troll': 6, 'Dragon': 7, 'Ogre': 8, 'Wizard': 9, 'Spectre': 5, 'Mercenary': 3,
             'Elephantry': 11, 'Champion': 12, 'King': 13, 'Lich': 9
         };
+        // Force the Mercenary value to 3 so AI evaluations match the desired scoring.
+        basePieceValues['Mercenary'] = 3;
         basePieceValues['Necromancer'] = 10;
         basePieceValues['Zombie'] = 3;
         basePieceValues['Undead'] = 5;
@@ -4610,11 +4635,11 @@
         function getAiTimeBudget() {
             let base = isLargeBoardVariant() ? AI_TIME_LIMIT_LARGE : AI_TIME_LIMIT_DEFAULT;
             if (aiDifficulty === 'Hard') {
-                base += isLargeBoardVariant() ? 600 : 1800; // Increased for depth 65 planning: allows extensive multi-move lookahead
+                base += isLargeBoardVariant() ? 1200 : 3600; // Increased significantly for depth 91 planning: allows extensive multi-move lookahead (doubled from 600/1800)
             } else if (aiDifficulty === 'Medium') {
-                base += isLargeBoardVariant() ? 400 : 1200; // Increased for depth 44 planning: allows significant multi-move lookahead
+                base += isLargeBoardVariant() ? 800 : 2400; // Increased significantly for depth 53 planning: allows deeper tactical analysis (doubled from 400/1200)
             } else if (aiDifficulty === 'Easy') {
-                base += isLargeBoardVariant() ? 200 : 600; // Increased for depth 25 planning: allows 3+ move lookahead
+                base += isLargeBoardVariant() ? 400 : 1200; // Increased for depth 25 planning: allows better 3+ move lookahead (doubled from 200/600)
             }
             return base;
         }
@@ -6133,11 +6158,11 @@
                 baseAiDepth = 25; // Increased by 60% intelligence + 30% general difficulty (12 * 1.6 * 1.3 ≈ 25) - plans 3+ moves ahead
                 pieceValueScale = 8.0031744; // Increased by 60% intelligence + 30% general difficulty (3.84768 * 1.6 * 1.3)
             } else if (level === 'Medium') {
-                baseAiDepth = 44; // Increased by 80% intelligence + 30% general difficulty (19 * 1.8 * 1.3 ≈ 44) - plans 3+ moves ahead
-                pieceValueScale = 11.74238208; // Increased by 80% intelligence + 30% general difficulty (5.018112 * 1.8 * 1.3)
+                baseAiDepth = 53; // Increased by additional 20% intelligence (44 * 1.2 ≈ 53) - deeper search for better tactical planning
+                pieceValueScale = 12.9166202; // Increased by additional 10% difficulty (11.74238208 * 1.1) - better piece evaluation
             } else if (level === 'Hard') {
-                baseAiDepth = 65; // Increased by 100% intelligence + 30% general difficulty (25 * 2.0 * 1.3 = 65) - plans 3+ moves ahead
-                pieceValueScale = 16.6053888; // Increased by 100% intelligence + 30% general difficulty (6.386688 * 2.0 * 1.3)
+                baseAiDepth = 91; // Increased by additional 40% intelligence (65 * 1.4 = 91) - extensive multi-move lookahead
+                pieceValueScale = 19.9264666; // Increased by additional 20% difficulty (16.6053888 * 1.2) - superior piece evaluation
             }
             applyAiDepthForVariant();
         }
@@ -8051,6 +8076,73 @@
                 cost: BARRAGE_COST,
                 special: 'barrage',
                 targetValue
+            };
+        }
+
+        function selectAiElephantryMoveShootTarget(row, col) {
+            const piece = board[row]?.[col];
+            if (!piece) return null;
+            const player = piece.player;
+            const directions = [
+                [0, 1], [0, -1], [1, 0], [-1, 0],
+                [1, 1], [1, -1], [-1, 1], [-1, -1]
+            ];
+            let bestTarget = null;
+            let bestValue = -Infinity;
+            for (const [dr, dc] of directions) {
+                const nr = row + dr;
+                const nc = col + dc;
+                if (!isValid(nr, nc)) continue;
+                const occupant = board[nr]?.[nc];
+                if (!occupant || occupant.player === player || occupant.type === 'Spectre') continue;
+                const value = aiPieceValues[occupant.type] !== undefined
+                    ? aiPieceValues[occupant.type]
+                    : (pieceValues[occupant.type] || 0);
+                if (value > bestValue) {
+                    bestValue = value;
+                    bestTarget = [nr, nc];
+                }
+            }
+            return bestTarget;
+        }
+
+        function findAiElephantryTripleShotOpportunity(player, availableMoves, movedSet) {
+            if (player !== 'B' || availableMoves < 2) return null;
+            let best = null;
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const piece = board[r][c];
+                    if (!piece || piece.player !== player || piece.type !== 'Elephantry') continue;
+                    if (movedSet.has(`${r},${c}`)) continue;
+                    const pieceKey = `${r},${c},${player}`;
+                    const remainingUses = typeof elephantryExtendedRangeShotsRemaining[pieceKey] === 'number'
+                        ? elephantryExtendedRangeShotsRemaining[pieceKey]
+                        : 3;
+                    if (remainingUses <= 0) continue;
+                    const targets = getElephantryExtendedRangeMoves(r, c);
+                    if (!targets.length) continue;
+                    const values = targets.map(move => {
+                        const targetPiece = board[move.pos[0]]?.[move.pos[1]];
+                        if (!targetPiece) return 0;
+                        return aiPieceValues[targetPiece.type] !== undefined
+                            ? aiPieceValues[targetPiece.type]
+                            : (pieceValues[targetPiece.type] || 0);
+                    }).sort((a, b) => b - a);
+                    if (!values.length || values[0] <= 0) continue;
+                    const score = values.slice(0, 3).reduce((sum, val) => sum + val, 0) + targets.length * 0.6;
+                    if (!best || score > best.score) {
+                        best = { row: r, col: c, score };
+                    }
+                }
+            }
+            if (!best) return null;
+            return {
+                type: 'elephantryTripleShot',
+                from: [best.row, best.col],
+                pos: [best.row, best.col],
+                cost: 2,
+                special: 'elephantryTripleShot',
+                targetValue: best.score
             };
         }
 
@@ -14895,11 +14987,11 @@
             const centerRow = (ROWS - 1) / 2;
             const centerCol = (COLS - 1) / 2;
             const BACKROW_SUMMON_BONUSES = {
-                Necromancer: 6,
-                Zombie: 5,
-                Fusilier: 5,
-                Pistolier: 5,
-                Lich: 8
+                Necromancer: 9, // Increased from 6 to encourage summoning
+                Zombie: 7, // Increased from 5
+                Fusilier: 7, // Increased from 5
+                Pistolier: 7, // Increased from 5
+                Lich: 12 // Increased from 8
             };
 
             // Use AI profile weights (if AI is playing, adjust weights based on profile)
@@ -15480,14 +15572,14 @@
                         const darkVoidTargets = getDarkVoidTargets(r, c);
                         if (darkVoidTargets.length) {
                             for (let [nr, nc] of darkVoidTargets) {
-                                let targetValue = 1.8;
+                                let targetValue = 5.5; // Increased from 1.8 to encourage Dark Void usage
                                 const occupant = board[nr][nc];
                                 if (occupant) {
-                                    const multiplier = occupant.player === player ? -0.35 : 1.1;
+                                    const multiplier = occupant.player === player ? -0.35 : 1.5; // Increased from 1.1 to 1.5
                                     targetValue += (aiPieceValues[occupant.type] || 0) * multiplier;
                                 }
-                                if (aiDifficulty === 'Hard') targetValue *= 1.3;
-                                else if (aiDifficulty === 'Medium') targetValue *= 1.15;
+                                if (aiDifficulty === 'Hard') targetValue *= 1.5; // Increased from 1.3
+                                else if (aiDifficulty === 'Medium') targetValue *= 1.35; // Increased from 1.15
                                 allPossibleActions.push({
                                     type: 'move',
                                     pos: [nr, nc],
@@ -16118,6 +16210,110 @@
                 setTimeout(() => makeNextMove(), 1200);
             }
 
+            function handleAiElephantryMoveShoot(action, moveResult, finalRow, finalCol) {
+                const piece = board[finalRow]?.[finalCol];
+                if (!piece || piece.player !== 'B' || piece.type !== 'Elephantry') {
+                    completeAiMove(action, moveResult);
+                    return;
+                }
+                const target = selectAiElephantryMoveShootTarget(finalRow, finalCol);
+                if (target) {
+                    shootPiece(finalRow, finalCol, target[0], target[1]);
+                    const targetLabel = formatBoardCoordinates(target[0], target[1]);
+                    gameLog.push(`${getOpponentDisplayName()} Elephantry shot at ${targetLabel}.`);
+                } else {
+                    gameLog.push(`${getOpponentDisplayName()} Elephantry had no clear targets after moving.`);
+                }
+                renderBoard();
+                updateCapturedPiecesDisplay();
+                updateScoreDisplay();
+                updateGameLog();
+                completeAiMove(action, moveResult);
+            }
+
+            function executeAiElephantryTripleShot(action) {
+                const [startRow, startCol] = action.from || action.pos || [];
+                const piece = board[startRow]?.[startCol];
+                if (!piece || piece.player !== 'B' || piece.type !== 'Elephantry') {
+                    setTimeout(() => makeNextMove(), 400);
+                    return;
+                }
+                const pieceKey = `${startRow},${startCol},${piece.player}`;
+                const remainingUses = typeof elephantryExtendedRangeShotsRemaining[pieceKey] === 'number'
+                    ? elephantryExtendedRangeShotsRemaining[pieceKey]
+                    : 3;
+                if (remainingUses <= 0) {
+                    setTimeout(() => makeNextMove(), 400);
+                    return;
+                }
+                const actionCost = typeof action.cost === 'number' ? action.cost : 2;
+                movesLeft = Math.max(0, movesLeft - actionCost);
+                highlightSquares = [[startRow, startCol]];
+                updateStatus();
+                updateEndTurnButton();
+                lastAction = { special: 'elephantryTripleShot' };
+
+                const finishTripleShot = () => {
+                    elephantryExtendedRangeShotsRemaining[pieceKey] = Math.max(0, remainingUses - 1);
+                    highlightSquares = [];
+                    renderBoard();
+                    completeAiMove(action);
+                };
+
+                let shotsFired = 0;
+                const fireNextShot = () => {
+                    if (shotsFired >= 3) {
+                        finishTripleShot();
+                        return;
+                    }
+                    const options = getElephantryExtendedRangeMoves(startRow, startCol);
+                    if (!options.length) {
+                        finishTripleShot();
+                        return;
+                    }
+                    let bestMove = null;
+                    let bestValue = -Infinity;
+                    for (const move of options) {
+                        const targetPiece = board[move.pos[0]][move.pos[1]];
+                        if (!targetPiece) continue;
+                        const value = aiPieceValues[targetPiece.type] !== undefined
+                            ? aiPieceValues[targetPiece.type]
+                            : (pieceValues[targetPiece.type] || 0);
+                        if (value > bestValue) {
+                            bestValue = value;
+                            bestMove = move;
+                        }
+                    }
+                    if (!bestMove) {
+                        finishTripleShot();
+                        return;
+                    }
+                    const targetRow = bestMove.pos[0];
+                    const targetCol = bestMove.pos[1];
+                    const targetPiece = board[targetRow]?.[targetCol];
+                    const success = randomCoinFlip();
+                    if (success && targetPiece && targetPiece.player !== 'B') {
+                        const logMessage = `AI Elephantry triple shot hit ${targetPiece.type} at ${formatBoardCoordinates(targetRow,targetCol)}.`;
+                        applySpellCapture('B', targetRow, targetCol, {
+                            ability: 'Elephantry Triple Shot',
+                            logMessage
+                        });
+                    } else {
+                        gameLog.push(`AI Elephantry triple shot missed at ${formatBoardCoordinates(targetRow,targetCol)}.`);
+                    }
+                    updateCapturedPiecesDisplay();
+                    updateScoreDisplay();
+                    updateGameLog();
+                    renderBoard();
+                    checkSupremacy('B');
+                    if (gameOver) return;
+                    shotsFired++;
+                    setTimeout(() => fireNextShot(), 600);
+                };
+
+                fireNextShot();
+            }
+
             function makeNextMove() {
                 try {
                     // If game is paused (e.g., warcry animation), reschedule and wait
@@ -16350,6 +16546,14 @@
                     const barrageAction = findAiBarrageOpportunity('B', movesLeft, movedPieces);
                     if (barrageAction) {
                         action = barrageAction;
+                        plannedActions = [];
+                    }
+                }
+
+                if (!action) {
+                    const tripleShotAction = findAiElephantryTripleShotOpportunity('B', movesLeft, movedPieces);
+                    if (tripleShotAction) {
+                        action = tripleShotAction;
                         plannedActions = [];
                     }
                 }
@@ -16904,7 +17108,24 @@
                                 return; // Exit to wait for coin toss callback
                             } else {
                                 movesLeft -= actionCost;
+                                if (special === 'elephantryCharge' && Array.isArray(action.captures)) {
+                                    for (const capture of action.captures) {
+                                        const captureRow = capture[0];
+                                        const captureCol = capture[1];
+                                        if (captureRow === undefined || captureCol === undefined) continue;
+                                        const occupant = board[captureRow]?.[captureCol];
+                                        if (!occupant) continue;
+                                        applySpellCapture('B', captureRow, captureCol, {
+                                            ability: 'Elephantry Charge',
+                                            logMessage: `AI Elephantry charge captured ${occupant.type} at ${formatBoardCoordinates(captureRow,captureCol)}.`
+                                        });
+                                    }
+                                }
                                 const moveResult = movePiece(from[0], from[1], pos[0], pos[1], jump);
+                                if (special === 'elephantryMoveShoot') {
+                                    handleAiElephantryMoveShoot(action, moveResult, pos[0], pos[1]);
+                                    return;
+                                }
                                 completeAiMove(action, moveResult);
                                 return;
                             }
@@ -17047,6 +17268,9 @@
                             wizardTeleportSwapUsed['B'] = true;
                             gameLog.push(`AI used Teleport Swap to swap Wizard at ${formatBoardCoordinates(playerWizardRow,playerWizardCol)} with opponent's Wizard at ${formatBoardCoordinates(opponentWizardRow,opponentWizardCol)}`);
                             movedPieces.add(`${opponentWizardRow},${opponentWizardCol}`);
+                        } else if (action.type === 'elephantryTripleShot') {
+                            executeAiElephantryTripleShot(action);
+                            return;
                         } else if (action.type === 'barrage') {
                             const barrageCost = typeof cost === 'number' ? cost : BARRAGE_COST;
                             const [casterRow, casterCol] = from || [];
@@ -17826,5 +18050,3 @@
     </script>
 </body>
 </html>
-
-
