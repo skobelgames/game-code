@@ -1049,8 +1049,9 @@
         #how-to-play-modal {
             display: none;
             position: fixed;
-            inset: 0;
-            margin: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             background-color: #fff;
             padding: 0;
             border: 2px solid #333;
@@ -1058,7 +1059,6 @@
             z-index: 2005;
             width: 90vw;
             max-width: 800px;
-            height: fit-content;
             max-height: 90vh;
             overflow: hidden;
             box-sizing: border-box;
@@ -2472,64 +2472,123 @@
 
             let html = `
                 <h2>Game Overview</h2>
-                <p><strong>Belicus</strong> is a strategic chess-like game where you command an army against an AI opponent. Capture the enemy King to win!</p>
+                <p><strong>Belicus</strong> is a strategic chess-like war game where you command an army against an AI opponent. Victory comes through capturing the enemy King or achieving alternate win conditions. Each game features tactical depth with special abilities, summoning mechanics, and strategic resource management.</p>
 
                 <h2>Game Variants</h2>
                 <ul>
-                    <li><strong>24's (Standard):</strong> 10x14 board with 24 pieces per side</li>
-                    <li><strong>36's (Advanced):</strong> 10x14 board with 36 pieces per side - includes Archers, Ballistas, and Ogres</li>
-                    <li><strong>36's (Expert):</strong> 10x14 board with 36 pieces per side - includes all advanced pieces plus Mercenaries and Elephantry</li>
-                    <li><strong>36's (Elite):</strong> 10x14 board with 36 pieces per side - includes all Expert pieces plus Necromancers and Zombies for advanced summoning gameplay</li>
-                    <li><strong>36's (Supreme):</strong> 10x14 board with the Elite roster and unlocks experimental spellcraft for Wizards and Necromancers.</li>
-                    <li><strong>24's Close-Combat Battle:</strong> Smaller 8x12 board for faster games</li>
+                    <li><strong>24's (Standard):</strong> 10×14 board, 24 pieces per side. Perfect for learning the fundamentals with Infantry, Cavalry, Trolls, Dragons, Wizards, Guards, a Champion, and King.</li>
+                    <li><strong>36's (Advanced):</strong> 10×14 board, 36 pieces per side. Adds Archers, Ballistas, and Ogres for expanded tactical options.</li>
+                    <li><strong>36's (Expert):</strong> 10×14 board, 36 pieces per side. Includes all Advanced pieces plus Mercenaries and Elephantry with powerful special abilities.</li>
+                    <li><strong>36's (Elite):</strong> 10×14 board, 36 pieces per side. Adds Necromancers, Liches, and Zombies enabling advanced summoning strategies and dark magic.</li>
+                    <li><strong>36's (Supreme):</strong> 10×14 board with the Elite roster. Unlocks experimental spellcraft including Energy Blast, Sacrifice spells, and Champion-summoned Huntsmen.</li>
+                    <li><strong>24's Close-Combat Battle:</strong> Compact 8×12 board for fast-paced aggressive gameplay with immediate piece-to-piece contact.</li>
                 </ul>
 
-                <h2>How to Win</h2>
+                <h2>Victory Conditions</h2>
                 <ul>
-                    <li><strong>Regicide:</strong> Capture the enemy King (instant victory)</li>
-                    <li><strong>Supremacy:</strong> Capture enemy Champion, keep their score ≤1, and get your King or Champion to their back row</li>
-                    <li><strong>Relentless:</strong> Activate 3 reinforcements using Infantry while opponent has 0 reinforcements</li>
-                    <li><strong>Score Victory:</strong> Highest score when game timer expires</li>
+                    <li><strong>Regicide:</strong> Capture the enemy King for instant victory (most common).</li>
+                    <li><strong>Supremacy:</strong> Capture the enemy Champion, reduce their score to ≤1 point, and move your King or Champion to their back row.</li>
+                    <li><strong>Relentless:</strong> Activate 3 reinforcements using Infantry while your opponent has zero reinforcements available.</li>
+                    <li><strong>Score Victory:</strong> Have the highest score when the game timer expires.</li>
                 </ul>
 
                 <h2>Draw Conditions</h2>
                 <ul>
-                    <li><strong>Truce:</strong> When both players have 6 or fewer pieces remaining, either player can propose a truce. Both players must agree for the game to end in a draw. If declined, the truce can be proposed again at the start of the next 3 rounds. After 3 declined attempts, truce is no longer available.</li>
+                    <li><strong>Truce:</strong> When both players have 6 or fewer pieces remaining, either player can propose a truce. Both must agree to end in a draw. If declined, the truce can be re-proposed for up to 3 attempts across subsequent rounds. After 3 declined attempts, truce is no longer available.</li>
                     <li><strong>Match:</strong> When both players only have their King remaining, the game automatically ends in a draw.</li>
                 </ul>
 
-                <h2>Round Mechanics</h2>
+                <h2>Basic Gameplay</h2>
+                <h3>Move Points System</h3>
                 <ul>
-                    <li>Each round you have 3 moves (or 2 if your Champion was captured)</li>
-                    <li>Different actions cost different move points (1-2 points)</li>
-                    <li><strong>Honour (Warcry):</strong> Score 10+ points in a round to gain +2 moves next round</li>
-                    <li><strong>Despair:</strong> Lose 2+ non-basic pieces in a round to suffer -2 moves next round</li>
-                    <li>Champions on enemy back row reduce opponent's moves by 1</li>
+                    <li>You start each round with <strong>3 move points</strong> (reduced to 2 if your Champion is captured).</li>
+                    <li>Basic moves cost 1 point, special abilities cost 1-3 points depending on power.</li>
+                    <li>Plan your actions carefully—once you spend your points, your turn ends.</li>
                 </ul>
 
-                <h2>Reinforcements</h2>
-                <p>When Infantry, Champion, or King reaches the opponent's back row without capturing, you can drop one of your captured pieces back on the board.</p>
+                <h3>Bonus Moves & Penalties</h3>
                 <ul>
-                    <li><strong>36's (Expert):</strong> Champion/King reinforcements can be Ballista, Elephantry, or Mercenary for pressure in the next round.</li>
+                    <li><strong>Honour (Warcry):</strong> Score 10+ points in a single round to gain +2 bonus moves next round. The board glows gold when active.</li>
+                    <li><strong>Despair:</strong> Lose 2 or more non-Infantry pieces in a round to suffer -2 moves next round. Poor planning has consequences!</li>
+                    <li><strong>Champion Pressure:</strong> If your Champion reaches the enemy's back row, your opponent loses 1 move point each round while it remains there.</li>
                 </ul>
 
-                <h2>Special Actions &amp; Spell Tech</h2>
+                <h3>Reinforcements</h3>
+                <p>When your Infantry, Champion, or King reaches the opponent's back row <strong>without capturing a piece</strong>, you earn a reinforcement. Choose one previously captured piece from your graveyard to return to the board on that square.</p>
                 <ul>
-                    <li><strong>Energy Blast:</strong> Spell-variant Wizards and Dragons can spend 2–3 moves to fire along a straight line; each step after the first is resolved through probability, so positioning and pre-paid costs matter.</li>
-                    <li><strong>Sacrifice:</strong> Exchange a friendly piece to instantly clear adjacent enemies; it costs 2 move points but can turn the tide in cramped lines.</li>
-                    <li><strong>Elephantry Specials:</strong> Every Elephantry can perform Move+Shoot combos (2 points), a one-time 3-space Charge that captures along its path, and Triple Shot (2 points) that fires three coin-flip attacks at 2-square range without moving.</li>
-                    <li><strong>Pistoliers &amp; Fusiliers:</strong> Pistolier can move then shoot diagonally; Fusilier enjoys Crack Shot (3 flipped shots, 2 points) and Strafe repositioning. Neither can normally make two captures in a single resolution.</li>
-                    <li><strong>Dragon &amp; Wizard Mobility:</strong> Dragons wield Inferno once per game and Strafe twice per game; Wizards teleport twice a match and may swap with enemy Wizards at range via Teleport Swap.</li>
-                    <li><strong>Huntsman Burst &amp; Necromancer Shots:</strong> Huntsman Burst (2 points) flips multiple coins to reach far-off goals, while Necromancer shots/leaps and Lich Soul Blasts all obey the same coin-promissory capture rules.</li>
-                    <li><strong>Mercenary Bonus Turn:</strong> After a successful Mercenary capture, win a coin flip to keep moving instantly and ignore remaining move point costs for that piece (tracks once per round).</li>
+                    <li>Infantry reinforcements: Return any captured piece.</li>
+                    <li>Champion/King reinforcements: In Expert+ variants, you can select Ballistas, Elephantry, or Mercenaries for immediate tactical pressure.</li>
+                    <li>Strategic tip: Reinforcements can swing the game—protect pieces making the journey to the back row!</li>
                 </ul>
 
-                <h2>Summoning &amp; Dark Void</h2>
-                <p>Champion and King summons always cost 2 points: Champions can spawn Pistoliers or Fusiliers, and Kings can summon the same to reinforce tempo on their next turn. Necromancers (and Liches in Elite/Supreme) spend 2 points per attempt to call Zombies, Spectres, or Undead next to Dark Void tiles; Lich summoning also requires collecting enough souls and may spawn new Dark Void squares. Summoning uses a coin flip, Spectres cost extra risk, and failed attempts leave the caster in place.</p>
-                <p>Dark Void itself costs 2 points to call via Necromancer or Lich, removing the occupant (if present) and leaving a cursed square that demands coin flips for adjacent captures or attacks. Any Neuromancer/Spectre summoned onto or near Dark Void must respect its rooted rules: failed captures root the attacker while successes still reward their value.</p>
+                <h2>Special Abilities by Piece</h2>
+                <h3>Royal Pieces</h3>
+                <ul>
+                    <li><strong>King - Guard of Honour:</strong> Swap positions with an adjacent Guard (costs 2 points, usable once per game). Use this to escape danger or reposition defensively.</li>
+                    <li><strong>Champion:</strong> Can summon Pistoliers or Fusiliers (costs 2 points). Also enables Barrage ability when you have Moral Boost.</li>
+                </ul>
 
-                <h2>Barrage, Moral Boost &amp; Warcry</h2>
-                <p>Each player starts with zero Moral Boosts, but once you succeed in enough coin flips (+2 moves for the next round), you can spend 2 points with a Champion/King to fire <strong>Barrage</strong> (requires champion alive). Barrage chooses six random squares, each with independent coin-flip capture resolution, and it can even hurt friendly pieces, so plan around friendly fire. AI opponents obey the exact same requirements and can chain Barrage after a streak of Moral Boosts.</p>
+                <h3>Magic Units</h3>
+                <ul>
+                    <li><strong>Wizard - Teleport:</strong> Instantly move to any empty square of the same color (costs 2 points, usable twice per game).</li>
+                    <li><strong>Wizard - Teleport Swap:</strong> Swap positions with an enemy Wizard on the same color square (costs 2 points, usable once per game).</li>
+                    <li><strong>Necromancer:</strong> Can summon Zombies and Spectres near Dark Void tiles (costs 2 points, requires coin flip). Can also create Dark Void squares (costs 2 points).</li>
+                    <li><strong>Lich:</strong> Requires souls from captures to unlock abilities. Can use Soulstride (2-square leap) after 2 captures and Soul Blast (ranged attack) with increasing range per 3 souls collected. Immune to most magical attacks—requires Wizards, Necromancers, or Spectres to capture.</li>
+                </ul>
+
+                <h3>Heavy Assault</h3>
+                <ul>
+                    <li><strong>Cavalry - Charge:</strong> Move unlimited squares in one straight direction (costs 2 points, usable once per game). Great for surprise attacks or escaping.</li>
+                    <li><strong>Dragon - Inferno:</strong> Move 1 square and capture all adjacent enemies in a devastating area attack (costs 2 points, usable once per game).</li>
+                    <li><strong>Dragon - Strafe:</strong> Move then attack diagonally (usable twice per game).</li>
+                    <li><strong>Ogre - Rage:</strong> Rush 2 squares straight (horizontal or vertical) and capture every enemy in a 2×3 corridor along the path (costs 2 points, usable once per game).</li>
+                    <li><strong>Elephantry - Charge:</strong> One-time 3-square charge that captures all enemies along the path (devastating when lanes are clear).</li>
+                    <li><strong>Elephantry - Triple Shot:</strong> Fire three coin-flip attacks at 2-square range without moving (costs 2 points).</li>
+                    <li><strong>Elephantry - Move+Shoot:</strong> Move then shoot in one action (costs 2 points).</li>
+                </ul>
+
+                <h3>Ranged & Skirmish Units</h3>
+                <ul>
+                    <li><strong>Archer - Skirmish:</strong> Move then shoot diagonally 1 square (costs 2 points, usable twice per game).</li>
+                    <li><strong>Archer - Longshot Diagonal:</strong> Shoot diagonally 2 squares (costs 2 points, usable twice per game).</li>
+                    <li><strong>Ballista - Extend Range:</strong> Gain +1 shooting range for the current round (costs 2 points, usable once per round).</li>
+                    <li><strong>Ballista - Double Time:</strong> Move 2 squares in one direction (costs 2 points, usable twice per game).</li>
+                    <li><strong>Pistolier:</strong> Can move then shoot diagonally in one action.</li>
+                    <li><strong>Fusilier - Crack Shot:</strong> Fire three coin-flip shots (costs 2 points). Also has Strafe repositioning ability.</li>
+                </ul>
+
+                <h3>Elite Units</h3>
+                <ul>
+                    <li><strong>Mercenary - Bonus Turn:</strong> After a successful capture, flip a coin. If you win, continue moving with this piece and ignore move point costs for the rest of the round (usable once per round). High risk, high reward!</li>
+                    <li><strong>Huntsman (Supreme only):</strong> Champions can summon Huntsmen (max 2 active, 6 total per game). Huntsmen move 1 square normally or spend 2 points for Burst—flip four coins to chain up to 4 movement steps. Opponents need coin flips to capture Huntsmen, but Huntsmen auto-capture Zombies.</li>
+                </ul>
+
+                <h2>Advanced Mechanics</h2>
+                <h3>Dark Void (Elite & Supreme)</h3>
+                <p>Necromancers and Liches can create <strong>Dark Void</strong> squares (costs 2 points). These cursed tiles remove any piece on that square and create a dangerous zone:</p>
+                <ul>
+                    <li>All captures or attacks adjacent to Dark Void require a coin flip to succeed.</li>
+                    <li>Failed captures near Dark Void root the attacker in place.</li>
+                    <li>Necromancers can summon Zombies, Spectres, or other undead adjacent to Dark Void tiles.</li>
+                    <li>Lich summoning may spawn additional Dark Void squares as the darkness spreads.</li>
+                </ul>
+
+                <h3>Barrage (All Variants)</h3>
+                <p>When you earn a <strong>Moral Boost</strong> (by winning multiple coin flips or achieving specific thresholds), your Champion or King can unleash Barrage (costs 2 points, requires Champion alive).</p>
+                <ul>
+                    <li>Targets six random squares across the board.</li>
+                    <li>Each square is resolved with an independent coin flip—success captures the piece.</li>
+                    <li><strong>Warning:</strong> Barrage can hit your own pieces! Use carefully.</li>
+                    <li>AI opponents can also use Barrage when they earn Moral Boosts.</li>
+                </ul>
+
+                <h3>Supreme Spellcraft (Supreme Variant Only)</h3>
+                <p>The Supreme variant unlocks experimental magic:</p>
+                <ul>
+                    <li><strong>Energy Blast:</strong> Wizards and Necromancers first succeed on a spellcasting coin flip (costs 2 move points even if failed), then flip four coins to determine blast distance (1 square per success). The blast travels straight or diagonally toward the opponent's side, vaporizing all enemies in its path while ignoring friendlies. First use costs 2 points, second costs 3.</li>
+                    <li><strong>Sacrifice Spell:</strong> Once per game, a Wizard or Necromancer can spend 3 move points and win a coin flip to remove themselves from play, detonating a blast reaching 2 squares orthogonally and 1 square diagonally. Only available if the coin flip succeeds.</li>
+                    <li><strong>Protection:</strong> When a spell would capture your King, you may (once per game) sacrifice a Wizard, Necromancer, or Champion to negate the capture. This also deducts 2 move points from the start of your next round.</li>
+                </ul>
 
                 <h2>Piece Information</h2>
             `;
@@ -2574,37 +2633,20 @@
                     <li><strong>King:</strong> 13 points</li>
                 </ul>
 
-                <h2>Special Abilities</h2>
+                <h2>Strategy Tips</h2>
                 <ul>
-                    <li><strong>King - Guard of Honour:</strong> Swap with adjacent Guard (2 points, once per game)</li>
-                    <li><strong>Wizard - Teleport:</strong> Move to any empty square of same color (2 points, twice per game)</li>
-                    <li><strong>Wizard - Teleport Swap:</strong> Swap with enemy Wizard on same color (2 points, once per game)</li>
-                    <li><strong>Cavalry - Charge:</strong> Move unlimited squares in one direction (2 points, once per game)</li>
-                    <li><strong>Dragon - Inferno:</strong> Move 1 square and capture all adjacent enemies (2 points, once per game)</li>
-                    <li><strong>Ogre - Rage:</strong> Spend 2 points once per game to rush 2 squares straight (horizontal or vertical), capturing every enemy in the 2x3 corridor that follows the path before landing.</li>
-                    <li><strong>Lich - Soulstride &amp; Soul Blast:</strong> Soulstride lets them jump 2 squares (midpoint must be empty) once you’ve captured 2+ pieces, and Soul Blast spends 2 move points plus a coin flip to fire along any clear line, gaining 1 range per 3 captured souls (max 5). Liches ignore Inferno, Energy Blast, Sacrifice, and require a coin flip to capture unless the attacker is a Wizard, Necromancer, or Spectre.</li>
-                    <li><strong>Archer - Skirmish:</strong> Move then shoot diagonally 1 square (2 points, twice per game)</li>
-                    <li><strong>Archer - Longshot Diagonal:</strong> Shoot diagonally 2 squares (2 points, twice per game)</li>
-                    <li><strong>Ballista - Extend Range:</strong> +1 shooting range this round (2 points, once per round)</li>
-                    <li><strong>Ballista - Double Time:</strong> Move 2 squares in one direction (2 points, twice per game)</li>
-                </ul>
-
-                <h2>Supreme Spellcraft</h2>
-                <p>Exclusive to the 36's (Supreme) variant:</p>
-                <ul>
-                    <li><strong>Energy Blast:</strong> Wizards and Necromancers must first succeed on a spellcasting coin flip (costs 2 move points even on failure), then perform four consecutive flips (1 square per success) to determine the blast distance. First use costs 2 move points, second costs 3. The blast travels straight or diagonally toward the opponent's side and vaporizes every enemy along its path while ignoring friendlies.</li>
-                    <li><strong>Sacrifice Spell:</strong> Once per game, a Wizard or Necromancer may spend 3 move points, win a coin flip, and remove themselves from play to detonate a blast that reaches 2 squares orthogonally and 1 square diagonally. Only available if the coin flip succeeds.</li>
-                    <li><strong>Protection:</strong> When a spell would capture a King, that player may (once per game) sacrifice a Wizard, Necromancer, or Champion to negate the capture. This also deducts 2 move points from the start of their next round.</li>
-                    <li><strong>Huntsman:</strong> Champions can summon Huntsmen (max 2 active, 6 total per player). Huntsmen move 1 square, or spend 2 move points to roll four coin flips, gaining 1 chained step of movement per success. Shots against Huntsmen require a coin flip to succeed, while Huntsmen automatically capture Zombies.</li>
-                </ul>
-
-                <h2>Tips</h2>
-                <ul>
-                    <li>Protect your King and Champion - losing them severely weakens your army</li>
-                    <li>Plan your moves carefully - you only get 3 per round</li>
-                    <li>Use special abilities strategically - most can only be used once or twice</li>
-                    <li>Watch the timers - running out of time forfeits your round</li>
-                    <li>Score points by capturing enemy pieces - higher value pieces give more points</li>
+                    <li><strong>Protect Your Royals:</strong> Losing your King ends the game. Losing your Champion reduces your move points to 2 per round and disables Barrage—protect them at all costs!</li>
+                    <li><strong>Plan Your Move Points:</strong> With only 3 points per round, every action matters. Think ahead—can you afford that special ability or should you save points for critical captures?</li>
+                    <li><strong>Save Special Abilities:</strong> Most special abilities can only be used once or twice per game. Don't waste them on low-value targets—save them for game-changing moments.</li>
+                    <li><strong>Mind the Timers:</strong> Both game and round timers are ticking. Running out of time forfeits your turn or can lead to time-based defeat. Stay focused!</li>
+                    <li><strong>Control the Back Row:</strong> Getting Infantry, Champions, or your King to the enemy back row without capturing earns reinforcements. Plan safe paths to resurrect your fallen pieces.</li>
+                    <li><strong>Value High-Point Targets:</strong> Prioritize capturing high-value pieces like Wizards (9), Necromancers (10), Mercenaries (10), Elephantry (11), and Champions (12) to boost your score.</li>
+                    <li><strong>Pursue Warcry Bonuses:</strong> Scoring 10+ points in one round grants +2 moves next round. Chain captures for explosive turns!</li>
+                    <li><strong>Avoid Despair:</strong> Losing 2+ non-Infantry pieces in a round costs you 2 moves next round. Play defensively when exposed.</li>
+                    <li><strong>Use Coin Flips Wisely:</strong> Many advanced abilities require coin flips. Don't gamble important pieces unless you can afford to lose the flip.</li>
+                    <li><strong>Study Your Opponent:</strong> Different AI personalities (Berserker, Guardian, Tactician, Sorcerer, Nomad) play differently. Adapt your strategy!</li>
+                    <li><strong>Dark Void Dangers:</strong> In Elite/Supreme variants, avoid clustering near Dark Void tiles—all captures adjacent to them require coin flips.</li>
+                    <li><strong>Friendly Fire Warning:</strong> Barrage, Dragon Inferno, and some spell effects can hit your own pieces. Position carefully before unleashing area attacks!</li>
                 </ul>
             `;
 
