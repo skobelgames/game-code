@@ -16,7 +16,7 @@
 
         /* Prevent horizontal scrolling and lock viewport */
         html {
-            overflow-x: auto;
+            overflow-x: hidden;
             width: 100%;
             height: 100%;
         }
@@ -30,13 +30,10 @@
             margin: 0 auto;
             padding: 20px;
             min-height: 100vh;
-            overflow-x: auto;
+            overflow-x: hidden;
             width: var(--fixed-app-width);
             min-width: var(--fixed-app-width);
             max-width: var(--fixed-app-width);
-            transform: scale(var(--app-zoom));
-            transform-origin: top center;
-            zoom: var(--app-zoom);
         }
         body.game-loaded {
             justify-content: center;
