@@ -10772,6 +10772,7 @@
                     const playerLabel = necromancerOwner === 'W' ? 'Player' : getOpponentDisplayName();
                     const label = summonType === 'spectre' ? 'Spectre' : (summonType === 'lich' ? 'Lich' : (summonType === 'undead' ? 'Undead' : (summonType === 'undeadchampion' ? 'Undead Champion' : 'Zombie')));
                     const isLichSummoningUndead = summonType === 'undead' && summonContext?.summonerType === 'Lich';
+                    const isLichSummoningUndeadChampion = summonType === 'undeadchampion' && summonContext?.summonerType === 'Lich';
 
                     const completeSummon = (success) => {
                         if (success) {
@@ -10841,6 +10842,17 @@
                                         false
                                     );
                                 }
+                            },
+                            false,
+                            false
+                        );
+                    } else if (isLichSummoningUndeadChampion) {
+                        // Lich summoning undead champion requires 1 successful coin flip
+                        performCoinToss(
+                            `Summon ${label}`,
+                            `${playerLabel} attempts to summon ${label}...`,
+                            (success) => {
+                                completeSummon(success);
                             },
                             false,
                             false
@@ -13524,6 +13536,7 @@
                 const playerLabel = necromancerOwner === 'W' ? 'Player' : getOpponentDisplayName();
                     const label = summonType === 'spectre' ? 'Spectre' : (summonType === 'lich' ? 'Lich' : (summonType === 'undead' ? 'Undead' : (summonType === 'undeadchampion' ? 'Undead Champion' : 'Zombie')));
                     const isLichSummoningUndead = summonType === 'undead' && summonContext?.summonerType === 'Lich';
+                    const isLichSummoningUndeadChampion = summonType === 'undeadchampion' && summonContext?.summonerType === 'Lich';
 
                     const completeSummon = (success) => {
                         if (success) {
@@ -13593,6 +13606,17 @@
                                         false
                                     );
                                 }
+                            },
+                            false,
+                            false
+                        );
+                    } else if (isLichSummoningUndeadChampion) {
+                        // Lich summoning undead champion requires 1 successful coin flip
+                        performCoinToss(
+                            `Summon ${label}`,
+                            `${playerLabel} attempts to summon ${label}...`,
+                            (success) => {
+                                completeSummon(success);
                             },
                             false,
                             false
