@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>Belicus - Strategic Chess Variant</title>
+    <title>RATIX - Strategic Chess Variant</title>
     <style>
         :root {
             --fixed-app-width: 1320px;
@@ -1690,7 +1690,7 @@
 </head>
 <body>
     <div id="landing-header">
-        <h1>Belicus</h1>
+        <h1>RATIX</h1>
         <p>Created by Craig Skobel</p>
         <button class="how-to-button" onclick="openHowToPlay()">How to Play</button>
     </div>
@@ -1700,7 +1700,7 @@
             <button id="variant-btn-24s" data-ready="false" onclick="handleVariantClick('24s')">24's (Standard)</button>
             <div id="variant-info-24s" class="variant-info">
                 <p class="variant-description">Board: 10x14. Layout: single Infantry front rank backing a classic Cavalry, Troll, Dragon, Wizard, Guard, Champion, and King battle line.</p>
-                <p class="variant-difficulty"><strong>Recommended skill:</strong> Beginner-friendly for learning Belicus fundamentals, yet still offers solid tactical depth for any player.</p>
+                <p class="variant-difficulty"><strong>Recommended skill:</strong> Beginner-friendly for learning RATIX fundamentals, yet still offers solid tactical depth for any player.</p>
             </div>
         </div>
         <div class="variant-option">
@@ -1784,7 +1784,7 @@
             <button id="turn-timer-standard" onclick="setTurnTimer('standard', this)" class="selected-option">60 secs (Standard)</button>
         </div>
     </div>
-    <footer id="landing-footer">Belicus &copy; 2025 Skobel Games</footer>
+    <footer id="landing-footer">RATIX &copy; 2025 Skobel Games</footer>
     <div id="game-container">
         <div id="score-display">
             <div class="player-panel" id="player-panel">
@@ -1845,7 +1845,7 @@
             <aside id="right-panel">
                 <div id="right-controls">
                     <button class="how-to-button" onclick="openHowToPlay()">How to Play</button>
-                    <button id="Belicus-brand-button" type="button">Belicus</button>
+                    <button id="RATIX-brand-button" type="button">RATIX</button>
                 </div>
                 <div id="status">Player's turn: 3 moves remaining</div>
                 <div id="captured-pieces" aria-label="Graveyard">
@@ -1906,7 +1906,7 @@
     </div>
     <div id="how-to-play-modal">
         <div class="modal-header">
-            <span>How to Play - Belicus</span>
+            <span>How to Play - RATIX</span>
             <button class="modal-close" onclick="closeHowToPlay()" aria-label="Close">&times;</button>
         </div>
         <div class="modal-content">
@@ -2472,7 +2472,7 @@
 
             let html = `
                 <h2>Game Overview</h2>
-                <p><strong>Belicus</strong> is a strategic chess-like war game where you command an army against an AI opponent. Victory comes through capturing the enemy King or achieving alternate win conditions. Each game features tactical depth with special abilities, summoning mechanics, and strategic resource management.</p>
+                <p><strong>RATIX</strong> is a strategic chess-like war game where you command an army against an AI opponent. Victory comes through capturing the enemy King or achieving alternate win conditions. Each game features tactical depth with special abilities, summoning mechanics, and strategic resource management.</p>
 
                 <h2>Game Variants</h2>
                 <ul>
