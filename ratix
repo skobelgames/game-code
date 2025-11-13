@@ -2611,26 +2611,27 @@
                 <h2>Piece Point Values</h2>
                 <p>When you capture an enemy piece, you gain points based on the piece's value:</p>
                 <ul>
-                    <li><strong>Infantry:</strong> 1 point</li>
                     <li><strong>Archer:</strong> 2 points</li>
+                    <li><strong>Ballista:</strong> 5 points</li>
                     <li><strong>Cavalry:</strong> 3 points</li>
-                    <li><strong>Pistolier:</strong> 3 points</li>
-                    <li><strong>Zombie:</strong> 3 points</li>
+                    <li><strong>Champion:</strong> 12 points</li>
+                    <li><strong>Dragon:</strong> 7 points</li>
+                    <li><strong>Elephantry:</strong> 11 points</li>
                     <li><strong>Fusilier:</strong> 4 points</li>
                     <li><strong>Guard:</strong> 4 points</li>
-                    <li><strong>Ballista:</strong> 5 points</li>
-                    <li><strong>Spectre:</strong> 5 points</li>
                     <li><strong>Huntsman:</strong> 6 points</li>
-                    <li><strong>Troll:</strong> 6 points</li>
-                    <li><strong>Dragon:</strong> 7 points</li>
-                    <li><strong>Ogre:</strong> 8 points</li>
-                    <li><strong>Wizard:</strong> 9 points</li>
+                    <li><strong>Infantry:</strong> 1 point</li>
+                    <li><strong>King:</strong> 13 points</li>
                     <li><strong>Lich:</strong> 11 points</li>
                     <li><strong>Mercenary:</strong> 3 points</li>
                     <li><strong>Necromancer:</strong> 10 points</li>
-                    <li><strong>Elephantry:</strong> 11 points</li>
-                    <li><strong>Champion:</strong> 12 points</li>
-                    <li><strong>King:</strong> 13 points</li>
+                    <li><strong>Ogre:</strong> 8 points</li>
+                    <li><strong>Pistolier:</strong> 3 points</li>
+                    <li><strong>Spectre:</strong> 5 points</li>
+                    <li><strong>Troll:</strong> 6 points</li>
+                    <li><strong>Undead:</strong> 4 points</li>
+                    <li><strong>Wizard:</strong> 9 points</li>
+                    <li><strong>Zombie:</strong> 3 points</li>
                 </ul>
 
                 <h2>Strategy Tips</h2>
@@ -4660,8 +4661,8 @@
         basePieceValues['Mercenary'] = 3;
         basePieceValues['Necromancer'] = 10;
         basePieceValues['Zombie'] = 3;
-        basePieceValues['Undead'] = 5;
-        basePieceValues['Undead3'] = 5;
+        basePieceValues['Undead'] = 4;
+        basePieceValues['Undead3'] = 4;
         basePieceValues['Huntsman'] = 6;
         basePieceValues['DarkVoid'] = 0;
         const pieceValues = basePieceValues;
@@ -5403,10 +5404,6 @@
             'Undead': {
                 points: '1 point to move 1 square diagonally; 2 points to strafe horizontally or vertically.',
                 extra: 'Summoned by Necromancers or Liches adjacent to Dark Void tiles. Displays 2 lives (Necromancer summon) or 3 lives (Lich summon) as hearts in the info panel. Every capture attempt and every attack against it requires a coin flip; failed captures leave it rooted while failed attacks send the attacker to the graveyard.'
-            },
-            'Undead3': {
-                points: 'Same as Undead but appears with 3 lives (Lich summon).',
-                extra: 'Liches summon the 3-life Undead variant adjacent to Dark Void tiles. Cannot be captured without a coin flip; failed attackers go to the graveyard and still reward their value.'
             },
             'Mercenary': {
                 points: '1 point to move 1 square in any direction; 2 points for 2 squares in any direction.',
