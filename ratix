@@ -2625,8 +2625,8 @@
                     <li><strong>Dragon:</strong> 7 points</li>
                     <li><strong>Ogre:</strong> 8 points</li>
                     <li><strong>Wizard:</strong> 9 points</li>
-                    <li><strong>Lich:</strong> 9 points</li>
-                    <li><strong>Mercenary:</strong> 10 points</li>
+                    <li><strong>Lich:</strong> 11 points</li>
+                    <li><strong>Mercenary:</strong> 3 points</li>
                     <li><strong>Necromancer:</strong> 10 points</li>
                     <li><strong>Elephantry:</strong> 11 points</li>
                     <li><strong>Champion:</strong> 12 points</li>
@@ -4654,7 +4654,7 @@
         const basePieceValues = {
             'Infantry': 1, 'Archer': 2, 'Cavalry': 3, 'Pistolier': 3, 'Fusilier': 4, 'Guard': 4, 'Ballista': 5,
             'Troll': 6, 'Dragon': 7, 'Ogre': 8, 'Wizard': 9, 'Spectre': 5, 'Mercenary': 3,
-            'Elephantry': 11, 'Champion': 12, 'King': 13, 'Lich': 9
+            'Elephantry': 11, 'Champion': 12, 'King': 13, 'Lich': 11
         };
         // Force the Mercenary value to 3 so AI evaluations match the desired scoring.
         basePieceValues['Mercenary'] = 3;
@@ -15030,7 +15030,7 @@
                 Zombie: 7, // Increased from 5
                 Fusilier: 7, // Increased from 5
                 Pistolier: 7, // Increased from 5
-                Lich: 12 // Increased from 8
+                Lich: 11 // Increased from 8
             };
 
             // Use AI profile weights (if AI is playing, adjust weights based on profile)
