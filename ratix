@@ -3424,6 +3424,7 @@
             roundLosses[player] = roundLosses[player] || {};
             roundLosses[opponent] = {};
             decrementNecromancerCooldown(player);
+            decrementUndeadChampionCooldown(player);
             decayEnergyBlastResiduals(player);
             let turnStartHandled = false;
             const finalizeTurnStart = () => {
@@ -3538,6 +3539,7 @@
         let lichesSummoned = { 'W': 0, 'B': 0 }; // Track summoned liches (max 1 per player)
         let undeadChampionsSummoned = { 'W': 0, 'B': 0 }; // Track summoned undead champions (max 1 per player)
         let undeadChampionTeleportUsed = new WeakSet(); // Track which undead champions have used teleport
+        let undeadChampionRangedCooldown = new Map(); // Track per-piece ranged attack cooldown
 
         function getMaxZombies(player) {
             return 3 + Math.min(zombieConversions[player] || 0, 2);
@@ -3577,6 +3579,15 @@
                 necromancerShootCooldown.set(piece, turns);
             } else {
                 necromancerShootCooldown.delete(piece);
+            }
+        }
+
+        function setUndeadChampionRangedCooldown(piece, turns) {
+            if (!piece) return;
+            if (turns > 0) {
+                undeadChampionRangedCooldown.set(piece, turns);
+            } else {
+                undeadChampionRangedCooldown.delete(piece);
             }
         }
 
@@ -3627,6 +3638,7 @@
             }
             if (isUndeadChampionType(piece)) {
                 undeadChampionTeleportUsed.delete(piece);
+                undeadChampionRangedCooldown.delete(piece);
             }
         }
 
@@ -4349,6 +4361,23 @@
             necromancerTeleportCounts.forEach((_, piece) => {
                 if (!isPieceOnBoard(piece)) {
                     cleanupNecromancerTracking(piece);
+                }
+            });
+        }
+
+        function decrementUndeadChampionCooldown(player) {
+            undeadChampionRangedCooldown.forEach((turns, piece) => {
+                if (!isPieceOnBoard(piece)) {
+                    cleanupNecromancerTracking(piece);
+                    return;
+                }
+                if (piece.player === player && turns > 0) {
+                    const next = turns - 1;
+                    if (next <= 0) {
+                        undeadChampionRangedCooldown.delete(piece);
+                    } else {
+                        undeadChampionRangedCooldown.set(piece, next);
+                    }
                 }
             });
         }
@@ -6189,8 +6218,9 @@
         pieceTypes['Undead3'] = pieceTypes['Undead'];
 
         pieceTypes['UndeadChampion'] = {
-            move: (r, c, board, player) => {
+            move: (r, c, board, player, _, __, movesLeft = 0) => {
                 let moves = [];
+                const piece = board[r][c];
                 const allDirs = [[1,1], [1,-1], [-1,1], [-1,-1], [0,1], [0,-1], [1,0], [-1,0]];
                 // Regular movement: any direction, 1 square, costs 1 move point
                 for (let [dr, dc] of allDirs) {
@@ -6201,14 +6231,17 @@
                         moves.push({ type: 'move', pos: [nr, nc], cost: 1 });
                     }
                 }
-                // Ranged attack: any direction, 2 squares away
-                for (let [dr, dc] of allDirs) {
-                    const nr = r + dr * 2;
-                    const nc = c + dc * 2;
-                    if (!isValid(nr, nc)) continue;
-                    const target = board[nr][nc];
-                    if (target && target.player !== player) {
-                        moves.push({ type: 'move', pos: [nr, nc], cost: 1, special: 'undeadChampionRanged' });
+                // Ranged attack: any direction, 2 squares away, costs 2 move points, has 1 round cooldown
+                const cooldown = undeadChampionRangedCooldown.get(piece) || 0;
+                if (movesLeft >= 2 && cooldown === 0) {
+                    for (let [dr, dc] of allDirs) {
+                        const nr = r + dr * 2;
+                        const nc = c + dc * 2;
+                        if (!isValid(nr, nc)) continue;
+                        const target = board[nr][nc];
+                        if (target && target.player !== player) {
+                            moves.push({ type: 'move', pos: [nr, nc], cost: 2, special: 'undeadChampionRanged' });
+                        }
                     }
                 }
                 return moves;
@@ -9690,6 +9723,10 @@
             if (move.special === 'rage') {
                 ogreRageUsed[currentPlayer] = true;
                 performOgreRageCapture(move.captureArea, currentPlayer);
+            }
+            if (move.special === 'undeadChampionRanged') {
+                const undeadChampionPiece = board[row][col];
+                setUndeadChampionRangedCooldown(undeadChampionPiece, 2);
             }
 
             if (moveResult?.mercenaryFlipNeeded) {
@@ -17761,6 +17798,9 @@
             necromancerSummonMode = null;
             necromancerTeleportCounts = new Map();
             necromancerShootCooldown = new Map();
+            undeadChampionsSummoned = { 'W': 0, 'B': 0 };
+            undeadChampionTeleportUsed = new WeakSet();
+            undeadChampionRangedCooldown = new Map();
             darkVoidUses = { 'W': 0, 'B': 0 };
             darkVoidSquares.clear();
             zombiesSummoned = { 'W': 0, 'B': 0 };
