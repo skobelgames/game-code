@@ -2217,7 +2217,7 @@
         const HUNTSMAN_BURST_FLIP_COUNT = 4;
         const HUNTSMAN_BURST_SUCCESS_PROBS = [1, 0.9375, 0.6875, 0.3125, 0.0625];
         const HUNTSMAN_BURST_AI_THRESHOLD = 3.5;
-        const KING_SUMMON_AI_THRESHOLD = 4;
+        const KING_SUMMON_AI_THRESHOLD = 1;
         const MORAL_BOOST_SUCCESS_LIMIT = 3;
         const MORAL_BOOST_BONUS = 2;
         const BARRAGE_TARGET_COUNT = 6;
@@ -8021,11 +8021,11 @@
             if (spawnCol === null) return null;
             const options = [];
             if ((pistoliersSummoned[player] || 0) < 2) {
-                const value = (aiPieceValues['Pistolier'] || pieceValues['Pistolier'] || 3) + 2;
+                const value = (aiPieceValues['Pistolier'] || pieceValues['Pistolier'] || 3) + 6;
                 options.push({ summonType: 'Pistolier', score: value });
             }
             if ((fusiliersSummoned[player] || 0) < 2) {
-                const value = (aiPieceValues['Fusilier'] || pieceValues['Fusilier'] || 4) + 1.5;
+                const value = (aiPieceValues['Fusilier'] || pieceValues['Fusilier'] || 4) + 5;
                 options.push({ summonType: 'Fusilier', score: value });
             }
             if (!options.length) return null;
@@ -15513,9 +15513,9 @@
                                         let nr = r + d[0], nc = c + d[1];
                                         if (isValid(nr, nc) && !board[nr][nc]) {
                                             // Summoning has 50% success rate, but Spectre is valuable (value 9)
-                                            // Base value = 0.5 * 9 = 4.5, increased to 9.0 to heavily encourage summoning
+                                            // Base value = 0.5 * 9 = 4.5, increased to 15.0 to heavily encourage summoning
                                             // Apply difficulty multiplier: Easy 1.0x, Medium 1.3x, Hard 1.5x
-                                            let summonValue = 9.0;
+                                            let summonValue = 15.0;
                                             if (aiDifficulty === 'Hard') summonValue *= 1.95; // +30% difficulty (1.5 → 1.95)
                                             else if (aiDifficulty === 'Medium') summonValue *= 1.56; // +20% difficulty (1.3 → 1.56)
                                             allPossibleActions.push({ type: 'summon', pos: [nr, nc], from: [r,c], cost: 2, special: 'summonSpectre', pieceType: 'Wizard', targetValue: summonValue });
@@ -15533,9 +15533,9 @@
                                         if (aiTimeExpired()) break outerBuild;
                                         if (!board[backRow][col]) {
                                             // Zombie summoning has 50% success rate, Zombie value is 3
-                                            // Expected value = 0.5 * 3 = 1.5, increased to 6.0 to encourage summoning
+                                            // Expected value = 0.5 * 3 = 1.5, increased to 12.0 to encourage summoning
                                             // Apply difficulty multiplier: Easy 1.0x, Medium 1.3x, Hard 1.5x
-                                            let summonValue = 6.0;
+                                            let summonValue = 12.0;
                                             if (aiDifficulty === 'Hard') summonValue *= 1.95; // +30% difficulty (1.5 → 1.95)
                                             else if (aiDifficulty === 'Medium') summonValue *= 1.56; // +20% difficulty (1.3 → 1.56)
                                             allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'summonZombie', pieceType: 'Necromancer', targetValue: summonValue });
@@ -15553,7 +15553,7 @@
                                         for (let col = 0; col < COLS; col++) {
                                             if (aiTimeExpired()) break outerBuild;
                                             if (!board[backRow][col]) {
-                                                let summonValue = 14;
+                                                let summonValue = 22;
                                                 if (aiDifficulty === 'Hard') summonValue *= 1.5;
                                                 else if (aiDifficulty === 'Medium') summonValue *= 1.3;
                                                 allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'summonNecromancerLich', pieceType: 'Necromancer', targetValue: summonValue });
@@ -15574,9 +15574,9 @@
                                         if (!isValid(nr, nc)) continue;
                                         if (board[nr][nc]) continue;
                                         // Spectre summoning has 50% success rate, Spectre value is 9
-                                        // Expected value = 0.5 * 9 = 4.5, increased to 10.0 to heavily encourage summoning
+                                        // Expected value = 0.5 * 9 = 4.5, increased to 16.0 to heavily encourage summoning
                                         // Apply difficulty multiplier: Easy 1.0x, Medium 1.3x, Hard 1.5x
-                                        let summonValue = 10.0;
+                                        let summonValue = 16.0;
                                         if (aiDifficulty === 'Hard') summonValue *= 1.5;
                                         else if (aiDifficulty === 'Medium') summonValue *= 1.3;
                                         allPossibleActions.push({ type: 'summon', pos: [nr, nc], from: [r,c], cost: 2, special: 'summonNecromancerSpectre', pieceType: 'Necromancer', targetValue: summonValue });
@@ -15586,7 +15586,7 @@
                             if ((piece.type === 'Necromancer' || piece.type === 'Lich') && undeadSummoned[player] < UNDEAD_SUMMON_LIMIT && movesLeft >= UNDEAD_SUMMON_COST) {
                                 const undeadTargets = getUndeadSummonTargets();
                                 if (undeadTargets.length) {
-                                    let summonValue = 8.0;
+                                    let summonValue = 14.0;
                                     if (aiDifficulty === 'Hard') summonValue *= 1.3;
                                     else if (aiDifficulty === 'Medium') summonValue *= 1.15;
                                     for (let [nr, nc] of undeadTargets) {
@@ -15600,6 +15600,68 @@
                                             pieceType: piece.type,
                                             targetValue: summonValue
                                         });
+                                    }
+                                }
+                            }
+
+                            // Check for Champion Summoning (Necromancer, Huntsman)
+                            if (piece.type === 'Champion' && (gameVariant === '36s-elite' || gameVariant === '36s-supreme') && movesLeft >= 2) {
+                                const backRow = player === 'W' ? ROWS - 1 : 0;
+                                // Check for Necromancer summoning
+                                if ((necromancersSummoned[player] || 0) < 2) {
+                                    for (let col = 0; col < COLS; col++) {
+                                        if (aiTimeExpired()) break outerBuild;
+                                        if (!board[backRow][col]) {
+                                            // Necromancer is extremely valuable for summoning capabilities
+                                            let summonValue = 18.0;
+                                            if (aiDifficulty === 'Hard') summonValue *= 1.5;
+                                            else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                            allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'championSummon', summonType: 'Necromancer', pieceType: 'Champion', targetValue: summonValue });
+                                        }
+                                    }
+                                }
+                                // Check for Huntsman summoning (Supreme only)
+                                if (gameVariant === '36s-supreme' && (huntsmenSummoned[player] || 0) < HUNTSMAN_SUMMON_LIMIT && (huntsmenOnBoard[player] || 0) < HUNTSMAN_MAX_ACTIVE) {
+                                    for (let col = 0; col < COLS; col++) {
+                                        if (aiTimeExpired()) break outerBuild;
+                                        if (!board[backRow][col]) {
+                                            // Huntsman is valuable for mobility and capture mechanics
+                                            let summonValue = 12.0;
+                                            if (aiDifficulty === 'Hard') summonValue *= 1.5;
+                                            else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                            allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'championSummon', summonType: 'Huntsman', pieceType: 'Champion', targetValue: summonValue });
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Check for King Summoning (Pistolier, Fusilier)
+                            if (piece.type === 'King' && ['36s-expert', '36s-elite', '36s-supreme'].includes(gameVariant) && movesLeft >= 2) {
+                                const backRow = player === 'W' ? ROWS - 1 : 0;
+                                // Check for Pistolier summoning
+                                if ((pistoliersSummoned[player] || 0) < 2) {
+                                    for (let col = 0; col < COLS; col++) {
+                                        if (aiTimeExpired()) break outerBuild;
+                                        if (!board[backRow][col]) {
+                                            // Pistolier is valuable for diagonal shooting
+                                            let summonValue = 10.0;
+                                            if (aiDifficulty === 'Hard') summonValue *= 1.5;
+                                            else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                            allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'kingSummon', summonType: 'Pistolier', pieceType: 'King', targetValue: summonValue });
+                                        }
+                                    }
+                                }
+                                // Check for Fusilier summoning
+                                if ((fusiliersSummoned[player] || 0) < 2) {
+                                    for (let col = 0; col < COLS; col++) {
+                                        if (aiTimeExpired()) break outerBuild;
+                                        if (!board[backRow][col]) {
+                                            // Fusilier is valuable for forward shooting
+                                            let summonValue = 10.0;
+                                            if (aiDifficulty === 'Hard') summonValue *= 1.5;
+                                            else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                            allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'kingSummon', summonType: 'Fusilier', pieceType: 'King', targetValue: summonValue });
+                                        }
                                     }
                                 }
                             }
