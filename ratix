@@ -9794,7 +9794,7 @@
             const necromancer = board[fromRow]?.[fromCol];
             const validNecro = necromancer && necromancer.type === 'Necromancer';
             const validLich = necromancer && necromancer.type === 'Lich';
-            const requiresNecro = move.summonType !== 'undead';
+            const requiresNecro = move.summonType !== 'undead' && move.summonType !== 'undeadchampion';
             necromancerSummonMode = null;
             if (!necromancer || (requiresNecro && !validNecro) || (!requiresNecro && !(validNecro || validLich))) {
                 validMoves = [];
@@ -13534,7 +13534,7 @@
                     necromancerSummonMode = null;
                     const validNecro = necromancer && necromancer.type === 'Necromancer';
                     const validLich = necromancer && necromancer.type === 'Lich';
-                    const requiresNecro = summonType !== 'undead';
+                    const requiresNecro = summonType !== 'undead' && summonType !== 'undeadchampion';
                     if (!necromancer || (requiresNecro && !validNecro) || (!requiresNecro && !(validNecro || validLich))) {
                         validMoves = [];
                         selectedPiece = null;
