@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>Belicus - Strategic Chess Variant</title>
+    <title>RATIX - Strategic Chess Variant</title>
     <style>
         :root {
             --fixed-app-width: 1320px;
@@ -1690,7 +1690,7 @@
 </head>
 <body>
     <div id="landing-header">
-        <h1>Belicus</h1>
+        <h1>RATIX</h1>
         <p>Created by Craig Skobel</p>
         <button class="how-to-button" onclick="openHowToPlay()">How to Play</button>
     </div>
@@ -1700,7 +1700,7 @@
             <button id="variant-btn-24s" data-ready="false" onclick="handleVariantClick('24s')">24's (Standard)</button>
             <div id="variant-info-24s" class="variant-info">
                 <p class="variant-description">Board: 10x14. Layout: single Infantry front rank backing a classic Cavalry, Troll, Dragon, Wizard, Guard, Champion, and King battle line.</p>
-                <p class="variant-difficulty"><strong>Recommended skill:</strong> Beginner-friendly for learning Belicus fundamentals, yet still offers solid tactical depth for any player.</p>
+                <p class="variant-difficulty"><strong>Recommended skill:</strong> Beginner-friendly for learning RATIX fundamentals, yet still offers solid tactical depth for any player.</p>
             </div>
         </div>
         <div class="variant-option">
@@ -1784,7 +1784,7 @@
             <button id="turn-timer-standard" onclick="setTurnTimer('standard', this)" class="selected-option">60 secs (Standard)</button>
         </div>
     </div>
-    <footer id="landing-footer">Belicus &copy; 2025 Skobel Games</footer>
+    <footer id="landing-footer">RATIX &copy; 2025 Skobel Games</footer>
     <div id="game-container">
         <div id="score-display">
             <div class="player-panel" id="player-panel">
@@ -1845,7 +1845,7 @@
             <aside id="right-panel">
                 <div id="right-controls">
                     <button class="how-to-button" onclick="openHowToPlay()">How to Play</button>
-                    <button id="Belicus-brand-button" type="button">Belicus</button>
+                    <button id="RATIX-brand-button" type="button">RATIX</button>
                 </div>
                 <div id="status">Player's turn: 3 moves remaining</div>
                 <div id="captured-pieces" aria-label="Graveyard">
@@ -1906,7 +1906,7 @@
     </div>
     <div id="how-to-play-modal">
         <div class="modal-header">
-            <span>How to Play - Belicus</span>
+            <span>How to Play - RATIX</span>
             <button class="modal-close" onclick="closeHowToPlay()" aria-label="Close">&times;</button>
         </div>
         <div class="modal-content">
@@ -2217,7 +2217,7 @@
         const HUNTSMAN_BURST_FLIP_COUNT = 4;
         const HUNTSMAN_BURST_SUCCESS_PROBS = [1, 0.9375, 0.6875, 0.3125, 0.0625];
         const HUNTSMAN_BURST_AI_THRESHOLD = 3.5;
-        const KING_SUMMON_AI_THRESHOLD = 4;
+        const KING_SUMMON_AI_THRESHOLD = 1;
         const MORAL_BOOST_SUCCESS_LIMIT = 3;
         const MORAL_BOOST_BONUS = 2;
         const BARRAGE_TARGET_COUNT = 6;
@@ -2472,7 +2472,7 @@
 
             let html = `
                 <h2>Game Overview</h2>
-                <p><strong>Belicus</strong> is a strategic chess-like war game where you command an army against an AI opponent. Victory comes through capturing the enemy King or achieving alternate win conditions. Each game features tactical depth with special abilities, summoning mechanics, and strategic resource management.</p>
+                <p><strong>RATIX</strong> is a strategic chess-like war game where you command an army against an AI opponent. Victory comes through capturing the enemy King or achieving alternate win conditions. Each game features tactical depth with special abilities, summoning mechanics, and strategic resource management.</p>
 
                 <h2>Game Variants</h2>
                 <ul>
@@ -2611,26 +2611,27 @@
                 <h2>Piece Point Values</h2>
                 <p>When you capture an enemy piece, you gain points based on the piece's value:</p>
                 <ul>
-                    <li><strong>Infantry:</strong> 1 point</li>
                     <li><strong>Archer:</strong> 2 points</li>
+                    <li><strong>Ballista:</strong> 5 points</li>
                     <li><strong>Cavalry:</strong> 3 points</li>
-                    <li><strong>Pistolier:</strong> 3 points</li>
-                    <li><strong>Zombie:</strong> 3 points</li>
+                    <li><strong>Champion:</strong> 12 points</li>
+                    <li><strong>Dragon:</strong> 7 points</li>
+                    <li><strong>Elephantry:</strong> 11 points</li>
                     <li><strong>Fusilier:</strong> 4 points</li>
                     <li><strong>Guard:</strong> 4 points</li>
-                    <li><strong>Ballista:</strong> 5 points</li>
-                    <li><strong>Spectre:</strong> 5 points</li>
                     <li><strong>Huntsman:</strong> 6 points</li>
-                    <li><strong>Troll:</strong> 6 points</li>
-                    <li><strong>Dragon:</strong> 7 points</li>
-                    <li><strong>Ogre:</strong> 8 points</li>
-                    <li><strong>Wizard:</strong> 9 points</li>
-                    <li><strong>Lich:</strong> 9 points</li>
-                    <li><strong>Mercenary:</strong> 10 points</li>
-                    <li><strong>Necromancer:</strong> 10 points</li>
-                    <li><strong>Elephantry:</strong> 11 points</li>
-                    <li><strong>Champion:</strong> 12 points</li>
+                    <li><strong>Infantry:</strong> 1 point</li>
                     <li><strong>King:</strong> 13 points</li>
+                    <li><strong>Lich:</strong> 11 points</li>
+                    <li><strong>Mercenary:</strong> 3 points</li>
+                    <li><strong>Necromancer:</strong> 10 points</li>
+                    <li><strong>Ogre:</strong> 8 points</li>
+                    <li><strong>Pistolier:</strong> 3 points</li>
+                    <li><strong>Spectre:</strong> 5 points</li>
+                    <li><strong>Troll:</strong> 6 points</li>
+                    <li><strong>Undead:</strong> 4 points</li>
+                    <li><strong>Wizard:</strong> 9 points</li>
+                    <li><strong>Zombie:</strong> 3 points</li>
                 </ul>
 
                 <h2>Strategy Tips</h2>
@@ -4654,14 +4655,14 @@
         const basePieceValues = {
             'Infantry': 1, 'Archer': 2, 'Cavalry': 3, 'Pistolier': 3, 'Fusilier': 4, 'Guard': 4, 'Ballista': 5,
             'Troll': 6, 'Dragon': 7, 'Ogre': 8, 'Wizard': 9, 'Spectre': 5, 'Mercenary': 3,
-            'Elephantry': 11, 'Champion': 12, 'King': 13, 'Lich': 9
+            'Elephantry': 11, 'Champion': 12, 'King': 13, 'Lich': 11
         };
         // Force the Mercenary value to 3 so AI evaluations match the desired scoring.
         basePieceValues['Mercenary'] = 3;
         basePieceValues['Necromancer'] = 10;
         basePieceValues['Zombie'] = 3;
-        basePieceValues['Undead'] = 5;
-        basePieceValues['Undead3'] = 5;
+        basePieceValues['Undead'] = 4;
+        basePieceValues['Undead3'] = 4;
         basePieceValues['Huntsman'] = 6;
         basePieceValues['DarkVoid'] = 0;
         const pieceValues = basePieceValues;
@@ -5403,10 +5404,6 @@
             'Undead': {
                 points: '1 point to move 1 square diagonally; 2 points to strafe horizontally or vertically.',
                 extra: 'Summoned by Necromancers or Liches adjacent to Dark Void tiles. Displays 2 lives (Necromancer summon) or 3 lives (Lich summon) as hearts in the info panel. Every capture attempt and every attack against it requires a coin flip; failed captures leave it rooted while failed attacks send the attacker to the graveyard.'
-            },
-            'Undead3': {
-                points: 'Same as Undead but appears with 3 lives (Lich summon).',
-                extra: 'Liches summon the 3-life Undead variant adjacent to Dark Void tiles. Cannot be captured without a coin flip; failed attackers go to the graveyard and still reward their value.'
             },
             'Mercenary': {
                 points: '1 point to move 1 square in any direction; 2 points for 2 squares in any direction.',
@@ -8024,11 +8021,11 @@
             if (spawnCol === null) return null;
             const options = [];
             if ((pistoliersSummoned[player] || 0) < 2) {
-                const value = (aiPieceValues['Pistolier'] || pieceValues['Pistolier'] || 3) + 2;
+                const value = (aiPieceValues['Pistolier'] || pieceValues['Pistolier'] || 3) + 6;
                 options.push({ summonType: 'Pistolier', score: value });
             }
             if ((fusiliersSummoned[player] || 0) < 2) {
-                const value = (aiPieceValues['Fusilier'] || pieceValues['Fusilier'] || 4) + 1.5;
+                const value = (aiPieceValues['Fusilier'] || pieceValues['Fusilier'] || 4) + 5;
                 options.push({ summonType: 'Fusilier', score: value });
             }
             if (!options.length) return null;
@@ -15030,7 +15027,7 @@
                 Zombie: 7, // Increased from 5
                 Fusilier: 7, // Increased from 5
                 Pistolier: 7, // Increased from 5
-                Lich: 12 // Increased from 8
+                Lich: 11 // Increased from 8
             };
 
             // Use AI profile weights (if AI is playing, adjust weights based on profile)
@@ -15516,9 +15513,9 @@
                                         let nr = r + d[0], nc = c + d[1];
                                         if (isValid(nr, nc) && !board[nr][nc]) {
                                             // Summoning has 50% success rate, but Spectre is valuable (value 9)
-                                            // Base value = 0.5 * 9 = 4.5, increased to 9.0 to heavily encourage summoning
+                                            // Base value = 0.5 * 9 = 4.5, increased to 15.0 to heavily encourage summoning
                                             // Apply difficulty multiplier: Easy 1.0x, Medium 1.3x, Hard 1.5x
-                                            let summonValue = 9.0;
+                                            let summonValue = 15.0;
                                             if (aiDifficulty === 'Hard') summonValue *= 1.95; // +30% difficulty (1.5 → 1.95)
                                             else if (aiDifficulty === 'Medium') summonValue *= 1.56; // +20% difficulty (1.3 → 1.56)
                                             allPossibleActions.push({ type: 'summon', pos: [nr, nc], from: [r,c], cost: 2, special: 'summonSpectre', pieceType: 'Wizard', targetValue: summonValue });
@@ -15536,9 +15533,9 @@
                                         if (aiTimeExpired()) break outerBuild;
                                         if (!board[backRow][col]) {
                                             // Zombie summoning has 50% success rate, Zombie value is 3
-                                            // Expected value = 0.5 * 3 = 1.5, increased to 6.0 to encourage summoning
+                                            // Expected value = 0.5 * 3 = 1.5, increased to 12.0 to encourage summoning
                                             // Apply difficulty multiplier: Easy 1.0x, Medium 1.3x, Hard 1.5x
-                                            let summonValue = 6.0;
+                                            let summonValue = 12.0;
                                             if (aiDifficulty === 'Hard') summonValue *= 1.95; // +30% difficulty (1.5 → 1.95)
                                             else if (aiDifficulty === 'Medium') summonValue *= 1.56; // +20% difficulty (1.3 → 1.56)
                                             allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'summonZombie', pieceType: 'Necromancer', targetValue: summonValue });
@@ -15556,7 +15553,7 @@
                                         for (let col = 0; col < COLS; col++) {
                                             if (aiTimeExpired()) break outerBuild;
                                             if (!board[backRow][col]) {
-                                                let summonValue = 14;
+                                                let summonValue = 22;
                                                 if (aiDifficulty === 'Hard') summonValue *= 1.5;
                                                 else if (aiDifficulty === 'Medium') summonValue *= 1.3;
                                                 allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'summonNecromancerLich', pieceType: 'Necromancer', targetValue: summonValue });
@@ -15577,9 +15574,9 @@
                                         if (!isValid(nr, nc)) continue;
                                         if (board[nr][nc]) continue;
                                         // Spectre summoning has 50% success rate, Spectre value is 9
-                                        // Expected value = 0.5 * 9 = 4.5, increased to 10.0 to heavily encourage summoning
+                                        // Expected value = 0.5 * 9 = 4.5, increased to 16.0 to heavily encourage summoning
                                         // Apply difficulty multiplier: Easy 1.0x, Medium 1.3x, Hard 1.5x
-                                        let summonValue = 10.0;
+                                        let summonValue = 16.0;
                                         if (aiDifficulty === 'Hard') summonValue *= 1.5;
                                         else if (aiDifficulty === 'Medium') summonValue *= 1.3;
                                         allPossibleActions.push({ type: 'summon', pos: [nr, nc], from: [r,c], cost: 2, special: 'summonNecromancerSpectre', pieceType: 'Necromancer', targetValue: summonValue });
@@ -15589,7 +15586,7 @@
                             if ((piece.type === 'Necromancer' || piece.type === 'Lich') && undeadSummoned[player] < UNDEAD_SUMMON_LIMIT && movesLeft >= UNDEAD_SUMMON_COST) {
                                 const undeadTargets = getUndeadSummonTargets();
                                 if (undeadTargets.length) {
-                                    let summonValue = 8.0;
+                                    let summonValue = 14.0;
                                     if (aiDifficulty === 'Hard') summonValue *= 1.3;
                                     else if (aiDifficulty === 'Medium') summonValue *= 1.15;
                                     for (let [nr, nc] of undeadTargets) {
@@ -15603,6 +15600,68 @@
                                             pieceType: piece.type,
                                             targetValue: summonValue
                                         });
+                                    }
+                                }
+                            }
+
+                            // Check for Champion Summoning (Necromancer, Huntsman)
+                            if (piece.type === 'Champion' && (gameVariant === '36s-elite' || gameVariant === '36s-supreme') && movesLeft >= 2) {
+                                const backRow = player === 'W' ? ROWS - 1 : 0;
+                                // Check for Necromancer summoning
+                                if ((necromancersSummoned[player] || 0) < 2) {
+                                    for (let col = 0; col < COLS; col++) {
+                                        if (aiTimeExpired()) break outerBuild;
+                                        if (!board[backRow][col]) {
+                                            // Necromancer is extremely valuable for summoning capabilities
+                                            let summonValue = 18.0;
+                                            if (aiDifficulty === 'Hard') summonValue *= 1.5;
+                                            else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                            allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'championSummon', summonType: 'Necromancer', pieceType: 'Champion', targetValue: summonValue });
+                                        }
+                                    }
+                                }
+                                // Check for Huntsman summoning (Supreme only)
+                                if (gameVariant === '36s-supreme' && (huntsmenSummoned[player] || 0) < HUNTSMAN_SUMMON_LIMIT && (huntsmenOnBoard[player] || 0) < HUNTSMAN_MAX_ACTIVE) {
+                                    for (let col = 0; col < COLS; col++) {
+                                        if (aiTimeExpired()) break outerBuild;
+                                        if (!board[backRow][col]) {
+                                            // Huntsman is valuable for mobility and capture mechanics
+                                            let summonValue = 12.0;
+                                            if (aiDifficulty === 'Hard') summonValue *= 1.5;
+                                            else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                            allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'championSummon', summonType: 'Huntsman', pieceType: 'Champion', targetValue: summonValue });
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Check for King Summoning (Pistolier, Fusilier)
+                            if (piece.type === 'King' && ['36s-expert', '36s-elite', '36s-supreme'].includes(gameVariant) && movesLeft >= 2) {
+                                const backRow = player === 'W' ? ROWS - 1 : 0;
+                                // Check for Pistolier summoning
+                                if ((pistoliersSummoned[player] || 0) < 2) {
+                                    for (let col = 0; col < COLS; col++) {
+                                        if (aiTimeExpired()) break outerBuild;
+                                        if (!board[backRow][col]) {
+                                            // Pistolier is valuable for diagonal shooting
+                                            let summonValue = 10.0;
+                                            if (aiDifficulty === 'Hard') summonValue *= 1.5;
+                                            else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                            allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'kingSummon', summonType: 'Pistolier', pieceType: 'King', targetValue: summonValue });
+                                        }
+                                    }
+                                }
+                                // Check for Fusilier summoning
+                                if ((fusiliersSummoned[player] || 0) < 2) {
+                                    for (let col = 0; col < COLS; col++) {
+                                        if (aiTimeExpired()) break outerBuild;
+                                        if (!board[backRow][col]) {
+                                            // Fusilier is valuable for forward shooting
+                                            let summonValue = 10.0;
+                                            if (aiDifficulty === 'Hard') summonValue *= 1.5;
+                                            else if (aiDifficulty === 'Medium') summonValue *= 1.3;
+                                            allPossibleActions.push({ type: 'summon', pos: [backRow, col], from: [r,c], cost: 2, special: 'kingSummon', summonType: 'Fusilier', pieceType: 'King', targetValue: summonValue });
+                                        }
                                     }
                                 }
                             }
