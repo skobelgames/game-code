@@ -7391,6 +7391,7 @@
             if (necromancerSpectreButton) necromancerSpectreButton.style.display = 'none';
             if (necromancerLichButton) necromancerLichButton.style.display = 'none';
             if (necromancerUndeadButton) necromancerUndeadButton.style.display = 'none';
+            if (lichUndeadChampionButton) lichUndeadChampionButton.style.display = 'none';
             if (necromancerTeleportButton) necromancerTeleportButton.style.display = 'none';
             if (darkVoidButton) {
                 darkVoidButton.style.display = 'none';
@@ -10746,7 +10747,7 @@
                     const necromancer = board[fromRow]?.[fromCol];
                     const summonContext = necromancerSummonMode;
                     necromancerSummonMode = null;
-                    if (!necromancer || necromancer.type !== 'Necromancer') {
+                    if (!necromancer || (necromancer.type !== 'Necromancer' && necromancer.type !== 'Lich')) {
                         validMoves = [];
                         selectedPiece = null;
                         renderBoard();
