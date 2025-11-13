@@ -3536,6 +3536,8 @@
         let pistoliersSummoned = { 'W': 0, 'B': 0 }; // Track summoned pistoliers (max 2 per player)
         let fusiliersSummoned = { 'W': 0, 'B': 0 }; // Track summoned fusiliers (max 2 per player)
         let lichesSummoned = { 'W': 0, 'B': 0 }; // Track summoned liches (max 1 per player)
+        let undeadChampionsSummoned = { 'W': 0, 'B': 0 }; // Track summoned undead champions (max 1 per player)
+        let undeadChampionTeleportUsed = new WeakSet(); // Track which undead champions have used teleport
 
         function getMaxZombies(player) {
             return 3 + Math.min(zombieConversions[player] || 0, 2);
@@ -3583,12 +3585,16 @@
         }
 
         function createUndeadPiece(player, lives, summonedBy) {
-            const type = lives >= 3 ? 'Undead3' : 'Undead';
+            const type = 'Undead';
             return { type, player, lives, maxLives: lives, summonedBy };
         }
 
         function createSpectrePiece(player) {
             return { type: 'Spectre', player };
+        }
+
+        function createUndeadChampionPiece(player, summonedBy) {
+            return { type: 'UndeadChampion', player, lives: 2, maxLives: 2, summonedBy };
         }
 
         function isPieceOnBoard(piece) {
@@ -3615,6 +3621,12 @@
             }
             if (isUndeadType(piece) && undeadSummoned[piece.player] > 0) {
                 undeadSummoned[piece.player]--;
+            }
+            if (isUndeadChampionType(piece) && undeadChampionsSummoned[piece.player] > 0) {
+                undeadChampionsSummoned[piece.player]--;
+            }
+            if (isUndeadChampionType(piece)) {
+                undeadChampionTeleportUsed.delete(piece);
             }
         }
 
@@ -4648,6 +4660,7 @@
         pieceIcons['Zombie'] = 'Z';
         pieceIcons['Undead'] = 'U';
         pieceIcons['Undead3'] = 'U';
+        pieceIcons['UndeadChampion'] = 'ⓤ';
         pieceIcons['Huntsman'] = 'H';
         const facingIcons = {
             'U': '^', 'D': 'v', 'L': '<', 'R': '>'
@@ -4663,6 +4676,7 @@
         basePieceValues['Zombie'] = 3;
         basePieceValues['Undead'] = 4;
         basePieceValues['Undead3'] = 4;
+        basePieceValues['UndeadChampion'] = 10;
         basePieceValues['Huntsman'] = 6;
         basePieceValues['DarkVoid'] = 0;
         const pieceValues = basePieceValues;
@@ -4723,8 +4737,10 @@
         const LICH_CAPTURE_AUTO_TYPES = new Set(['Wizard', 'Necromancer', 'Spectre']);
         const UNDEAD_SUMMON_LIMIT = 2;
         const UNDEAD_SUMMON_COST = 2;
-        const UNDEAD_LIVES_BY_SUMMONER = { 'Necromancer': 2, 'Lich': 3 };
-        const UNDEAD_TYPES = new Set(['Undead', 'Undead3']);
+        const UNDEAD_LIVES_BY_SUMMONER = { 'Necromancer': 2, 'Lich': 2 };
+        const UNDEAD_TYPES = new Set(['Undead']);
+        const UNDEAD_CHAMPION_SUMMON_LIMIT = 1;
+        const UNDEAD_CHAMPION_TELEPORT_RANGE = 3;
         const KING_EVADE_RANGE = 2;
         const KING_SHOT_AI_THRESHOLD = 5; // Minimum target value before AI considers King Shot
         const KING_EVADE_CAPTURE_BONUS = 6; // Weight applied to captured piece value when evading
@@ -5466,6 +5482,16 @@
             const type = typeof value === 'string' ? value : value.type;
             return UNDEAD_TYPES.has(type);
         }
+        function isUndeadChampionType(value) {
+            if (!value) return false;
+            const type = typeof value === 'string' ? value : value.type;
+            return type === 'UndeadChampion';
+        }
+        function requiresCoinFlipCapture(value) {
+            if (!value) return false;
+            const type = typeof value === 'string' ? value : value.type;
+            return UNDEAD_TYPES.has(type) || type === 'UndeadChampion';
+        }
         function isAdjacentToDarkVoid(row, col) {
             for (let dr = -1; dr <= 1; dr++) {
                 for (let dc = -1; dc <= 1; dc++) {
@@ -6161,6 +6187,33 @@
             }
         };
         pieceTypes['Undead3'] = pieceTypes['Undead'];
+
+        pieceTypes['UndeadChampion'] = {
+            move: (r, c, board, player) => {
+                let moves = [];
+                const allDirs = [[1,1], [1,-1], [-1,1], [-1,-1], [0,1], [0,-1], [1,0], [-1,0]];
+                // Regular movement: any direction, 1 square, costs 1 move point
+                for (let [dr, dc] of allDirs) {
+                    const nr = r + dr;
+                    const nc = c + dc;
+                    if (!isValid(nr, nc) || isDarkVoidSquare(nr, nc)) continue;
+                    if (!board[nr][nc] || board[nr][nc].player !== player) {
+                        moves.push({ type: 'move', pos: [nr, nc], cost: 1 });
+                    }
+                }
+                // Ranged attack: any direction, 2 squares away
+                for (let [dr, dc] of allDirs) {
+                    const nr = r + dr * 2;
+                    const nc = c + dc * 2;
+                    if (!isValid(nr, nc)) continue;
+                    const target = board[nr][nc];
+                    if (target && target.player !== player) {
+                        moves.push({ type: 'move', pos: [nr, nc], cost: 1, special: 'undeadChampionRanged' });
+                    }
+                }
+                return moves;
+            }
+        };
 
         pieceTypes['DarkVoid'] = {
             move: () => []
@@ -7194,6 +7247,15 @@
                 necromancerUndeadButton.style.display = 'none';
                 necromancerUndeadButton.onclick = () => activateNecromancerSummon('undead', necromancerUndeadButton);
                 document.getElementById('controls').insertBefore(necromancerUndeadButton, document.getElementById('guard-honour-button'));
+            }
+            let lichUndeadChampionButton = document.getElementById('lich-summon-undead-champion-button');
+            if (!lichUndeadChampionButton) {
+                lichUndeadChampionButton = document.createElement('button');
+                lichUndeadChampionButton.id = 'lich-summon-undead-champion-button';
+                lichUndeadChampionButton.textContent = 'Summon Undead Champion';
+                lichUndeadChampionButton.style.display = 'none';
+                lichUndeadChampionButton.onclick = () => activateNecromancerSummon('undeadchampion', lichUndeadChampionButton);
+                document.getElementById('controls').insertBefore(lichUndeadChampionButton, document.getElementById('guard-honour-button'));
             }
             let necromancerTeleportButton = document.getElementById('necromancer-teleport-button');
             if (!necromancerTeleportButton) {
@@ -10651,53 +10713,89 @@
                     renderBoard();
                     const playerLabel = necromancerOwner === 'W' ? 'Player' : getOpponentDisplayName();
                     const label = summonType === 'spectre' ? 'Spectre' : (summonType === 'lich' ? 'Lich' : (summonType === 'undead' ? 'Undead' : 'Zombie'));
-                    performCoinToss(
-                        `Summon ${label}`,
-                        `${playerLabel} attempts to summon a ${label}...`,
-                        (success) => {
-                            if (success) {
-                                if (!board[targetRow][targetCol]) {
-                                    if (summonType === 'spectre') {
-                                        board[targetRow][targetCol] = { type: 'Spectre', player: necromancerOwner };
-                                        spectresSummoned[necromancerOwner]++;
-                                    } else if (summonType === 'lich') {
-                                        board[targetRow][targetCol] = { type: 'Lich', player: necromancerOwner };
-                                        lichesSummoned[necromancerOwner]++;
-                                    } else {
-                                        if (summonType === 'undead') {
-                                            const summonerType = summonContext?.summonerType || 'Necromancer';
-                                            const undeadLives = UNDEAD_LIVES_BY_SUMMONER[summonerType] || UNDEAD_LIVES_BY_SUMMONER['Necromancer'];
-                                            const undeadPiece = createUndeadPiece(necromancerOwner, undeadLives, summonerType);
-                                            board[targetRow][targetCol] = undeadPiece;
-                                            undeadSummoned[necromancerOwner] = (undeadSummoned[necromancerOwner] || 0) + 1;
-                                        } else {
-                                            const zombiePiece = createZombiePiece(necromancerOwner);
-                                            board[targetRow][targetCol] = zombiePiece;
-                                            zombiesSummoned[necromancerOwner] = (zombiesSummoned[necromancerOwner] || 0) + 1;
-                                        }
-                                    }
-                                    gameStats.summonCount[necromancerOwner]++;
-                                    gameLog.push(`${playerLabel} summoned a ${label} at ${formatBoardCoordinates(targetRow,targetCol)}.`);
+                    const isLichSummoningUndead = summonType === 'undead' && summonContext?.summonerType === 'Lich';
+
+                    const completeSummon = (success) => {
+                        if (success) {
+                            if (!board[targetRow][targetCol]) {
+                                if (summonType === 'spectre') {
+                                    board[targetRow][targetCol] = { type: 'Spectre', player: necromancerOwner };
+                                    spectresSummoned[necromancerOwner]++;
+                                } else if (summonType === 'lich') {
+                                    board[targetRow][targetCol] = { type: 'Lich', player: necromancerOwner };
+                                    lichesSummoned[necromancerOwner]++;
+                                } else if (summonType === 'undeadchampion') {
+                                    const summonerType = summonContext?.summonerType || 'Lich';
+                                    const undeadChampionPiece = createUndeadChampionPiece(necromancerOwner, summonerType);
+                                    board[targetRow][targetCol] = undeadChampionPiece;
+                                    undeadChampionsSummoned[necromancerOwner] = (undeadChampionsSummoned[necromancerOwner] || 0) + 1;
                                 } else {
-                                    gameLog.push(`${playerLabel}'s ${label} summon succeeded but the chosen square was occupied.`);
+                                    if (summonType === 'undead') {
+                                        const summonerType = summonContext?.summonerType || 'Necromancer';
+                                        const undeadLives = UNDEAD_LIVES_BY_SUMMONER[summonerType] || UNDEAD_LIVES_BY_SUMMONER['Necromancer'];
+                                        const undeadPiece = createUndeadPiece(necromancerOwner, undeadLives, summonerType);
+                                        board[targetRow][targetCol] = undeadPiece;
+                                        undeadSummoned[necromancerOwner] = (undeadSummoned[necromancerOwner] || 0) + 1;
+                                    } else {
+                                        const zombiePiece = createZombiePiece(necromancerOwner);
+                                        board[targetRow][targetCol] = zombiePiece;
+                                        zombiesSummoned[necromancerOwner] = (zombiesSummoned[necromancerOwner] || 0) + 1;
+                                    }
                                 }
+                                gameStats.summonCount[necromancerOwner]++;
+                                gameLog.push(`${playerLabel} summoned a ${label} at ${formatBoardCoordinates(targetRow,targetCol)}.`);
                             } else {
-                                gameLog.push(`${playerLabel} failed to summon a ${label}.`);
+                                gameLog.push(`${playerLabel}'s ${label} summon succeeded but the chosen square was occupied.`);
                             }
-                            lastAction = { move: true };
-                            movedPieces.add(`${fromRow},${fromCol}`);
-                            renderBoard();
-                            updateStatus();
-                            updateEndTurnButton();
-                            updateGameLog();
-                            checkGameOver();
-                            if (movesLeft === 0 && !reinforcementPending && currentPlayer === 'W') {
-                                triggerAiTurn();
-                            }
-                        },
-                        false,
-                        false
-                    );
+                        } else {
+                            gameLog.push(`${playerLabel} failed to summon a ${label}.`);
+                        }
+                        lastAction = { move: true };
+                        movedPieces.add(`${fromRow},${fromCol}`);
+                        renderBoard();
+                        updateStatus();
+                        updateEndTurnButton();
+                        updateGameLog();
+                        checkGameOver();
+                        if (movesLeft === 0 && !reinforcementPending && currentPlayer === 'W') {
+                            triggerAiTurn();
+                        }
+                    };
+
+                    if (isLichSummoningUndead) {
+                        // Lich summoning undead requires 2 successful coin flips
+                        performCoinToss(
+                            `Summon ${label} - Flip 1/2`,
+                            `${playerLabel} attempts first coin flip to summon ${label}...`,
+                            (firstSuccess) => {
+                                if (!firstSuccess) {
+                                    completeSummon(false);
+                                } else {
+                                    performCoinToss(
+                                        `Summon ${label} - Flip 2/2`,
+                                        `${playerLabel} attempts second coin flip to summon ${label}...`,
+                                        (secondSuccess) => {
+                                            completeSummon(secondSuccess);
+                                        },
+                                        false,
+                                        false
+                                    );
+                                }
+                            },
+                            false,
+                            false
+                        );
+                    } else {
+                        performCoinToss(
+                            `Summon ${label}`,
+                            `${playerLabel} attempts to summon a ${label}...`,
+                            (success) => {
+                                completeSummon(success);
+                            },
+                            false,
+                            false
+                        );
+                    }
                 }
                 return;
             }
@@ -10867,8 +10965,8 @@
                         const attackingPiece = board[selectedPiece.row][selectedPiece.col];
                         const isCapturingSpectre = targetPiece && targetPiece.type === 'Spectre' && targetPiece.player !== attackingPiece.player;
                         const captureExempt = attackingPiece.type === 'Wizard' || attackingPiece.type === 'Spectre';
-                        const isTargetUndead = targetPiece && isUndeadType(targetPiece) && targetPiece.player !== attackingPiece.player;
-                        const isAttackingUndead = attackingPiece && isUndeadType(attackingPiece) && targetPiece && targetPiece.player !== attackingPiece.player;
+                        const isTargetUndead = targetPiece && (isUndeadType(targetPiece) || isUndeadChampionType(targetPiece)) && targetPiece.player !== attackingPiece.player;
+                        const isAttackingUndead = attackingPiece && (isUndeadType(attackingPiece) || isUndeadChampionType(attackingPiece)) && targetPiece && targetPiece.player !== attackingPiece.player;
 
                         if ((isTargetUndead || isAttackingUndead) && move.type === 'move') {
                             const fromRow = selectedPiece.row;
@@ -11536,16 +11634,18 @@
             }
             const piece = board[selectedPiece.row][selectedPiece.col];
             const isUndeadSummon = type === 'undead';
+            const isUndeadChampionSummon = type === 'undeadchampion';
             if (!piece) return;
             const isNecromancerPiece = piece.type === 'Necromancer';
-            if ((isUndeadSummon && !(isNecromancerPiece || piece.type === 'Lich')) || (!isUndeadSummon && !isNecromancerPiece)) return;
+            const isLichPiece = piece.type === 'Lich';
+            if ((isUndeadSummon && !(isNecromancerPiece || isLichPiece)) || (isUndeadChampionSummon && !isLichPiece) || (!isUndeadSummon && !isUndeadChampionSummon && !isNecromancerPiece)) return;
             if (gameVariant !== '36s-elite' && gameVariant !== '36s-supreme') return;
             const owner = piece.player;
             const summonerType = piece.type;
             const isZombieSummon = type === 'zombie';
             const isSpectreSummon = type === 'spectre';
             const isLichSummon = type === 'lich';
-            if (!isZombieSummon && !isSpectreSummon && !isLichSummon && !isUndeadSummon) return;
+            if (!isZombieSummon && !isSpectreSummon && !isLichSummon && !isUndeadSummon && !isUndeadChampionSummon) return;
             if (isZombieSummon) {
                 const maxZombies = getMaxZombies(owner);
                 if ((zombiesSummoned[owner] || 0) >= maxZombies) {
@@ -11603,6 +11703,19 @@
                     return;
                 }
                 options = undeadTargets.map(pos => ({ type: 'summon', pos, cost: UNDEAD_SUMMON_COST, special: 'necromancerSummon', summonType: type }));
+            } else if (isUndeadChampionSummon) {
+                if ((undeadChampionsSummoned[owner] || 0) >= UNDEAD_CHAMPION_SUMMON_LIMIT) {
+                    gameLog.push('Undead Champion already summoned. Cannot summon more.');
+                    updateGameLog();
+                    return;
+                }
+                const undeadTargets = getUndeadSummonTargets();
+                if (!undeadTargets.length) {
+                    gameLog.push('No open squares adjacent to a Dark Void to summon Undead Champion.');
+                    updateGameLog();
+                    return;
+                }
+                options = undeadTargets.map(pos => ({ type: 'summon', pos, cost: UNDEAD_SUMMON_COST, special: 'necromancerSummon', summonType: type }));
             } else {
                 if (!hasBackRowSpawnSlot(owner)) {
                     gameLog.push('No open squares on the back row to place a summon.');
@@ -11628,14 +11741,16 @@
                     ? 'necromancer-summon-lich-button'
                     : isUndeadSummon
                         ? 'necromancer-summon-undead-button'
-                        : 'necromancer-summon-zombie-button';
+                        : isUndeadChampionSummon
+                            ? 'lich-summon-undead-champion-button'
+                            : 'necromancer-summon-zombie-button';
             setActiveControlButton(button || document.getElementById(fallbackId));
             validMoves = options;
             renderBoard();
             updateStatus();
             updateEndTurnButton();
-            const label = isSpectreSummon ? 'Spectre' : (isLichSummon ? 'Lich' : (isUndeadSummon ? 'Undead' : 'Zombie'));
-            const placementLabel = isSpectreSummon ? 'an adjacent square' : (isUndeadSummon ? 'a square next to a Dark Void' : 'a back row square');
+            const label = isSpectreSummon ? 'Spectre' : (isLichSummon ? 'Lich' : (isUndeadSummon ? 'Undead' : (isUndeadChampionSummon ? 'Undead Champion' : 'Zombie')));
+            const placementLabel = isSpectreSummon ? 'an adjacent square' : ((isUndeadSummon || isUndeadChampionSummon) ? 'a square next to a Dark Void' : 'a back row square');
             gameLog.push(`Select ${placementLabel} to summon a ${label}.`);
             updateGameLog();
         }
@@ -13321,41 +13436,45 @@
                     renderBoard();
                 const playerLabel = necromancerOwner === 'W' ? 'Player' : getOpponentDisplayName();
                     const label = summonType === 'spectre' ? 'Spectre' : (summonType === 'lich' ? 'Lich' : (summonType === 'undead' ? 'Undead' : 'Zombie'));
-                    performCoinToss(
-                        `Summon ${label}`,
-                        `${playerLabel} attempts to summon a ${label}...`,
-                        (success) => {
-                            if (success) {
-                                if (!board[targetRow][targetCol]) {
-                                    if (summonType === 'spectre') {
-                                        board[targetRow][targetCol] = { type: 'Spectre', player: necromancerOwner };
-                                        spectresSummoned[necromancerOwner]++;
-                                    } else if (summonType === 'lich') {
-                                        board[targetRow][targetCol] = { type: 'Lich', player: necromancerOwner };
-                                        lichesSummoned[necromancerOwner]++;
+                    const isLichSummoningUndead = summonType === 'undead' && summonContext?.summonerType === 'Lich';
+
+                    const completeSummon = (success) => {
+                        if (success) {
+                            if (!board[targetRow][targetCol]) {
+                                if (summonType === 'spectre') {
+                                    board[targetRow][targetCol] = { type: 'Spectre', player: necromancerOwner };
+                                    spectresSummoned[necromancerOwner]++;
+                                } else if (summonType === 'lich') {
+                                    board[targetRow][targetCol] = { type: 'Lich', player: necromancerOwner };
+                                    lichesSummoned[necromancerOwner]++;
+                                } else if (summonType === 'undeadchampion') {
+                                    const summonerType = summonContext?.summonerType || 'Lich';
+                                    const undeadChampionPiece = createUndeadChampionPiece(necromancerOwner, summonerType);
+                                    board[targetRow][targetCol] = undeadChampionPiece;
+                                    undeadChampionsSummoned[necromancerOwner] = (undeadChampionsSummoned[necromancerOwner] || 0) + 1;
+                                } else {
+                                    if (summonType === 'undead') {
+                                        const summonerType = summonContext?.summonerType || 'Necromancer';
+                                        const undeadLives = UNDEAD_LIVES_BY_SUMMONER[summonerType] || UNDEAD_LIVES_BY_SUMMONER['Necromancer'];
+                                        const undeadPiece = createUndeadPiece(necromancerOwner, undeadLives, summonerType);
+                                        board[targetRow][targetCol] = undeadPiece;
+                                        undeadSummoned[necromancerOwner] = (undeadSummoned[necromancerOwner] || 0) + 1;
                                     } else {
-                                        if (summonType === 'undead') {
-                                            const summonerType = summonContext?.summonerType || 'Necromancer';
-                                            const undeadLives = UNDEAD_LIVES_BY_SUMMONER[summonerType] || UNDEAD_LIVES_BY_SUMMONER['Necromancer'];
-                                            const undeadPiece = createUndeadPiece(necromancerOwner, undeadLives, summonerType);
-                                            board[targetRow][targetCol] = undeadPiece;
-                                            undeadSummoned[necromancerOwner] = (undeadSummoned[necromancerOwner] || 0) + 1;
-                                        } else {
-                                            const zombiePiece = createZombiePiece(necromancerOwner);
-                                            board[targetRow][targetCol] = zombiePiece;
-                                            zombiesSummoned[necromancerOwner] = (zombiesSummoned[necromancerOwner] || 0) + 1;
-                                        }
+                                        const zombiePiece = createZombiePiece(necromancerOwner);
+                                        board[targetRow][targetCol] = zombiePiece;
+                                        zombiesSummoned[necromancerOwner] = (zombiesSummoned[necromancerOwner] || 0) + 1;
                                     }
+                                }
                                 gameStats.summonCount[necromancerOwner]++;
                                 gameLog.push(`${playerLabel} summoned a ${label} at ${formatBoardCoordinates(targetRow,targetCol)}.`);
                             } else {
                                 gameLog.push(`${playerLabel}'s ${label} summon succeeded but the chosen square was occupied.`);
                             }
                         } else {
-                                gameLog.push(`${playerLabel} failed to summon a ${label}.`);
-                            }
-                            lastAction = { move: true };
-                            movedPieces.add(`${fromRow},${fromCol}`);
+                            gameLog.push(`${playerLabel} failed to summon a ${label}.`);
+                        }
+                        lastAction = { move: true };
+                        movedPieces.add(`${fromRow},${fromCol}`);
                         renderBoard();
                         updateStatus();
                         updateEndTurnButton();
@@ -13364,10 +13483,42 @@
                         if (movesLeft === 0 && !reinforcementPending && currentPlayer === 'W') {
                             triggerAiTurn();
                         }
-                    },
-                        false,
-                        false
-                    );
+                    };
+
+                    if (isLichSummoningUndead) {
+                        // Lich summoning undead requires 2 successful coin flips
+                        performCoinToss(
+                            `Summon ${label} - Flip 1/2`,
+                            `${playerLabel} attempts first coin flip to summon ${label}...`,
+                            (firstSuccess) => {
+                                if (!firstSuccess) {
+                                    completeSummon(false);
+                                } else {
+                                    performCoinToss(
+                                        `Summon ${label} - Flip 2/2`,
+                                        `${playerLabel} attempts second coin flip to summon ${label}...`,
+                                        (secondSuccess) => {
+                                            completeSummon(secondSuccess);
+                                        },
+                                        false,
+                                        false
+                                    );
+                                }
+                            },
+                            false,
+                            false
+                        );
+                    } else {
+                        performCoinToss(
+                            `Summon ${label}`,
+                            `${playerLabel} attempts to summon a ${label}...`,
+                            (success) => {
+                                completeSummon(success);
+                            },
+                            false,
+                            false
+                        );
+                    }
                 }
                 return;
             }
@@ -14505,12 +14656,13 @@
         }
 
         function attemptUndeadCapture(attackerPiece, targetPiece, fromRow, fromCol, toRow, toCol, success) {
-            if (!attackerPiece || !isUndeadType(attackerPiece) || !targetPiece || targetPiece.player === attackerPiece.player) {
+            if (!attackerPiece || !(isUndeadType(attackerPiece) || isUndeadChampionType(attackerPiece)) || !targetPiece || targetPiece.player === attackerPiece.player) {
                 return null;
             }
             if (!success) {
                 const actorLabel = attackerPiece.player === 'W' ? 'Player' : getOpponentDisplayName();
-                gameLog.push(`${actorLabel} Undead failed to capture ${targetPiece.type} at ${formatBoardCoordinates(toRow,toCol)} and stayed in place.`);
+                const pieceName = isUndeadChampionType(attackerPiece) ? 'Undead Champion' : 'Undead';
+                gameLog.push(`${actorLabel} ${pieceName} failed to capture ${targetPiece.type} at ${formatBoardCoordinates(toRow,toCol)} and stayed in place.`);
                 updateGameLog();
                 return { captureFailed: true };
             }
@@ -14518,14 +14670,15 @@
         }
 
         function handleUndeadDefense(attackerPiece, undeadPiece, fromRow, fromCol, targetRow, targetCol, success) {
-            if (!attackerPiece || !undeadPiece || !isUndeadType(undeadPiece)) return null;
+            if (!attackerPiece || !undeadPiece || !(isUndeadType(undeadPiece) || isUndeadChampionType(undeadPiece))) return null;
             const actorLabel = attackerPiece.player === 'W' ? 'Player' : getOpponentDisplayName();
+            const undeadName = isUndeadChampionType(undeadPiece) ? 'Undead Champion' : 'Undead';
             if (!success) {
                 const captureValue = pieceValues[attackerPiece.type] || 0;
                 recordUndeadCapture(attackerPiece, undeadPiece.player, fromRow, fromCol, captureValue);
                 cleanupNecromancerTracking(attackerPiece);
                 board[fromRow][fromCol] = null;
-                gameLog.push(`${actorLabel}'s ${attackerPiece.type} failed to slay the Undead and was destroyed (+${captureValue} points).`);
+                gameLog.push(`${actorLabel}'s ${attackerPiece.type} failed to slay the ${undeadName} and was destroyed (+${captureValue} points).`);
                 updateGameLog();
                 if (attackerPiece.type === 'King') {
                     gameOver = true;
@@ -14540,11 +14693,11 @@
             const remaining = Math.max(0, currentLives - 1);
             undeadPiece.lives = remaining;
             if (remaining > 0) {
-                gameLog.push(`${actorLabel} hit the Undead! ${remaining} heart${remaining === 1 ? '' : 's'} remain.`);
+                gameLog.push(`${actorLabel} hit the ${undeadName}! ${remaining} heart${remaining === 1 ? '' : 's'} remain.`);
                 updateGameLog();
                 return { undeadDamaged: true };
             }
-            gameLog.push(`${actorLabel} shattered the Undead's final heart!`);
+            gameLog.push(`${actorLabel} shattered the ${undeadName}'s final heart!`);
             updateGameLog();
             return { undeadDestroyed: true };
         }
@@ -17136,8 +17289,8 @@
                             const attackingPiece = board[from[0]][from[1]];
                             const isCapturingSpectre = targetPiece && targetPiece.type === 'Spectre' && targetPiece.player !== attackingPiece.player;
                             const captureExempt = attackingPiece.type === 'Wizard' || attackingPiece.type === 'Spectre';
-                            const isTargetUndead = targetPiece && isUndeadType(targetPiece) && targetPiece.player !== attackingPiece.player;
-                            const isAttackingUndead = attackingPiece && isUndeadType(attackingPiece) && targetPiece && targetPiece.player !== attackingPiece.player;
+                            const isTargetUndead = targetPiece && (isUndeadType(targetPiece) || isUndeadChampionType(targetPiece)) && targetPiece.player !== attackingPiece.player;
+                            const isAttackingUndead = attackingPiece && (isUndeadType(attackingPiece) || isUndeadChampionType(attackingPiece)) && targetPiece && targetPiece.player !== attackingPiece.player;
                             const actionCost = typeof action.cost === 'number' ? action.cost : 1;
 
                             if ((isTargetUndead || isAttackingUndead) && action.type === 'move') {
