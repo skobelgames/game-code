@@ -7533,7 +7533,7 @@
                         huntsmanBurstButton.style.display = 'inline';
                         huntsmanBurstButton.disabled = movesLeft < 2 || pendingHuntsmanBurst !== null || movedPieces.has(pieceKey);
                     }
-                    if (barrageButton && (piece.type === 'King' || piece.type === 'Champion')) {
+                    if (barrageButton && (piece.type === 'King' || piece.type === 'Champion') && gameVariant === '36s-supreme') {
                         const hasBoosts = moralBoostSuccesses[currentPlayer] >= BARRAGE_REQUIRED_MORAL_BOOSTS;
                         const championAlive = isChampionPresent(currentPlayer);
                         const underLimit = canUseBarrage(currentPlayer);
@@ -8077,6 +8077,7 @@
         }
 
         function findAiBarrageOpportunity(player, availableMoves, movedSet) {
+            if (gameVariant !== '36s-supreme') return null; // Barrage only available in Supreme variant
             if (player !== 'B' || availableMoves < BARRAGE_COST) return null;
             if (lastAction?.move) return null;
             if (!canUseBarrage(player)) return null;
@@ -8102,9 +8103,10 @@
 
             if (!enemyPieces || !championFrom) return null;
 
-            let targetValue = Math.min(enemyPieces, BARRAGE_TARGET_COUNT) * 3.0;
-            if (aiDifficulty === 'Hard') targetValue *= 1.25;
-            else if (aiDifficulty === 'Medium') targetValue *= 1.15;
+            // Highly encourage barrage usage after achieving 3 moral boosts
+            let targetValue = Math.min(enemyPieces, BARRAGE_TARGET_COUNT) * 6.0; // Increased from 3.0 to 6.0
+            if (aiDifficulty === 'Hard') targetValue *= 1.5; // Increased from 1.25 to 1.5
+            else if (aiDifficulty === 'Medium') targetValue *= 1.3; // Increased from 1.15 to 1.3
 
             return {
                 type: 'barrage',
@@ -8652,6 +8654,7 @@
         }
 
         async function activateBarrage(button = null) {
+            if (gameVariant !== '36s-supreme') return; // Barrage only available in Supreme variant
             if (!selectedPiece || reinforcementPending || lastAction?.move || movesLeft < BARRAGE_COST) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
             if (!piece || (piece.type !== 'King' && piece.type !== 'Champion')) return;
@@ -14946,8 +14949,9 @@
             reinforcementPending = { player, row, col };
             let availablePieces = capturedPieces[player].map(p => p.type);
             const piece = board[row][col];
+            // King and Champion can bring extra reinforcements in advanced+ variants (36s and above)
             if (piece.type === 'Champion' || piece.type === 'King') {
-                if (gameVariant === '36s-expert' || gameVariant === '36s-elite' || gameVariant === '36s-supreme') {
+                if (gameVariant === '36s' || gameVariant === '36s-expert' || gameVariant === '36s-elite' || gameVariant === '36s-supreme') {
                     availablePieces.push(...Array(2).fill('Ballista'), ...Array(2).fill('Elephantry'), ...Array(2).fill('Mercenary'));
                 }
             }
@@ -15064,8 +15068,13 @@
                         if (piece.type === 'Infantry' || piece.type === 'Champion' || piece.type === 'King') {
                             const distanceToBackRow = Math.abs(r - opponentBackRow);
                             const maxDistance = player === 'W' ? ROWS - 1 : (gameVariant === 'ccb' ? 7 : 9);
-                            const advancementBonus = (1 - distanceToBackRow / maxDistance) * 3; // Up to +3 bonus for being close to back row
+                            // Significantly increased bonus to encourage AI to reach back row for reinforcements
+                            const advancementBonus = (1 - distanceToBackRow / maxDistance) * 8; // Increased from 3 to 8
                             playerPieceValue += advancementBonus;
+                            // Extra bonus when at back row (reinforcement opportunity)
+                            if (r === opponentBackRow) {
+                                playerPieceValue += 10; // Strong incentive for triggering reinforcements
+                            }
                         }
 
                         if (r === playerBackRow && BACKROW_SUMMON_BONUSES[piece.type]) {
@@ -15692,6 +15701,7 @@
                     }
 
                     if ((piece.type === 'Champion' || piece.type === 'King') &&
+                        gameVariant === '36s-supreme' && // Barrage only available in Supreme variant
                         !lastAction?.move &&
                         canUseBarrage(player) &&
                         moralBoostSuccesses[player] >= BARRAGE_REQUIRED_MORAL_BOOSTS &&
@@ -15708,9 +15718,10 @@
                             }
                         }
                         if (enemyCandidates > 0) {
-                            let targetValue = Math.min(enemyCandidates, BARRAGE_TARGET_COUNT) * 3.2;
-                            if (aiDifficulty === 'Hard') targetValue *= 1.25;
-                            else if (aiDifficulty === 'Medium') targetValue *= 1.15;
+                            // Highly encourage barrage usage after achieving 3 moral boosts
+                            let targetValue = Math.min(enemyCandidates, BARRAGE_TARGET_COUNT) * 6.0; // Increased from 3.2 to 6.0
+                            if (aiDifficulty === 'Hard') targetValue *= 1.5; // Increased from 1.25 to 1.5
+                            else if (aiDifficulty === 'Medium') targetValue *= 1.3; // Increased from 1.15 to 1.3
                             allPossibleActions.push({
                                 type: 'barrage',
                                 from: [r, c],
@@ -17370,6 +17381,10 @@
                             executeAiElephantryTripleShot(action);
                             return;
                         } else if (action.type === 'barrage') {
+                            if (gameVariant !== '36s-supreme') {
+                                setTimeout(() => makeNextMove(), 400);
+                                return;
+                            }
                             const barrageCost = typeof cost === 'number' ? cost : BARRAGE_COST;
                             const [casterRow, casterCol] = from || [];
                             const casterPiece = board[casterRow]?.[casterCol];
