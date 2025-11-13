@@ -5559,11 +5559,11 @@
             return freeSquares;
         }
 
-        function createDarkVoidUndeadMove(row, col) {
+        function createDarkVoidUndeadMove(row, col, summonType = 'undead') {
             const nearby = getAdjacentsToDarkVoid(row, col);
             if (!nearby.length) return null;
             const target = nearby[0];
-            return { type: 'summon', pos: target, cost: UNDEAD_SUMMON_COST, special: 'necromancerSummon', summonType: 'undead', darkVoidSource: [row, col] };
+            return { type: 'summon', pos: target, cost: UNDEAD_SUMMON_COST, special: 'necromancerSummon', summonType: summonType, darkVoidSource: [row, col] };
         }
 
         function handleDarkVoidCollision(pieceType, row, col) {
@@ -10735,8 +10735,8 @@
             // Handle Necromancer summon targeting
             if (necromancerSummonMode && selectedPiece) {
                 let move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.special === 'necromancerSummon');
-                if (!move && necromancerSummonMode && necromancerSummonMode.type === 'undead' && board[row]?.[col]?.type === 'DarkVoid') {
-                    move = createDarkVoidUndeadMove(row, col);
+                if (!move && necromancerSummonMode && (necromancerSummonMode.type === 'undead' || necromancerSummonMode.type === 'undeadchampion') && board[row]?.[col]?.type === 'DarkVoid') {
+                    move = createDarkVoidUndeadMove(row, col, necromancerSummonMode.type);
                 }
                 if (move) {
                     const summonType = move.summonType;
