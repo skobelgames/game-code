@@ -3995,6 +3995,67 @@
             return true;
         }
 
+        function trySpawnUndeadChampionFromLich(lichPlayer, deathRow, deathCol) {
+            // Check if already spawned the maximum undead champions
+            if ((undeadChampionsSummoned[lichPlayer] || 0) >= 1) {
+                return;
+            }
+
+            // Find valid spawn locations: adjacent to dark void or adjacent to death location
+            const spawnCandidates = [];
+
+            // First priority: squares adjacent to dark void
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (!board[r][c] && isAdjacentToDarkVoid(r, c)) {
+                        spawnCandidates.push([r, c]);
+                    }
+                }
+            }
+
+            // Second priority: squares adjacent to where the Lich died
+            if (spawnCandidates.length === 0) {
+                const dirs = [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+                for (let [dr, dc] of dirs) {
+                    const nr = deathRow + dr;
+                    const nc = deathCol + dc;
+                    if (isValid(nr, nc) && !board[nr][nc]) {
+                        spawnCandidates.push([nr, nc]);
+                    }
+                }
+            }
+
+            // No valid spawn locations
+            if (spawnCandidates.length === 0) {
+                const playerLabel = lichPlayer === 'W' ? 'Player' : getOpponentDisplayName();
+                gameLog.push(`${playerLabel}'s fallen Lich could not spawn an Undead Champion - no valid locations.`);
+                updateGameLog();
+                return;
+            }
+
+            // Perform coin flip for undead champion spawn
+            const result = Math.random() < 0.5;
+            const playerLabel = lichPlayer === 'W' ? 'Player' : getOpponentDisplayName();
+            const title = 'Undead Champion Resurrection';
+            const message = `${playerLabel}'s fallen Lich attempts to summon an Undead Champion...`;
+
+            enqueueZombieCoinFlip(result, title, message);
+
+            if (result) {
+                // Success! Spawn the undead champion
+                const [spawnRow, spawnCol] = spawnCandidates[Math.floor(Math.random() * spawnCandidates.length)];
+                const undeadChampion = createUndeadChampionPiece(lichPlayer, 'Lich');
+                board[spawnRow][spawnCol] = undeadChampion;
+                undeadChampionsSummoned[lichPlayer] = (undeadChampionsSummoned[lichPlayer] || 0) + 1;
+                gameLog.push(`${playerLabel}'s fallen Lich summoned an Undead Champion at ${formatBoardCoordinates(spawnRow, spawnCol)}!`);
+            } else {
+                // Failed coin flip
+                gameLog.push(`${playerLabel}'s fallen Lich failed to summon an Undead Champion.`);
+            }
+
+            updateGameLog();
+        }
+
         function mercenaryCoinFlip(player) {
             const result = Math.random() < 0.5;
             const playerLabel = player === 'W' ? 'Player' : 'AI';
@@ -14895,6 +14956,10 @@
                     gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} captured ${capturedPiece.type} (+${captureValue} points) with ${piece.type} at ${formatBoardCoordinates(jump[0],jump[1])}`);
                     cleanupNecromancerTracking(capturedPiece);
                     board[jump[0]][jump[1]] = null;
+                    // Try to spawn undead champion if a Lich was captured
+                    if (capturedPiece.type === 'Lich') {
+                        trySpawnUndeadChampionFromLich(capturedPiece.player, jump[0], jump[1]);
+                    }
                     if (capturedPiece.type === 'King') {
                         // Complete the move first
                         board[toRow][toCol] = piece;
@@ -14955,6 +15020,10 @@
                             championCaptured[capturedPiece.player] = true;
                         }
                         cleanupNecromancerTracking(capturedPiece);
+                        // Try to spawn undead champion if a Lich was captured
+                        if (capturedPiece.type === 'Lich') {
+                            trySpawnUndeadChampionFromLich(capturedPiece.player, toRow, toCol);
+                        }
                         if (capturedPiece.type === 'King') {
                             // Complete the move first
                             board[toRow][toCol] = piece;
@@ -15171,6 +15240,10 @@
             }
             cleanupNecromancerTracking(targetPiece);
             board[targetRow][targetCol] = null;
+            // Try to spawn undead champion if a Lich was captured
+            if (targetPiece.type === 'Lich') {
+                trySpawnUndeadChampionFromLich(targetPiece.player, targetRow, targetCol);
+            }
             if (targetPiece.type === 'King') {
                 const victoryReason = options.victoryReason || options.ability || null;
                 endGame(attackerPlayer, victoryReason);
