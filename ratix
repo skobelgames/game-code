@@ -5497,7 +5497,7 @@
         };
         const DARK_VOID_COST = 2;
         const DARK_VOID_USE_LIMIT = 2;
-        const DARK_VOID_TRAVELERS = new Set(['Dragon', 'Necromancer', 'Lich']);
+        const DARK_VOID_TRAVELERS = new Set(['Dragon', 'Necromancer', 'Lich', 'Spectre']);
 
         function darkVoidKey(row, col) {
             return `${row},${col}`;
@@ -6143,7 +6143,7 @@
                 for (let [dr, dc, perps] of knightDiagMoves) {
                     for (let [pr, pc] of perps) {
                         let nr = r + pr, nc = c + pc;
-                        if (isValid(nr, nc) && (!board[nr][nc] || board[nr][nc].player !== player)) {
+                        if (isValid(nr, nc) && !isDarkVoidSquare(nr, nc) && (!board[nr][nc] || board[nr][nc].player !== player)) {
                             moves.push({ type: 'move', pos: [nr, nc], cost: 1 });
                         }
                     }
@@ -10769,7 +10769,7 @@
                     showPieceInfo(null);
                     renderBoard();
                     const playerLabel = necromancerOwner === 'W' ? 'Player' : getOpponentDisplayName();
-                    const label = summonType === 'spectre' ? 'Spectre' : (summonType === 'lich' ? 'Lich' : (summonType === 'undead' ? 'Undead' : 'Zombie'));
+                    const label = summonType === 'spectre' ? 'Spectre' : (summonType === 'lich' ? 'Lich' : (summonType === 'undead' ? 'Undead' : (summonType === 'undeadchampion' ? 'Undead Champion' : 'Zombie')));
                     const isLichSummoningUndead = summonType === 'undead' && summonContext?.summonerType === 'Lich';
 
                     const completeSummon = (success) => {
@@ -13521,7 +13521,7 @@
                     showPieceInfo(null);
                     renderBoard();
                 const playerLabel = necromancerOwner === 'W' ? 'Player' : getOpponentDisplayName();
-                    const label = summonType === 'spectre' ? 'Spectre' : (summonType === 'lich' ? 'Lich' : (summonType === 'undead' ? 'Undead' : 'Zombie'));
+                    const label = summonType === 'spectre' ? 'Spectre' : (summonType === 'lich' ? 'Lich' : (summonType === 'undead' ? 'Undead' : (summonType === 'undeadchampion' ? 'Undead Champion' : 'Zombie')));
                     const isLichSummoningUndead = summonType === 'undead' && summonContext?.summonerType === 'Lich';
 
                     const completeSummon = (success) => {
