@@ -5450,6 +5450,10 @@
                 points: '1 point to move 1 square diagonally; 2 points to strafe horizontally or vertically.',
                 extra: 'Summoned by Necromancers or Liches adjacent to Dark Void tiles. Displays 2 lives (Necromancer summon) or 3 lives (Lich summon) as hearts in the info panel. Every capture attempt and every attack against it requires a coin flip; failed captures leave it rooted while failed attacks send the attacker to the graveyard.'
             },
+            'UndeadChampion': {
+                points: '1 point to move 1 square in any direction; 2 points for ranged attack up to 2 squares away (1-round cooldown); 2 points to teleport up to 3 squares (once per game).',
+                extra: 'Summoned by Liches adjacent to Dark Void tiles. Maximum 1 per player per game. Has 2 lives displayed as hearts. Ranged attack can target enemies 2 squares away in any direction. Every capture attempt and every attack against it requires a coin flip; failed captures leave it rooted while failed attacks send the attacker to the graveyard.'
+            },
             'Mercenary': {
                 points: '1 point to move 1 square in any direction; 2 points for 2 squares in any direction.',
                 extra: 'Can move or capture in any direction. Special Move: After a successful capture, triggers a coin flip - if successful, the mercenary continues its round instantly without move point costs (once per round).'
