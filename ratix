@@ -7570,6 +7570,26 @@
                             necromancerUndeadButton.removeAttribute('title');
                         }
                     }
+                    if (lichUndeadChampionButton && piece.type === 'Lich') {
+                        const undeadTargets = getUndeadSummonTargets();
+                        const limitReached = (undeadChampionsSummoned[currentPlayer] || 0) >= UNDEAD_CHAMPION_SUMMON_LIMIT;
+                        let reason = '';
+                        if (limitReached) {
+                            reason = `Undead Champion already summoned.`;
+                        } else if (!undeadTargets.length) {
+                            reason = 'Need an empty square adjacent to Dark Void.';
+                        } else if (movesLeft < UNDEAD_SUMMON_COST) {
+                            reason = `Need ${UNDEAD_SUMMON_COST} move points.`;
+                        }
+                        lichUndeadChampionButton.style.display = 'inline';
+                        if (reason) {
+                            lichUndeadChampionButton.disabled = true;
+                            lichUndeadChampionButton.title = reason;
+                        } else {
+                            lichUndeadChampionButton.disabled = false;
+                            lichUndeadChampionButton.removeAttribute('title');
+                        }
+                    }
                     if (piece.type === 'Wizard' && wizardTeleportUsed[currentPlayer] < 2 && movesLeft >= 2) {
                         teleportButton.style.display = 'inline';
                         teleportButton.disabled = false;
@@ -10800,14 +10820,16 @@
                     };
 
                     if (isLichSummoningUndead) {
-                        // Lich summoning undead requires 2 successful coin flips
+                        // Lich summoning undead requires 1 successful coin flip out of 2 attempts
                         performCoinToss(
                             `Summon ${label} - Flip 1/2`,
                             `${playerLabel} attempts first coin flip to summon ${label}...`,
                             (firstSuccess) => {
-                                if (!firstSuccess) {
-                                    completeSummon(false);
+                                if (firstSuccess) {
+                                    // First flip succeeded - summon successful, no need for second flip
+                                    completeSummon(true);
                                 } else {
+                                    // First flip failed - try second flip
                                     performCoinToss(
                                         `Summon ${label} - Flip 2/2`,
                                         `${playerLabel} attempts second coin flip to summon ${label}...`,
@@ -11753,7 +11775,34 @@
                     return;
                 }
                 options = undeadTargets.map(pos => ({ type: 'summon', pos, cost: UNDEAD_SUMMON_COST, special: 'necromancerSummon', summonType: type }));
+            } else if (isLichSummon) {
+                // Lich can be summoned on back row OR next to dark voids
+                const backRow = getBackRow(owner);
+                const undeadTargets = getUndeadSummonTargets();
+
+                // Add back row positions
+                for (let c = 0; c < COLS; c++) {
+                    if (!board[backRow][c]) {
+                        options.push({ type: 'summon', pos: [backRow, c], cost: 2, special: 'necromancerSummon', summonType: type });
+                    }
+                }
+
+                // Add dark void adjacent positions
+                for (const pos of undeadTargets) {
+                    // Avoid duplicates (in case a dark void is on back row)
+                    const isDuplicate = options.some(opt => opt.pos[0] === pos[0] && opt.pos[1] === pos[1]);
+                    if (!isDuplicate) {
+                        options.push({ type: 'summon', pos, cost: 2, special: 'necromancerSummon', summonType: type });
+                    }
+                }
+
+                if (!options.length) {
+                    gameLog.push('No open squares on the back row or adjacent to a Dark Void to summon Lich.');
+                    updateGameLog();
+                    return;
+                }
             } else {
+                // Zombie and other summons - back row only
                 if (!hasBackRowSpawnSlot(owner)) {
                     gameLog.push('No open squares on the back row to place a summon.');
                     updateGameLog();
@@ -13523,14 +13572,16 @@
                     };
 
                     if (isLichSummoningUndead) {
-                        // Lich summoning undead requires 2 successful coin flips
+                        // Lich summoning undead requires 1 successful coin flip out of 2 attempts
                         performCoinToss(
                             `Summon ${label} - Flip 1/2`,
                             `${playerLabel} attempts first coin flip to summon ${label}...`,
                             (firstSuccess) => {
-                                if (!firstSuccess) {
-                                    completeSummon(false);
+                                if (firstSuccess) {
+                                    // First flip succeeded - summon successful, no need for second flip
+                                    completeSummon(true);
                                 } else {
+                                    // First flip failed - try second flip
                                     performCoinToss(
                                         `Summon ${label} - Flip 2/2`,
                                         `${playerLabel} attempts second coin flip to summon ${label}...`,
