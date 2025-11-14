@@ -11143,7 +11143,12 @@
                         const isTargetUndead = targetPiece && (isUndeadType(targetPiece) || isUndeadChampionType(targetPiece)) && targetPiece.player !== attackingPiece.player;
                         const isAttackingUndead = attackingPiece && (isUndeadType(attackingPiece) || isUndeadChampionType(attackingPiece)) && targetPiece && targetPiece.player !== attackingPiece.player;
 
-                        if ((isTargetUndead || isAttackingUndead) && move.type === 'move') {
+                        // Check if attacker auto-captures undead (undead vs undead, or magic pieces vs undead)
+                        const isUndeadVsUndead = isTargetUndead && isAttackingUndead;
+                        const isMagicVsUndead = isTargetUndead && (attackingPiece.type === 'Necromancer' || attackingPiece.type === 'Lich' || attackingPiece.type === 'Wizard' || attackingPiece.type === 'Spectre');
+                        const autoCaptures = isUndeadVsUndead || isMagicVsUndead;
+
+                        if ((isTargetUndead || isAttackingUndead) && move.type === 'move' && !autoCaptures) {
                             const fromRow = selectedPiece.row;
                             const fromCol = selectedPiece.col;
                             const toRow = row;
@@ -14765,7 +14770,10 @@
                     const targetPiece = board[nr][nc];
                     // Dragons cannot capture other Dragons with Inferno
                         if (targetPiece && targetPiece.player === opponent && targetPiece.type !== 'Dragon') {
-                        if (isUndeadType(targetPiece)) {
+                        // Undead and Undead Champion are immune to Inferno
+                        if (isUndeadType(targetPiece) || isUndeadChampionType(targetPiece)) {
+                            const undeadName = isUndeadChampionType(targetPiece) ? 'Undead Champion' : 'Undead';
+                            gameLog.push(`Dragon's Inferno could not harm the ${undeadName} at ${formatBoardCoordinates(nr,nc)}.`);
                             continue;
                         }
                         if (targetPiece.type === 'Lich') {
@@ -14938,15 +14946,9 @@
                 }
                 return { attackerRemoved: true };
             }
+            // Successful attack instant-kills undead
             const currentLives = typeof undeadPiece.lives === 'number' ? undeadPiece.lives : (undeadPiece.maxLives || 1);
-            const remaining = Math.max(0, currentLives - 1);
-            undeadPiece.lives = remaining;
-            if (remaining > 0) {
-                gameLog.push(`${actorLabel} hit the ${undeadName}! ${remaining} heart${remaining === 1 ? '' : 's'} remain.`);
-                updateGameLog();
-                return { undeadDamaged: true };
-            }
-            gameLog.push(`${actorLabel} shattered the ${undeadName}'s final heart!`);
+            gameLog.push(`${actorLabel} shattered the ${undeadName}!`);
             updateGameLog();
             return { undeadDestroyed: true };
         }
