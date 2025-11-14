@@ -2186,7 +2186,8 @@
         const blockingActionCounters = {
             coinFlip: 0,
             zombieFlip: 0,
-            barrage: 0
+            barrage: 0,
+            energyBlast: 0
         };
         let barragePauseState = null;
 
@@ -9404,6 +9405,7 @@
             energyBlastUsage.set(piece, uses + 1);
             lastAction = { move: true };
             movedPieces.add(`${row},${col}`);
+            beginBlockingAction('energyBlast');
             const context = { piece, row, col, direction };
             if (piece.player === 'W') {
                 startEnergyBlastFlipSequence(context);
@@ -9421,7 +9423,10 @@
 
         function completeEnergyBlastAfterRange(context, successes, flips) {
             const { piece, row, col, direction } = context;
-            if (!piece) return;
+            if (!piece) {
+                endBlockingAction('energyBlast');
+                return;
+            }
             const playerLabel = piece.player === 'W' ? 'Player' : getOpponentDisplayName();
             const flipSummary = flips.map(result => result ? 'Hit' : 'Miss').join(' ');
             gameLog.push(`${playerLabel} cast Energy Blast (${successes} range) [${flipSummary}]`);
@@ -9439,6 +9444,7 @@
                 checkGameOver();
                 removeEnergyBlastGlow();
                 clearActiveControlButton(document.getElementById('energy-blast-button'));
+                endBlockingAction('energyBlast');
                 // Add delay before turn transition to ensure blast is visually complete
                 if (movesLeft === 0 && !reinforcementPending) {
                     setTimeout(() => {
