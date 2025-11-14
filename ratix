@@ -928,6 +928,48 @@
             font-size: 18px;
             font-weight: bold;
         }
+        #multi-coin-toss-modal {
+            z-index: 2002;
+            max-width: 600px;
+            text-align: center;
+        }
+        #multi-coin-toss-modal .modal-content p {
+            margin: 15px 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .multi-coin-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 20px auto;
+            flex-wrap: wrap;
+        }
+        .multi-coin-display .coin {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            border: 4px solid #333;
+            background-color: #666;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .multi-coin-display .coin.spinning {
+            animation: flipCoin 2s ease-in-out;
+        }
+        .multi-coin-display .coin.white {
+            background-color: white;
+            color: black;
+        }
+        .multi-coin-display .coin.black {
+            background-color: black;
+            color: white;
+        }
         #dice-roll-modal {
             z-index: 2003;
             max-width: 520px;
@@ -2006,6 +2048,22 @@
             <button id="coin-toss-start" onclick="startCoinToss()" style="display: none; background-color: #2196F3; visibility: hidden;">Flip Coin</button>
             <button id="coin-toss-continue" onclick="closeCoinToss()" style="display: none; background-color: #4CAF50; visibility: hidden;">Continue</button>
             <span id="coin-toss-progress" class="coin-progress">Successes: 0/0</span>
+        </div>
+    </div>
+
+    <div id="multi-coin-toss-modal">
+        <div class="modal-header">
+            <span id="multi-coin-toss-title">Coin Flips</span>
+        </div>
+        <div class="modal-content">
+            <p id="multi-coin-toss-message"></p>
+            <div id="multi-coin-display" class="multi-coin-display">
+                <!-- Coins will be dynamically added here -->
+            </div>
+            <p id="multi-coin-toss-description" style="font-size: 14px; margin-top: 10px;"></p>
+        </div>
+        <div class="modal-footer">
+            <span id="multi-coin-toss-progress" class="coin-progress">Successes: 0/0</span>
         </div>
     </div>
 
@@ -3116,6 +3174,140 @@
             }, animationDelay);
         }
 
+        function performMultiCoinToss(title, message, count, callback, specialEffect = null) {
+            gamePaused = true;
+            beginBlockingAction('coinFlip');
+
+            // Save timer state before stopping
+            pausedTimers.game = gameTimerInterval;
+            pausedTimers.turn = turnTimerInterval;
+            pausedTimers.turnPlayer = currentTurnTimerPlayer;
+            stopGameTimer();
+            stopTurnTimer();
+
+            // Set title and message
+            document.getElementById('multi-coin-toss-title').textContent = title;
+            document.getElementById('multi-coin-toss-message').textContent = message;
+            document.getElementById('multi-coin-toss-description').textContent = 'All coins will flip to determine the outcomes. White side means success, black side means failure.';
+
+            // Create coin elements
+            const multiCoinDisplay = document.getElementById('multi-coin-display');
+            multiCoinDisplay.innerHTML = '';
+
+            const coinElements = [];
+            for (let i = 0; i < count; i++) {
+                const coinDiv = document.createElement('div');
+                coinDiv.className = 'coin';
+                coinDiv.textContent = '☠︎';
+                coinDiv.style.backgroundColor = '#666';
+                coinDiv.style.color = 'white';
+                multiCoinDisplay.appendChild(coinDiv);
+                coinElements.push(coinDiv);
+            }
+
+            // Show modal
+            document.getElementById('modal-overlay').style.display = 'block';
+            document.getElementById('multi-coin-toss-modal').style.display = 'block';
+
+            // Auto-start after a short delay
+            setTimeout(() => {
+                // Determine all results at once
+                const results = [];
+                for (let i = 0; i < count; i++) {
+                    results.push(Math.random() < 0.5);
+                }
+
+                // Start all animations simultaneously
+                coinElements.forEach(coin => {
+                    coin.classList.add('spinning');
+                });
+
+                // After animation completes, show all results
+                setTimeout(() => {
+                    let successes = 0;
+
+                    coinElements.forEach((coin, index) => {
+                        coin.classList.remove('spinning');
+                        const result = results[index];
+
+                        if (result) {
+                            coin.classList.add('white');
+                            coin.style.backgroundColor = 'white';
+                            coin.style.color = 'black';
+                            successes++;
+                        } else {
+                            coin.classList.add('black');
+                            coin.style.backgroundColor = 'black';
+                            coin.style.color = 'white';
+                        }
+                    });
+
+                    // Update progress display
+                    document.getElementById('multi-coin-toss-progress').textContent = `Successes: ${successes}/${count}`;
+
+                    // Apply visual effect based on successes
+                    if (successes > 0) {
+                        applyCoinFlipSuccessEffect(specialEffect);
+                    } else {
+                        applyCoinFlipFailureEffect();
+                    }
+
+                    // Show result for a moment, then close and execute callback
+                    setTimeout(() => {
+                        document.getElementById('modal-overlay').style.display = 'none';
+                        document.getElementById('multi-coin-toss-modal').style.display = 'none';
+
+                        // Show popup notification
+                        const popup = document.getElementById('coin-flip-popup');
+                        const popupTitle = document.getElementById('coin-flip-popup-title');
+                        const popupMessage = document.getElementById('coin-flip-popup-message');
+
+                        popup.className = 'coin-flip-popup';
+                        if (successes > 0) {
+                            popup.classList.add('success');
+                            popupTitle.textContent = 'Results!';
+                            popupMessage.textContent = `${successes} out of ${count} flips succeeded!`;
+                        } else {
+                            popup.classList.add('failure');
+                            popupTitle.textContent = 'Results!';
+                            popupMessage.textContent = `All ${count} flips failed.`;
+                        }
+
+                        popup.style.display = 'block';
+                        popup.style.animation = 'popupFadeIn 0.2s ease-out';
+
+                        setTimeout(() => {
+                            popup.style.animation = 'popupFadeOut 0.3s ease-out';
+                            setTimeout(() => {
+                                popup.style.display = 'none';
+                            }, 300);
+                        }, 1500);
+
+                        // Execute callback with results array
+                        setTimeout(() => {
+                            if (callback) {
+                                callback(results);
+                            }
+
+                            gamePaused = false;
+                            if (pausedTimers.game && gameTimeRemaining > 0) {
+                                startGameTimer();
+                            }
+                            if (pausedTimers.turn && pausedTimers.turnPlayer) {
+                                if (pausedTimers.turnPlayer === 'W' && playerTurnTimeRemaining > 0) {
+                                    startTurnTimer('W', { reset: false });
+                                } else if (pausedTimers.turnPlayer === 'B' && aiTurnTimeRemaining > 0) {
+                                    startTurnTimer('B', { reset: false });
+                                }
+                            }
+                            endBlockingAction('coinFlip');
+                            pausedTimers = { game: null, turn: null, turnPlayer: null };
+                        }, 100);
+                    }, 1500);
+                }, 2000);
+            }, 500);
+        }
+
         function closeCoinToss() {
             // Close overlay and modal
             if (window.coinTossShowOverlay) {
@@ -3207,19 +3399,16 @@
         }
 
         function rollElephantryTripleShotFlips(onComplete, shot = 1) {
-            performCoinToss(
+            // Use multi-coin toss to flip all 3 coins simultaneously
+            performMultiCoinToss(
                 'Elephantry Triple Shot',
-                `Triple Shot coin flip ${shot}/3...`,
-                (success) => {
-                    elephantryTripleShotFlipResults.push(success);
-                    if (shot < 3) {
-                        rollElephantryTripleShotFlips(onComplete, shot + 1);
-                    } else {
-                        onComplete();
-                    }
+                'Flipping 3 coins for Triple Shot...',
+                3,
+                (results) => {
+                    elephantryTripleShotFlipResults = results;
+                    onComplete();
                 },
-                false,
-                false
+                null
             );
         }
 
@@ -8053,43 +8242,34 @@
                 successes: 0
             };
             pauseGameForEnergyBlastFlips();
-            runNextEnergyBlastFlip();
-        }
 
-        function runNextEnergyBlastFlip() {
-            const ctx = energyBlastFlipContext;
-            if (!ctx) return;
-            if (ctx.flips.length >= ENERGY_BLAST_FLIP_COUNT) {
-                coinTossEnergyBlastMode = null;
-                updateCoinTossEnergyBlastProgress();
-                energyBlastFlipContext = null;
-                resumeGameForEnergyBlastFlips();
-                completeEnergyBlastAfterRange(ctx.context, ctx.successes, ctx.flips);
-                return;
-            }
-            const flipNumber = ctx.flips.length + 1;
-            coinTossEnergyBlastMode = { successes: ctx.successes, total: ENERGY_BLAST_FLIP_COUNT };
-            updateCoinTossEnergyBlastProgress();
-            pauseGameForEnergyBlastFlips();
-            performCoinToss(
+            // Use multi-coin toss to flip all coins simultaneously
+            performMultiCoinToss(
                 'Energy Blast',
-                `Flip ${flipNumber} of ${ENERGY_BLAST_FLIP_COUNT}`,
-                (result) => {
+                `Flipping ${ENERGY_BLAST_FLIP_COUNT} coins...`,
+                ENERGY_BLAST_FLIP_COUNT,
+                (results) => {
                     if (!energyBlastFlipContext) {
                         return;
                     }
-                    ctx.flips.push(result);
-                    if (result) ctx.successes++;
-                    if (coinTossEnergyBlastMode) {
-                        coinTossEnergyBlastMode.successes = ctx.successes;
-                        updateCoinTossEnergyBlastProgress();
-                    }
-                    pauseGameForEnergyBlastFlips();
-                    runNextEnergyBlastFlip();
+                    const ctx = energyBlastFlipContext;
+                    ctx.flips = results;
+                    ctx.successes = results.filter(r => r).length;
+
+                    coinTossEnergyBlastMode = null;
+                    updateCoinTossEnergyBlastProgress();
+                    energyBlastFlipContext = null;
+                    resumeGameForEnergyBlastFlips();
+                    completeEnergyBlastAfterRange(ctx.context, ctx.successes, ctx.flips);
                 },
-                true,
-                false
+                'energy-blast'
             );
+        }
+
+        function runNextEnergyBlastFlip() {
+            // This function is no longer used, kept for compatibility
+            // All flips are now performed simultaneously via performMultiCoinToss
+            return;
         }
 
         function evaluateEnergyBlastDirection(row, col, direction, piece) {
