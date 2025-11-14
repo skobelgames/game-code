@@ -3208,15 +3208,17 @@
             return elephantryChargeMode || elephantryExtendedRangeActive || elephantryMoveShootMode;
         }
 
-        function rollElephantryTripleShotFlips(onComplete, shot = 1) {
+        function rollElephantryTripleShotFlips(onComplete, shot = 1, allFlips = []) {
             performCoinToss(
                 'Elephantry Triple Shot',
                 `Triple Shot coin flip ${shot}/3...`,
                 (success) => {
-                    elephantryTripleShotFlipResults.push(success);
+                    allFlips.push(success);
                     if (shot < 3) {
-                        rollElephantryTripleShotFlips(onComplete, shot + 1);
+                        rollElephantryTripleShotFlips(onComplete, shot + 1, allFlips);
                     } else {
+                        // Only store successful flips - failed flips don't result in shots
+                        elephantryTripleShotFlipResults = allFlips.filter(r => r);
                         onComplete();
                     }
                 },
@@ -9174,13 +9176,17 @@
                 const elephantryCol = selectedPiece.col;
 
                 // Perform instant coin flips for all 3 shots
+                const allFlips = [];
                 for (let i = 0; i < 3; i++) {
                     const success = randomCoinFlip();
-                    elephantryTripleShotFlipResults.push(success);
+                    allFlips.push(success);
                 }
 
-                const successCount = elephantryTripleShotFlipResults.filter(r => r).length;
+                const successCount = allFlips.filter(r => r).length;
                 gameLog.push(`Elephantry Triple Shot: ${successCount} of 3 coin flips successful.`);
+
+                // Only store successful flips - failed flips don't result in shots
+                elephantryTripleShotFlipResults = allFlips.filter(r => r);
 
                 elephantryTripleShotAwaitingTargets = true;
                 const nextMoves = getElephantryExtendedRangeMoves(elephantryRow, elephantryCol);
@@ -10889,71 +10895,70 @@
                     const elephantryRow = selectedPiece.row;
                     const elephantryCol = selectedPiece.col;
                     const shotIndex = elephantryTripleShotNextShot;
+
+                    // Only successful flips are in the array, so check bounds
                     if (shotIndex >= elephantryTripleShotFlipResults.length) {
                         return;
                     }
-                    const shotResult = elephantryTripleShotFlipResults[shotIndex];
+
                     const shotsRemainingAfter = Math.max(0, elephantryTripleShotFlipResults.length - (shotIndex + 1));
                     if (elephantryTripleShotPieceKey) {
                         elephantryExtendedRangeShotsRemaining[elephantryTripleShotPieceKey] = shotsRemainingAfter;
                     }
                     elephantryTripleShotNextShot++;
 
-                    if (shotResult) {
-                        const targetPiece = board[targetRow][targetCol];
-                        if (targetPiece && targetPiece.type === 'Spectre') {
-                            gameLog.push('Elephantry triple shot cannot target Spectres.');
-                        } else if (targetPiece && targetPiece.player !== currentPlayer && (isUndeadType(targetPiece) || isUndeadChampionType(targetPiece))) {
-                            // Handle undead pieces - deduct 1 life per hit
-                            const actorLabel = currentPlayer === 'W' ? 'Player' : 'AI';
-                            const undeadName = isUndeadChampionType(targetPiece) ? 'Undead Champion' : 'Undead';
-                            const currentLives = typeof targetPiece.lives === 'number' ? targetPiece.lives : (targetPiece.maxLives || 1);
-                            targetPiece.lives = currentLives - 1;
+                    // All flips in array are successful, so process as hit
+                    const targetPiece = board[targetRow][targetCol];
+                    if (targetPiece && targetPiece.type === 'Spectre') {
+                        gameLog.push('Elephantry triple shot cannot target Spectres.');
+                    } else if (targetPiece && targetPiece.player !== currentPlayer && (isUndeadType(targetPiece) || isUndeadChampionType(targetPiece))) {
+                        // Handle undead pieces - deduct 1 life per hit
+                        const actorLabel = currentPlayer === 'W' ? 'Player' : 'AI';
+                        const undeadName = isUndeadChampionType(targetPiece) ? 'Undead Champion' : 'Undead';
+                        const currentLives = typeof targetPiece.lives === 'number' ? targetPiece.lives : (targetPiece.maxLives || 1);
+                        targetPiece.lives = currentLives - 1;
 
-                            if (targetPiece.lives <= 0) {
-                                // Undead destroyed
-                                capturedSquares.push([targetRow, targetCol]);
-                                capturedPieces[currentPlayer].push(targetPiece);
-                                const captureValue = pieceValues[targetPiece.type];
-                                scores[currentPlayer] += captureValue;
-                                registerScoreGain(currentPlayer, captureValue, true);
-                                registerPieceLoss(targetPiece.player, targetPiece.type);
-                                trackCapture(currentPlayer);
-                                gameLog.push(`${actorLabel} Elephantry triple shot shattered the ${undeadName}! (+${captureValue} points)`);
-                                cleanupNecromancerTracking(targetPiece);
-                                board[targetRow][targetCol] = null;
-                                updateCapturedPiecesDisplay();
-                                updateScoreDisplay();
-                                checkSupremacy(currentPlayer);
-                            } else {
-                                // Undead damaged but alive
-                                const livesText = targetPiece.lives === 1 ? '1 life' : `${targetPiece.lives} lives`;
-                                gameLog.push(`${actorLabel} Elephantry triple shot hit the ${undeadName}! (${livesText} remaining)`);
-                            }
-                        } else if (targetPiece && targetPiece.player !== currentPlayer) {
+                        if (targetPiece.lives <= 0) {
+                            // Undead destroyed
                             capturedSquares.push([targetRow, targetCol]);
                             capturedPieces[currentPlayer].push(targetPiece);
                             const captureValue = pieceValues[targetPiece.type];
                             scores[currentPlayer] += captureValue;
-                            registerScoreGain(currentPlayer, captureValue);
+                            registerScoreGain(currentPlayer, captureValue, true);
                             registerPieceLoss(targetPiece.player, targetPiece.type);
-                            trackCapture(currentPlayer); // Track capture for statistics
-                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry triple shot hit! Captured ${targetPiece.type} (+${captureValue} points)`);
-
-                            if (targetPiece.type === 'Champion') {
-                                championCaptured[targetPiece.player] = true;
-                            }
-                            if (targetPiece.type === 'King') {
-                                endGame(currentPlayer);
-                                return;
-                            }
+                            trackCapture(currentPlayer);
+                            gameLog.push(`${actorLabel} Elephantry triple shot shattered the ${undeadName}! (+${captureValue} points)`);
+                            cleanupNecromancerTracking(targetPiece);
                             board[targetRow][targetCol] = null;
                             updateCapturedPiecesDisplay();
                             updateScoreDisplay();
                             checkSupremacy(currentPlayer);
                         } else {
-                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry triple shot missed at ${formatBoardCoordinates(targetRow,targetCol)}.`);
+                            // Undead damaged but alive
+                            const livesText = targetPiece.lives === 1 ? '1 life' : `${targetPiece.lives} lives`;
+                            gameLog.push(`${actorLabel} Elephantry triple shot hit the ${undeadName}! (${livesText} remaining)`);
                         }
+                    } else if (targetPiece && targetPiece.player !== currentPlayer) {
+                        capturedSquares.push([targetRow, targetCol]);
+                        capturedPieces[currentPlayer].push(targetPiece);
+                        const captureValue = pieceValues[targetPiece.type];
+                        scores[currentPlayer] += captureValue;
+                        registerScoreGain(currentPlayer, captureValue);
+                        registerPieceLoss(targetPiece.player, targetPiece.type);
+                        trackCapture(currentPlayer); // Track capture for statistics
+                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry triple shot hit! Captured ${targetPiece.type} (+${captureValue} points)`);
+
+                        if (targetPiece.type === 'Champion') {
+                            championCaptured[targetPiece.player] = true;
+                        }
+                        if (targetPiece.type === 'King') {
+                            endGame(currentPlayer);
+                            return;
+                        }
+                        board[targetRow][targetCol] = null;
+                        updateCapturedPiecesDisplay();
+                        updateScoreDisplay();
+                        checkSupremacy(currentPlayer);
                     } else {
                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry triple shot missed at ${formatBoardCoordinates(targetRow,targetCol)}.`);
                     }
@@ -13661,71 +13666,70 @@
                     const elephantryRow = selectedPiece.row;
                     const elephantryCol = selectedPiece.col;
                     const shotIndex = elephantryTripleShotNextShot;
+
+                    // Only successful flips are in the array, so check bounds
                     if (shotIndex >= elephantryTripleShotFlipResults.length) {
                         return;
                     }
-                    const shotResult = elephantryTripleShotFlipResults[shotIndex];
+
                     const shotsRemainingAfter = Math.max(0, elephantryTripleShotFlipResults.length - (shotIndex + 1));
                     if (elephantryTripleShotPieceKey) {
                         elephantryExtendedRangeShotsRemaining[elephantryTripleShotPieceKey] = shotsRemainingAfter;
                     }
                     elephantryTripleShotNextShot++;
 
-                    if (shotResult) {
-                        const targetPiece = board[targetRow][targetCol];
-                        if (targetPiece && targetPiece.type === 'Spectre') {
-                            gameLog.push('Elephantry triple shot cannot target Spectres.');
-                        } else if (targetPiece && targetPiece.player !== currentPlayer && (isUndeadType(targetPiece) || isUndeadChampionType(targetPiece))) {
-                            // Handle undead pieces - deduct 1 life per hit
-                            const actorLabel = currentPlayer === 'W' ? 'Player' : 'AI';
-                            const undeadName = isUndeadChampionType(targetPiece) ? 'Undead Champion' : 'Undead';
-                            const currentLives = typeof targetPiece.lives === 'number' ? targetPiece.lives : (targetPiece.maxLives || 1);
-                            targetPiece.lives = currentLives - 1;
+                    // All flips in array are successful, so process as hit
+                    const targetPiece = board[targetRow][targetCol];
+                    if (targetPiece && targetPiece.type === 'Spectre') {
+                        gameLog.push('Elephantry triple shot cannot target Spectres.');
+                    } else if (targetPiece && targetPiece.player !== currentPlayer && (isUndeadType(targetPiece) || isUndeadChampionType(targetPiece))) {
+                        // Handle undead pieces - deduct 1 life per hit
+                        const actorLabel = currentPlayer === 'W' ? 'Player' : 'AI';
+                        const undeadName = isUndeadChampionType(targetPiece) ? 'Undead Champion' : 'Undead';
+                        const currentLives = typeof targetPiece.lives === 'number' ? targetPiece.lives : (targetPiece.maxLives || 1);
+                        targetPiece.lives = currentLives - 1;
 
-                            if (targetPiece.lives <= 0) {
-                                // Undead destroyed
-                                capturedSquares.push([targetRow, targetCol]);
-                                capturedPieces[currentPlayer].push(targetPiece);
-                                const captureValue = pieceValues[targetPiece.type];
-                                scores[currentPlayer] += captureValue;
-                                registerScoreGain(currentPlayer, captureValue, true);
-                                registerPieceLoss(targetPiece.player, targetPiece.type);
-                                trackCapture(currentPlayer);
-                                gameLog.push(`${actorLabel} Elephantry triple shot shattered the ${undeadName}! (+${captureValue} points)`);
-                                cleanupNecromancerTracking(targetPiece);
-                                board[targetRow][targetCol] = null;
-                                updateCapturedPiecesDisplay();
-                                updateScoreDisplay();
-                                checkSupremacy(currentPlayer);
-                            } else {
-                                // Undead damaged but alive
-                                const livesText = targetPiece.lives === 1 ? '1 life' : `${targetPiece.lives} lives`;
-                                gameLog.push(`${actorLabel} Elephantry triple shot hit the ${undeadName}! (${livesText} remaining)`);
-                            }
-                        } else if (targetPiece && targetPiece.player !== currentPlayer) {
+                        if (targetPiece.lives <= 0) {
+                            // Undead destroyed
                             capturedSquares.push([targetRow, targetCol]);
                             capturedPieces[currentPlayer].push(targetPiece);
                             const captureValue = pieceValues[targetPiece.type];
                             scores[currentPlayer] += captureValue;
-                            registerScoreGain(currentPlayer, captureValue);
+                            registerScoreGain(currentPlayer, captureValue, true);
                             registerPieceLoss(targetPiece.player, targetPiece.type);
-                            trackCapture(currentPlayer); // Track capture for statistics
-                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry triple shot hit! Captured ${targetPiece.type} (+${captureValue} points)`);
-
-                            if (targetPiece.type === 'Champion') {
-                                championCaptured[targetPiece.player] = true;
-                            }
-                            if (targetPiece.type === 'King') {
-                                endGame(currentPlayer);
-                                return;
-                            }
+                            trackCapture(currentPlayer);
+                            gameLog.push(`${actorLabel} Elephantry triple shot shattered the ${undeadName}! (+${captureValue} points)`);
+                            cleanupNecromancerTracking(targetPiece);
                             board[targetRow][targetCol] = null;
                             updateCapturedPiecesDisplay();
                             updateScoreDisplay();
                             checkSupremacy(currentPlayer);
                         } else {
-                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry triple shot missed at ${formatBoardCoordinates(targetRow,targetCol)}.`);
+                            // Undead damaged but alive
+                            const livesText = targetPiece.lives === 1 ? '1 life' : `${targetPiece.lives} lives`;
+                            gameLog.push(`${actorLabel} Elephantry triple shot hit the ${undeadName}! (${livesText} remaining)`);
                         }
+                    } else if (targetPiece && targetPiece.player !== currentPlayer) {
+                        capturedSquares.push([targetRow, targetCol]);
+                        capturedPieces[currentPlayer].push(targetPiece);
+                        const captureValue = pieceValues[targetPiece.type];
+                        scores[currentPlayer] += captureValue;
+                        registerScoreGain(currentPlayer, captureValue);
+                        registerPieceLoss(targetPiece.player, targetPiece.type);
+                        trackCapture(currentPlayer); // Track capture for statistics
+                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry triple shot hit! Captured ${targetPiece.type} (+${captureValue} points)`);
+
+                        if (targetPiece.type === 'Champion') {
+                            championCaptured[targetPiece.player] = true;
+                        }
+                        if (targetPiece.type === 'King') {
+                            endGame(currentPlayer);
+                            return;
+                        }
+                        board[targetRow][targetCol] = null;
+                        updateCapturedPiecesDisplay();
+                        updateScoreDisplay();
+                        checkSupremacy(currentPlayer);
                     } else {
                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry triple shot missed at ${formatBoardCoordinates(targetRow,targetCol)}.`);
                     }
@@ -17172,7 +17176,8 @@
 
                 let shotsFired = 0;
                 const fireNextShot = () => {
-                    if (shotsFired >= 3) {
+                    // Only fire as many shots as there are successful flips
+                    if (shotsFired >= elephantryTripleShotFlipResults.length) {
                         finishTripleShot();
                         return;
                     }
@@ -17201,8 +17206,8 @@
                     const targetRow = bestMove.pos[0];
                     const targetCol = bestMove.pos[1];
                     const targetPiece = board[targetRow]?.[targetCol];
-                    const success = elephantryTripleShotFlipResults[shotsFired];
-                    if (success && targetPiece && targetPiece.player !== 'B') {
+                    // All flips in array are successful, so process as hit
+                    if (targetPiece && targetPiece.player !== 'B') {
                         const logMessage = `AI Elephantry triple shot hit ${targetPiece.type} at ${formatBoardCoordinates(targetRow,targetCol)}.`;
                         applySpellCapture('B', targetRow, targetCol, {
                             ability: 'Elephantry Triple Shot',
