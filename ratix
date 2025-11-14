@@ -1284,6 +1284,70 @@
             from { background-color: #000000; }
             to { background-color: #202020; }
         }
+        /* Coin flip result popup styles */
+        #coin-flip-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.98);
+            padding: 25px 35px;
+            border: 3px solid #333;
+            border-radius: 12px;
+            z-index: 2005;
+            text-align: center;
+            min-width: 280px;
+            max-width: 90%;
+            box-sizing: border-box;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            animation: popupFadeIn 0.2s ease-out;
+        }
+        #coin-flip-popup.success {
+            border-color: #4CAF50;
+            background-color: rgba(232, 255, 232, 0.98);
+        }
+        #coin-flip-popup.failure {
+            border-color: #f44336;
+            background-color: rgba(255, 232, 232, 0.98);
+        }
+        #coin-flip-popup h2 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        #coin-flip-popup.success h2 {
+            color: #2e7d32;
+        }
+        #coin-flip-popup.failure h2 {
+            color: #c62828;
+        }
+        #coin-flip-popup p {
+            margin: 5px 0 0 0;
+            font-size: 16px;
+            color: #333;
+            line-height: 1.4;
+        }
+        @keyframes popupFadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+        @keyframes popupFadeOut {
+            from {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+            to {
+                opacity: 0;
+                transform: translate(-50%, -40%);
+            }
+        }
         /* Warcry achievement popup styles */
         #warcry-achievement-modal {
             display: none;
@@ -1976,6 +2040,10 @@
     <div id="energy-blast-popup">
         <h1>ENERGY BLAST</h1>
         <p>Spell Unleashed</p>
+    </div>
+    <div id="coin-flip-popup">
+        <h2 id="coin-flip-popup-title">Success</h2>
+        <p id="coin-flip-popup-message"></p>
     </div>
     <div id="endgame-overlay"></div>
     <div id="game-stats-modal">
@@ -2907,26 +2975,29 @@
             // Hide the start button and description
             document.getElementById('coin-toss-start').style.display = 'none';
             document.getElementById('coin-toss-description').textContent = '';
-            document.getElementById('coin-toss-message').textContent = 'Flipping...';
 
             const coinResult = document.getElementById('coin-result');
             const continueBtn = document.getElementById('coin-toss-continue');
             const isEnergyBlastFlip = !!coinTossEnergyBlastMode;
+            const isFirstTurn = window.coinTossContext === 'first-turn';
 
             // Determine result
             const result = Math.random() < 0.5; // true = white (success), false = black (failure)
             window.lastCoinTossResult = result;
 
-            // Add spinning animation
-            coinResult.classList.add('spinning');
+            // Only show animation for first turn, instant for in-game flips
+            const animationDelay = isFirstTurn ? 2000 : 0;
 
-            // After animation completes (2 seconds), show result
+            if (isFirstTurn) {
+                document.getElementById('coin-toss-message').textContent = 'Flipping...';
+                // Add spinning animation only for first turn
+                coinResult.classList.add('spinning');
+            }
+
+            // After animation completes (2 seconds for first turn, instant for others), show result
             setTimeout(() => {
                 // Remove spinning class
                 coinResult.classList.remove('spinning');
-
-                // Apply result styling and show appropriate message based on context
-                const isFirstTurn = window.coinTossContext === 'first-turn';
 
                 if (result) {
                     coinResult.classList.add('white');
@@ -2936,7 +3007,7 @@
                     if (isFirstTurn) {
                         document.getElementById('coin-toss-message').textContent = "You won the coin toss! You're going first.";
                     } else {
-                        document.getElementById('coin-toss-message').textContent = "Success!";
+                        // For in-game flips, hide modal immediately and show popup instead
                         applyCoinFlipSuccessEffect(coinTossSpecialEffect);
                     }
                 } else {
@@ -2947,10 +3018,12 @@
                     if (isFirstTurn) {
                         document.getElementById('coin-toss-message').textContent = `${getOpponentDisplayName()} won the coin toss and is going first.`;
                     } else {
-                        document.getElementById('coin-toss-message').textContent = "Failure!";
+                        // For in-game flips, hide modal immediately and show popup instead
                         applyCoinFlipFailureEffect();
                     }
                 }
+
+                const savedSpecialEffect = coinTossSpecialEffect;
                 coinTossSpecialEffect = null;
 
                 if (coinTossEnergyBlastMode) {
@@ -2961,54 +3034,86 @@
                     updateCoinTossEnergyBlastProgress();
                 }
 
-                // Never show continue button - always auto-close
+                // For in-game flips, close modal immediately and show popup notification
+                if (!isFirstTurn) {
+                    // Close modal immediately
+                    if (window.coinTossShowOverlay) {
+                        document.getElementById('modal-overlay').style.display = 'none';
+                    }
+                    document.getElementById('coin-toss-modal').style.display = 'none';
+
+                    // Show popup notification
+                    showCoinFlipPopup(result, savedSpecialEffect, isEnergyBlastFlip);
+
+                    // Execute callback immediately
+                    setTimeout(() => {
+                        if (coinTossCallback) {
+                            const callback = coinTossCallback;
+                            coinTossCallback = null;
+                            callback(result);
+                        }
+
+                        const skipResume = coinTossSoulBlastHold;
+                        if (skipResume) {
+                            coinTossSoulBlastHold = false;
+                        } else {
+                            gamePaused = false;
+                            if (pausedTimers.game && gameTimeRemaining > 0) {
+                                startGameTimer();
+                            }
+                            if (pausedTimers.turn && pausedTimers.turnPlayer) {
+                                if (pausedTimers.turnPlayer === 'W' && playerTurnTimeRemaining > 0) {
+                                    startTurnTimer('W', { reset: false });
+                                } else if (pausedTimers.turnPlayer === 'B' && aiTurnTimeRemaining > 0) {
+                                    startTurnTimer('B', { reset: false });
+                                }
+                            }
+                        }
+                        endBlockingAction('coinFlip');
+                        pausedTimers = { game: null, turn: null, turnPlayer: null };
+                    }, 100);
+                    return;
+                }
+
+                // For first turn, keep original behavior with delays
                 const showDelay = isEnergyBlastFlip ? 0 : 500;
                 setTimeout(() => {
-                    // Continue button is now always hidden
-
-                    // Auto-close after a delay
                     const autoCloseDelay = isEnergyBlastFlip ? 800 : 2000;
+                    setTimeout(() => {
+                        if (window.coinTossShowOverlay) {
+                            document.getElementById('modal-overlay').style.display = 'none';
+                        }
+                        document.getElementById('coin-toss-modal').style.display = 'none';
+
                         setTimeout(() => {
-                            // Close overlay and modal
-                            if (window.coinTossShowOverlay) {
-                                document.getElementById('modal-overlay').style.display = 'none';
+                            if (coinTossCallback) {
+                                const callback = coinTossCallback;
+                                coinTossCallback = null;
+                                callback(result);
                             }
-                            document.getElementById('coin-toss-modal').style.display = 'none';
 
-                            // Wait for modal to be completely hidden before starting game
-                            setTimeout(() => {
-                                // Execute callback which will handle game initialization
-                                if (coinTossCallback) {
-                                    const callback = coinTossCallback;
-                                    coinTossCallback = null;
-                                    callback(result);
+                            const skipResume = coinTossSoulBlastHold;
+                            if (skipResume) {
+                                coinTossSoulBlastHold = false;
+                            } else {
+                                gamePaused = false;
+                                if (pausedTimers.game && gameTimeRemaining > 0) {
+                                    startGameTimer();
                                 }
-
-                                const skipResume = coinTossSoulBlastHold;
-                                if (skipResume) {
-                                    coinTossSoulBlastHold = false;
-                                } else {
-                                    // Unpause game and resume timers after callback completes
-                                    gamePaused = false;
-
-                                    // Resume timers if they were running before the coin toss
-                                    if (pausedTimers.game && gameTimeRemaining > 0) {
-                                        startGameTimer();
-                                    }
-                                    if (pausedTimers.turn && pausedTimers.turnPlayer) {
-                                        if (pausedTimers.turnPlayer === 'W' && playerTurnTimeRemaining > 0) {
-                                            startTurnTimer('W', { reset: false });
-                                        } else if (pausedTimers.turnPlayer === 'B' && aiTurnTimeRemaining > 0) {
-                                            startTurnTimer('B', { reset: false });
-                                        }
+                                if (pausedTimers.turn && pausedTimers.turnPlayer) {
+                                    if (pausedTimers.turnPlayer === 'W' && playerTurnTimeRemaining > 0) {
+                                        startTurnTimer('W', { reset: false });
+                                    } else if (pausedTimers.turnPlayer === 'B' && aiTurnTimeRemaining > 0) {
+                                        startTurnTimer('B', { reset: false });
                                     }
                                 }
-                                endBlockingAction('coinFlip');
-                                pausedTimers = { game: null, turn: null, turnPlayer: null };
-                            }, 300);
-                        }, autoCloseDelay);
+                            }
+                            endBlockingAction('coinFlip');
+                            pausedTimers = { game: null, turn: null, turnPlayer: null };
+                        }, 300);
+                    }, autoCloseDelay);
                 }, showDelay);
-            }, 2000);
+            }, animationDelay);
         }
 
         function closeCoinToss() {
@@ -3045,6 +3150,56 @@
                 endBlockingAction('coinFlip');
                 pausedTimers = { game: null, turn: null, turnPlayer: null };
             }, 300);
+        }
+
+        function showCoinFlipPopup(success, specialEffect, isEnergyBlastFlip) {
+            const popup = document.getElementById('coin-flip-popup');
+            const title = document.getElementById('coin-flip-popup-title');
+            const message = document.getElementById('coin-flip-popup-message');
+
+            // Clear previous classes
+            popup.className = '';
+
+            // Set success or failure styling
+            if (success) {
+                popup.classList.add('success');
+                title.textContent = 'Success!';
+
+                // Determine message based on special effect
+                if (specialEffect === 'energy-blast' || specialEffect === 'lich-soul-blast') {
+                    message.textContent = 'Ability activated successfully.';
+                } else if (isEnergyBlastFlip) {
+                    const successes = coinTossEnergyBlastMode?.successes || 0;
+                    const total = coinTossEnergyBlastMode?.total || ENERGY_BLAST_FLIP_COUNT;
+                    message.textContent = `Coin flip successful! (${successes}/${total} successes)`;
+                } else {
+                    message.textContent = 'The coin flip was successful!';
+                }
+            } else {
+                popup.classList.add('failure');
+                title.textContent = 'Failure!';
+
+                if (isEnergyBlastFlip) {
+                    const successes = coinTossEnergyBlastMode?.successes || 0;
+                    const total = coinTossEnergyBlastMode?.total || ENERGY_BLAST_FLIP_COUNT;
+                    message.textContent = `Coin flip failed. (${successes}/${total} successes)`;
+                } else {
+                    message.textContent = 'The coin flip failed.';
+                }
+            }
+
+            // Show popup
+            popup.style.display = 'block';
+            popup.style.animation = 'popupFadeIn 0.2s ease-out';
+
+            // Auto-hide after delay
+            const displayDuration = isEnergyBlastFlip ? 800 : 1500;
+            setTimeout(() => {
+                popup.style.animation = 'popupFadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    popup.style.display = 'none';
+                }, 300);
+            }, displayDuration);
         }
 
         function isElephantrySpecialActive() {
@@ -9150,7 +9305,7 @@
                     const attemptData = pendingEnergyBlast;
                     pendingEnergyBlast = null;
                     if (!success) {
-                        gameLog.push('Energy Blast spellcasting failed.');
+                        gameLog.push('Energy Blast: Coin flip failed - spellcasting unsuccessful.');
                         updateGameLog();
                         removeEnergyBlastGlow();
                         clearActiveControlButton(controlButton);
@@ -9168,7 +9323,7 @@
                     updateEndTurnButton();
                     activeEnergyBlastCost = { row, col, prepaid: attemptData.prepaid, cost: attemptData.cost };
                     applyEnergyBlastGlow();
-                    gameLog.push('Energy Blast spellcasting succeeded!');
+                    gameLog.push('Energy Blast: Coin flip successful - spell activated! Select target squares.');
                     updateGameLog();
                     showEnergyBlastPopup(() => {
                         openSpellDirectionModal({ type: 'energyBlast', row, col });
@@ -9948,12 +10103,12 @@
                             }
                         }
                         gameStats.summonCount[necromancerOwner]++;
-                        gameLog.push(`${playerLabel} summoned a ${label} at ${formatBoardCoordinates(targetRow,targetCol)}.`);
+                        gameLog.push(`${playerLabel} summoned a ${label} at ${formatBoardCoordinates(targetRow,targetCol)} - Coin flip successful!`);
                     } else {
                         gameLog.push(`${playerLabel}'s ${label} summon succeeded but the chosen square was occupied.`);
                     }
                 } else {
-                    gameLog.push(`${playerLabel} failed to summon a ${label}.`);
+                    gameLog.push(`${playerLabel} failed to summon a ${label} - Coin flip failed.`);
                 }
                 lastAction = { move: true };
                 movedPieces.add(`${fromRow},${fromCol}`);
@@ -13698,12 +13853,12 @@
                                     }
                                 }
                                 gameStats.summonCount[necromancerOwner]++;
-                                gameLog.push(`${playerLabel} summoned a ${label} at ${formatBoardCoordinates(targetRow,targetCol)}.`);
+                                gameLog.push(`${playerLabel} summoned a ${label} at ${formatBoardCoordinates(targetRow,targetCol)} - Coin flip successful!`);
                             } else {
                                 gameLog.push(`${playerLabel}'s ${label} summon succeeded but the chosen square was occupied.`);
                             }
                         } else {
-                            gameLog.push(`${playerLabel} failed to summon a ${label}.`);
+                            gameLog.push(`${playerLabel} failed to summon a ${label} - Coin flip failed.`);
                         }
                         lastAction = { move: true };
                         movedPieces.add(`${fromRow},${fromCol}`);
@@ -16672,8 +16827,8 @@
 
             let plannedActions = [];
 
-            // Add 1-2 second delay buffer before AI starts making moves
-            const aiStartDelay = 1000 + Math.random() * 1000; // Random delay between 1000-2000ms
+            // Add 3-7 second delay buffer before AI starts making moves
+            const aiStartDelay = 3000 + Math.random() * 4000; // Random delay between 3000-7000ms
 
             function completeAiMove(action, moveResult = null) {
                 const special = action?.special;
@@ -16716,11 +16871,11 @@
                     const mercPiece = moveResult.mercenaryPiece;
                     const mercPos = moveResult.mercenaryPos;
                     handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, () => {
-                        setTimeout(() => makeNextMove(), 1200);
+                        setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                     });
                     return;
                 }
-                setTimeout(() => makeNextMove(), 1200);
+                setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
             }
 
             function handleAiElephantryMoveShoot(action, moveResult, finalRow, finalCol) {
@@ -16906,7 +17061,7 @@
                             setTimeout(() => {
                                 highlightSquares = [];
                                 renderBoard();
-                                setTimeout(() => makeNextMove(), 1200);
+                                setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                             }, 1000);
                             return;
                         }
@@ -16942,7 +17097,7 @@
                                     updateEndTurnButton();
                                     updateGameLog();
                                     checkGameOver();
-                                    setTimeout(() => makeNextMove(), 1200);
+                                    setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                 },
                                 true,
                                 false
@@ -17153,7 +17308,7 @@
                                     updateScoreDisplay();
 
                                     // Continue AI turn
-                                    setTimeout(() => makeNextMove(), 1200);
+                                    setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                 },
                                 true, // Automated mode
                                 false // showOverlay
@@ -17190,7 +17345,7 @@
                                     updateScoreDisplay();
 
                                     // Continue AI turn
-                                    setTimeout(() => makeNextMove(), 1200);
+                                    setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                 },
                                 true, // Automated mode
                                 false // showOverlay
@@ -17224,7 +17379,7 @@
                                     renderBoard();
                                     updateScoreDisplay();
                                     updateGameLog();
-                                    setTimeout(() => makeNextMove(), 1200);
+                                    setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                 },
                                 true,
                                 false
@@ -17261,7 +17416,7 @@
                                     updateScoreDisplay();
 
                                     // Continue AI turn
-                                    setTimeout(() => makeNextMove(), 1200);
+                                    setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                 },
                                 true, // Automated mode
                                 false // showOverlay
@@ -17296,7 +17451,7 @@
                                     renderBoard();
                                     updateGameLog();
                                     updateScoreDisplay();
-                                    setTimeout(() => makeNextMove(), 1200);
+                                    setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                 },
                                 true,
                                 false
@@ -17321,10 +17476,10 @@
                             updateCapturedPiecesDisplay();
                             updateStatus();
                             updateEndTurnButton();
-                            setTimeout(() => makeNextMove(), 1200);
+                            setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                             return;
                         } else if (action.type === 'energyBlast') {
-                            const scheduleNextMove = () => setTimeout(() => makeNextMove(), 1200);
+                            const scheduleNextMove = () => setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                             if (!from || !direction) {
                                 scheduleNextMove();
                                 return;
@@ -17372,7 +17527,7 @@
                                     applyEnergyBlastGlow();
                                     gameLog.push('AI successfully channeled Energy Blast!');
                                     updateGameLog();
-                                    pendingAiEnergyBlastResume = () => setTimeout(() => makeNextMove(), 1200);
+                                    pendingAiEnergyBlastResume = () => setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                     performEnergyBlast(casterRow, casterCol, direction);
                                 },
                                 true,
@@ -17402,17 +17557,17 @@
                                     if (!success) {
                                         gameLog.push('AI failed the Sacrifice coin flip.');
                                         updateGameLog();
-                                        setTimeout(() => makeNextMove(), 1200);
+                                        setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                         return;
                                     }
                                     if (movesLeft < cost) {
                                         gameLog.push('AI lacked the move points to complete Sacrifice.');
                                         updateGameLog();
-                                        setTimeout(() => makeNextMove(), 1200);
+                                        setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                         return;
                                     }
                                     executeSacrifice(sRow, sCol, {
-                                        onComplete: () => setTimeout(() => makeNextMove(), 1200)
+                                        onComplete: () => setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000)
                                     });
                                 },
                                 true,
@@ -17455,7 +17610,7 @@
                                     updateGameLog();
                                     lastAction = { move: true };
                                     movedPieces.add(`${kingRow},${kingCol}`);
-                                    setTimeout(() => makeNextMove(), 1200);
+                                    setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                 },
                                 true,
                                 false
@@ -17509,7 +17664,7 @@
                                     updateGameLog();
                                     lastAction = { move: true };
                                     movedPieces.add(`${championRow},${championCol}`);
-                                    setTimeout(() => makeNextMove(), 1200);
+                                    setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                 },
                                 true,
                                 false
@@ -17536,7 +17691,7 @@
                             updateEndTurnButton();
                             beginHuntsmanBurstSequence(burstRow, burstCol, 'B', {
                                 automated: true,
-                                onComplete: () => setTimeout(() => makeNextMove(), 1200)
+                                onComplete: () => setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000)
                             });
                             return;
                         } else if (action.type === 'move') {
@@ -17568,14 +17723,14 @@
                                                 handleUndeadDefense(attackingPiece, targetPiece, fromRow, fromCol, toRow, toCol, false);
                                                 renderBoard();
                                                 updateGameLog();
-                                                setTimeout(() => makeNextMove(), 1200);
+                                                setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                                 return;
                                             }
                                             const defenseResult = handleUndeadDefense(attackingPiece, targetPiece, fromRow, fromCol, toRow, toCol, true);
                                             if (defenseResult?.attackerRemoved || defenseResult?.undeadDamaged) {
                                                 renderBoard();
                                                 updateGameLog();
-                                                setTimeout(() => makeNextMove(), 1200);
+                                                setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                                 return;
                                             }
                                         } else {
@@ -17583,7 +17738,7 @@
                                                 attemptUndeadCapture(attackingPiece, targetPiece, fromRow, fromCol, toRow, toCol, false);
                                                 renderBoard();
                                                 updateGameLog();
-                                                setTimeout(() => makeNextMove(), 1200);
+                                                setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                                 return;
                                             }
                                             attemptUndeadCapture(attackingPiece, targetPiece, fromRow, fromCol, toRow, toCol, true);
@@ -17614,7 +17769,7 @@
                                             gameLog.push(`AI failed to capture the Spectre.`);
                                             renderBoard();
                                             updateGameLog();
-                                            setTimeout(() => makeNextMove(), 1200);
+                                            setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                             return;
                                         }
 
@@ -17691,7 +17846,7 @@
                                         updateGameLog();
 
                                         // Continue AI turn
-                                        setTimeout(() => makeNextMove(), 1200);
+                                        setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                     },
                                     true, // Automated mode
                                     false // showOverlay
@@ -17719,7 +17874,7 @@
                                         updateGameLog();
 
                                         // Continue AI turn
-                                        setTimeout(() => makeNextMove(), 1200);
+                                        setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                                     },
                                     true, // Automated mode
                                     false // showOverlay
@@ -17844,7 +17999,7 @@
 
                             handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
                                 // Continue AI turn after coin flip
-                                setTimeout(() => makeNextMove(), 1200);
+                                setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                             });
                             return; // Exit to wait for coin flip callback
                         }
@@ -17871,7 +18026,7 @@
 
                             handleMercenaryCoinFlip(mercPiece.player, mercPiece, mercPos.row, mercPos.col, (bonusTurnGranted) => {
                                 // Continue AI turn after coin flip
-                                setTimeout(() => makeNextMove(), 1200);
+                                setTimeout(() => makeNextMove(), 3000 + Math.random() * 4000);
                             });
                             return; // Exit to wait for coin flip callback
                         }
