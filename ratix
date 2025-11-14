@@ -9407,18 +9407,15 @@
             movedPieces.add(`${row},${col}`);
             beginBlockingAction('energyBlast');
             const context = { piece, row, col, direction };
-            if (piece.player === 'W') {
-                startEnergyBlastFlipSequence(context);
-            } else {
-                const flips = [];
-                let successes = 0;
-                for (let i = 0; i < ENERGY_BLAST_FLIP_COUNT; i++) {
-                    const success = randomCoinFlip();
-                    flips.push(success);
-                    if (success) successes++;
-                }
-                completeEnergyBlastAfterRange(context, successes, flips);
+            // Perform instant coin flips for both player and AI
+            const flips = [];
+            let successes = 0;
+            for (let i = 0; i < ENERGY_BLAST_FLIP_COUNT; i++) {
+                const success = randomCoinFlip();
+                flips.push(success);
+                if (success) successes++;
             }
+            completeEnergyBlastAfterRange(context, successes, flips);
         }
 
         function completeEnergyBlastAfterRange(context, successes, flips) {
@@ -9454,19 +9451,9 @@
                     ensureAITurnIfNeeded();
                 }
             };
-            const finalizeEnergyBlast = () => {
-                finishEnergyBlast();
-                resumeGameForEnergyBlastFlips();
-                if (typeof pendingAiEnergyBlastResume === 'function') {
-                    const resume = pendingAiEnergyBlastResume;
-                    pendingAiEnergyBlastResume = null;
-                    resume();
-                }
-            };
-
             if (successes === 0) {
                 gameLog.push('The blast fizzled before leaving the caster.');
-                finalizeEnergyBlast();
+                finishEnergyBlast();
                 return;
             }
 
@@ -9498,7 +9485,7 @@
                 if (!targets.length) {
                     gameLog.push('Energy Blast hit no enemy pieces along its path.');
                     addEnergyBlastResidualSquares(pathSquares);
-                    finalizeEnergyBlast();
+                    finishEnergyBlast();
                     return;
                 }
                 resolveSpellTargetsSequentially(targets, piece.player, 'Energy Blast', (capturesHit) => {
@@ -9506,7 +9493,7 @@
                         gameLog.push('Energy Blast was negated or all targets were protected.');
                     }
                     addEnergyBlastResidualSquares(pathSquares);
-                    finalizeEnergyBlast();
+                    finishEnergyBlast();
                 });
             };
 
