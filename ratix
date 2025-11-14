@@ -10943,7 +10943,7 @@
                         capturedPieces[currentPlayer].push(targetPiece);
                         const captureValue = pieceValues[targetPiece.type];
                         scores[currentPlayer] += captureValue;
-                        registerScoreGain(currentPlayer, captureValue);
+                        registerScoreGain(currentPlayer, captureValue, true);
                         registerPieceLoss(targetPiece.player, targetPiece.type);
                         trackCapture(currentPlayer); // Track capture for statistics
                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry triple shot hit! Captured ${targetPiece.type} (+${captureValue} points)`);
@@ -13714,7 +13714,7 @@
                         capturedPieces[currentPlayer].push(targetPiece);
                         const captureValue = pieceValues[targetPiece.type];
                         scores[currentPlayer] += captureValue;
-                        registerScoreGain(currentPlayer, captureValue);
+                        registerScoreGain(currentPlayer, captureValue, true);
                         registerPieceLoss(targetPiece.player, targetPiece.type);
                         trackCapture(currentPlayer); // Track capture for statistics
                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry triple shot hit! Captured ${targetPiece.type} (+${captureValue} points)`);
