@@ -9439,8 +9439,11 @@
                 checkGameOver();
                 removeEnergyBlastGlow();
                 clearActiveControlButton(document.getElementById('energy-blast-button'));
+                // Add delay before turn transition to ensure blast is visually complete
                 if (movesLeft === 0 && !reinforcementPending) {
-                    triggerAiTurn();
+                    setTimeout(() => {
+                        triggerAiTurn();
+                    }, 800);
                 } else {
                     ensureAITurnIfNeeded();
                 }
