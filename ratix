@@ -4691,7 +4691,7 @@
         pieceIcons['Zombie'] = 'Z';
         pieceIcons['Undead'] = 'U';
         pieceIcons['Undead3'] = 'U';
-        pieceIcons['UndeadChampion'] = 'ⓤ';
+        pieceIcons['UndeadChampion'] = 'Ʊ';
         pieceIcons['Huntsman'] = 'H';
         const facingIcons = {
             'U': '^', 'D': 'v', 'L': '<', 'R': '>'
