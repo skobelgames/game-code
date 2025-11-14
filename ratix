@@ -3399,17 +3399,13 @@
         }
 
         function rollElephantryTripleShotFlips(onComplete, shot = 1) {
-            // Use multi-coin toss to flip all 3 coins simultaneously
-            performMultiCoinToss(
-                'Elephantry Triple Shot',
-                'Flipping 3 coins for Triple Shot...',
-                3,
-                (results) => {
-                    elephantryTripleShotFlipResults = results;
-                    onComplete();
-                },
-                null
-            );
+            // Do instant coin flips without animation
+            const results = [];
+            for (let i = 0; i < 3; i++) {
+                results.push(Math.random() < 0.5);
+            }
+            elephantryTripleShotFlipResults = results;
+            onComplete();
         }
 
         function finishElephantryTripleShot() {
@@ -8241,29 +8237,18 @@
                 flips: [],
                 successes: 0
             };
-            pauseGameForEnergyBlastFlips();
+            // Do instant coin flips without animation
+            const results = [];
+            for (let i = 0; i < ENERGY_BLAST_FLIP_COUNT; i++) {
+                results.push(Math.random() < 0.5);
+            }
 
-            // Use multi-coin toss to flip all coins simultaneously
-            performMultiCoinToss(
-                'Energy Blast',
-                `Flipping ${ENERGY_BLAST_FLIP_COUNT} coins...`,
-                ENERGY_BLAST_FLIP_COUNT,
-                (results) => {
-                    if (!energyBlastFlipContext) {
-                        return;
-                    }
-                    const ctx = energyBlastFlipContext;
-                    ctx.flips = results;
-                    ctx.successes = results.filter(r => r).length;
+            const ctx = energyBlastFlipContext;
+            ctx.flips = results;
+            ctx.successes = results.filter(r => r).length;
 
-                    coinTossEnergyBlastMode = null;
-                    updateCoinTossEnergyBlastProgress();
-                    energyBlastFlipContext = null;
-                    resumeGameForEnergyBlastFlips();
-                    completeEnergyBlastAfterRange(ctx.context, ctx.successes, ctx.flips);
-                },
-                'energy-blast'
-            );
+            energyBlastFlipContext = null;
+            completeEnergyBlastAfterRange(ctx.context, ctx.successes, ctx.flips);
         }
 
         function runNextEnergyBlastFlip() {
@@ -10136,7 +10121,14 @@
             // Only forward-facing lines (head-on + forward-left/right diagonals) should be considered
             const directions = getElephantryTripleShotDirections(piece.facing);
             const shotsRemaining = elephantryExtendedRangeShotsRemaining[pieceKey];
-            for (let d of directions) {
+            for (let i = 0; i < directions.length; i++) {
+                const d = directions[i];
+                // Only show targets for successful coin flips
+                if (elephantryTripleShotAwaitingTargets && elephantryTripleShotFlipResults.length > 0) {
+                    const shotIndex = 3 - shotsRemaining;
+                    if (i !== shotIndex) continue; // Skip this direction, not the current shot
+                    if (!elephantryTripleShotFlipResults[shotIndex]) continue; // Skip if coin flip failed
+                }
                 for (let dist = 1; dist <= 2; dist++) {
                     let nr = row + d[0] * dist;
                     let nc = col + d[1] * dist;
@@ -13123,7 +13115,14 @@
             // Only forward-facing lines (head-on + forward-left/right diagonals) should be considered
             const directions = getElephantryTripleShotDirections(piece.facing);
             const shotsRemaining = elephantryExtendedRangeShotsRemaining[pieceKey];
-            for (let d of directions) {
+            for (let i = 0; i < directions.length; i++) {
+                const d = directions[i];
+                // Only show targets for successful coin flips
+                if (elephantryTripleShotAwaitingTargets && elephantryTripleShotFlipResults.length > 0) {
+                    const shotIndex = 3 - shotsRemaining;
+                    if (i !== shotIndex) continue; // Skip this direction, not the current shot
+                    if (!elephantryTripleShotFlipResults[shotIndex]) continue; // Skip if coin flip failed
+                }
                 for (let dist = 1; dist <= 2; dist++) {
                     let nr = row + d[0] * dist;
                     let nc = col + d[1] * dist;
