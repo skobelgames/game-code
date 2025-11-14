@@ -3471,6 +3471,7 @@
             }
 
             roundScoreGain[player] = 0;
+            roundCaptureValue[player] = 0;
             roundLosses[player] = {};
             roundLosses[opponent] = {};
             warcryAchievedThisRound[player] = false;
@@ -3578,6 +3579,7 @@
             initialMovesLeft = moves;
             baseMovesThisTurn = baseMoves; // Store base moves for tracking when bonus is spent
             roundScoreGain[player] = 0;
+            roundCaptureValue[player] = 0;
             roundLosses[player] = roundLosses[player] || {};
             roundLosses[opponent] = {};
             decrementNecromancerCooldown(player);
@@ -4215,7 +4217,7 @@
             capturedPieces[player].push(targetPiece);
             const captureValue = pieceValues[targetPiece.type] || 0;
             scores[player] += captureValue;
-            registerScoreGain(player, captureValue);
+            registerScoreGain(player, captureValue, true);
             registerPieceLoss(targetPiece.player, targetPiece.type);
             trackCapture(player); // Track capture for statistics
             if (targetPiece.type === 'Champion') {
@@ -4314,7 +4316,7 @@
                 capturedPieces[attackerPiece.player].push(targetPiece);
                 const captureValue = pieceValues[targetPiece.type] || 0;
                 scores[attackerPiece.player] += captureValue;
-                registerScoreGain(attackerPiece.player, captureValue);
+                registerScoreGain(attackerPiece.player, captureValue, true);
                 registerPieceLoss(targetPiece.player, targetPiece.type);
                 trackCapture(attackerPiece.player);
                 gameLog.push(`${attackerPiece.player === 'W' ? 'Player' : 'AI'} Huntsman effortlessly captured Zombie at ${formatBoardCoordinates(targetRow,targetCol)}.`);
@@ -4339,7 +4341,7 @@
                 capturedPieces[attackerPiece.player].push(targetPiece);
                 const captureValue = pieceValues[targetPiece.type] || 0;
                 scores[attackerPiece.player] += captureValue;
-                registerScoreGain(attackerPiece.player, captureValue);
+                registerScoreGain(attackerPiece.player, captureValue, true);
                 registerPieceLoss(zombieOwner, targetPiece.type);
                 trackCapture(attackerPiece.player); // Track capture for statistics
                 gameLog.push(`${attackerLabel} ${successVerb} Zombie at ${formatBoardCoordinates(targetRow,targetCol)} after winning the coin flip.`);
@@ -4953,6 +4955,7 @@
         let boardResizeObserver = null;
 
         let roundScoreGain = { 'W': 0, 'B': 0 };
+        let roundCaptureValue = { 'W': 0, 'B': 0 }; // Track captures-only for warcry
         let roundLosses = { 'W': {}, 'B': {} };
         let nextRoundModifier = { 'W': 0, 'B': 0 };
         let warcryAchievedThisRound = { 'W': false, 'B': false };
@@ -5454,19 +5457,26 @@
             return player === 'B';
         }
 
-        function registerScoreGain(player, amount) {
+        function registerScoreGain(player, amount, isCapture = false) {
             const previousScore = roundScoreGain[player] || 0;
             roundScoreGain[player] = previousScore + amount;
             const newScore = roundScoreGain[player];
 
+            // Track captures separately for warcry
+            if (isCapture) {
+                const previousCaptureValue = roundCaptureValue[player] || 0;
+                roundCaptureValue[player] = previousCaptureValue + amount;
+                const newCaptureValue = roundCaptureValue[player];
+
+                // Check if warcry threshold was just reached (only from captures)
+                if (previousCaptureValue < HONOUR_THRESHOLD && newCaptureValue >= HONOUR_THRESHOLD && !warcryAchievedThisRound[player]) {
+                    warcryAchievedThisRound[player] = true;
+                    queueWarcryCelebration(player);
+                }
+            }
+
             // Track score for statistics
             trackScore(player, amount);
-
-            // Check if warcry threshold was just reached
-            if (previousScore < HONOUR_THRESHOLD && newScore >= HONOUR_THRESHOLD && !warcryAchievedThisRound[player]) {
-                warcryAchievedThisRound[player] = true;
-                queueWarcryCelebration(player);
-            }
         }
 
         function queueWarcryCelebration(player) {
@@ -10740,7 +10750,7 @@
                                 capturedPieces[currentPlayer].push(capturedPiece);
                                 const captureValue = pieceValues[capturedPiece.type];
                                 scores[currentPlayer] += captureValue;
-                                registerScoreGain(currentPlayer, captureValue);
+                                registerScoreGain(currentPlayer, captureValue, true);
                                 registerPieceLoss(capturedPiece.player, capturedPiece.type);
                                 trackCapture(currentPlayer); // Track capture for statistics
                                 gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry charged and captured ${capturedPiece.type} (+${captureValue} points) at ${formatBoardCoordinates(captureRow,captureCol)}`);
@@ -10884,7 +10894,7 @@
                                 capturedPieces[currentPlayer].push(targetPiece);
                                 const captureValue = pieceValues[targetPiece.type];
                                 scores[currentPlayer] += captureValue;
-                                registerScoreGain(currentPlayer, captureValue);
+                                registerScoreGain(currentPlayer, captureValue, true);
                                 registerPieceLoss(targetPiece.player, targetPiece.type);
                                 trackCapture(currentPlayer);
                                 gameLog.push(`${actorLabel} Elephantry triple shot shattered the ${undeadName}! (+${captureValue} points)`);
@@ -12179,10 +12189,17 @@
                     if (success) {
                         nextRoundModifier[boostPlayer] += MORAL_BOOST_BONUS;
                         moralBoostSuccesses[boostPlayer]++;
+                        const justUnlockedBarrage = moralBoostSuccesses[boostPlayer] === BARRAGE_REQUIRED_MORAL_BOOSTS;
                         gameLog.push(`${actorLabel} succeeded with Moral Boost! +2 moves next round.`);
                         // Wait for coin flip popup to close before showing morale boost popup (1500ms display + 300ms fade = 1800ms)
                         setTimeout(() => {
                             showWarcryAchievementPopup(boostPlayer, { title: 'MORAL BOOST', subtitle: '+2 Next Round' });
+                            // If this was the 3rd moral boost, show BARRAGE READY popup after moral boost popup
+                            if (justUnlockedBarrage) {
+                                setTimeout(() => {
+                                    showWarcryAchievementPopup(boostPlayer, { title: 'BARRAGE READY', subtitle: 'Artillery Unlocked' });
+                                }, 2800); // Show after moral boost popup closes (2600ms) + small delay
+                            }
                         }, 1800);
                     } else {
                         gameLog.push(`${actorLabel} failed to inspire a Moral Boost.`);
@@ -13505,7 +13522,7 @@
                                 capturedPieces[currentPlayer].push(capturedPiece);
                                 const captureValue = pieceValues[capturedPiece.type];
                                 scores[currentPlayer] += captureValue;
-                                registerScoreGain(currentPlayer, captureValue);
+                                registerScoreGain(currentPlayer, captureValue, true);
                                 registerPieceLoss(capturedPiece.player, capturedPiece.type);
                                 trackCapture(currentPlayer); // Track capture for statistics
                                 gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry charged and captured ${capturedPiece.type} (+${captureValue} points) at ${formatBoardCoordinates(captureRow,captureCol)}`);
@@ -13649,7 +13666,7 @@
                                 capturedPieces[currentPlayer].push(targetPiece);
                                 const captureValue = pieceValues[targetPiece.type];
                                 scores[currentPlayer] += captureValue;
-                                registerScoreGain(currentPlayer, captureValue);
+                                registerScoreGain(currentPlayer, captureValue, true);
                                 registerPieceLoss(targetPiece.player, targetPiece.type);
                                 trackCapture(currentPlayer);
                                 gameLog.push(`${actorLabel} Elephantry triple shot shattered the ${undeadName}! (+${captureValue} points)`);
@@ -15000,7 +15017,7 @@
                         const captureValue = pieceValues[targetPiece.type];
                         totalCaptureValue += captureValue; // Add to total
                         scores[player] += captureValue;
-                        registerScoreGain(player, captureValue);
+                        registerScoreGain(player, captureValue, true);
                         registerPieceLoss(opponent, targetPiece.type);
                         trackCapture(player); // Track capture for statistics
                         gameLog.push(`${player === 'W' ? 'Player' : 'AI'} captured ${targetPiece.type} (+${captureValue} points) with Dragon's Inferno at ${formatBoardCoordinates(nr,nc)}`);
@@ -15063,7 +15080,7 @@
                 capturedSquares.push([r, c]);
                 capturedPieces[player].push(targetPiece);
                 scores[player] += captureValue;
-                registerScoreGain(player, captureValue);
+                registerScoreGain(player, captureValue, true);
                 registerPieceLoss(targetPiece.player, targetPiece.type);
                 trackCapture(player);
                 if (targetPiece.type === 'Champion') {
@@ -15183,7 +15200,7 @@
             capturedSquares.push([row, col]);
             capturedPieces[owner].push(attackerPiece);
             scores[owner] += captureValue;
-            registerScoreGain(owner, captureValue);
+            registerScoreGain(owner, captureValue, true);
             registerPieceLoss(attackerPiece.player, attackerPiece.type);
             trackCapture(owner);
             checkSupremacy(owner);
@@ -15228,7 +15245,7 @@
                     capturedPieces[piece.player].push(capturedPiece);
                     captureValue = pieceValues[capturedPiece.type];
                     scores[piece.player] += captureValue;
-                    registerScoreGain(piece.player, captureValue);
+                    registerScoreGain(piece.player, captureValue, true);
                     registerPieceLoss(opponent, capturedPiece.type);
                     trackCapture(piece.player); // Track capture for statistics
                     gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} captured ${capturedPiece.type} (+${captureValue} points) with ${piece.type} at ${formatBoardCoordinates(jump[0],jump[1])}`);
@@ -15286,7 +15303,7 @@
                         capturedPieces[piece.player].push(capturedPiece);
                         captureValue = pieceValues[capturedPiece.type];
                         scores[piece.player] += captureValue;
-                        registerScoreGain(piece.player, captureValue);
+                        registerScoreGain(piece.player, captureValue, true);
                         registerPieceLoss(opponent, capturedPiece.type);
                         trackCapture(piece.player); // Track capture for statistics
                         gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} captured ${capturedPiece.type} (+${captureValue} points) with ${piece.type} at ${formatBoardCoordinates(toRow,toCol)}`);
@@ -15428,7 +15445,7 @@
                     capturedPieces[piece.player].push(targetPiece);
                     const captureValue = pieceValues[targetPiece.type];
                     scores[piece.player] += captureValue;
-                    registerScoreGain(piece.player, captureValue);
+                    registerScoreGain(piece.player, captureValue, true);
                     registerPieceLoss(getOpponent(piece.player), targetPiece.type);
                     trackCapture(piece.player);
                     gameLog.push(`${actorLabel} shattered the ${undeadName}${abilityText}! (+${captureValue} points)`);
@@ -15555,7 +15572,7 @@
             capturedPieces[attackerPlayer].push(targetPiece);
             const captureValue = pieceValues[targetPiece.type] || 0;
             scores[attackerPlayer] += captureValue;
-            registerScoreGain(attackerPlayer, captureValue);
+            registerScoreGain(attackerPlayer, captureValue, true);
             registerPieceLoss(targetPiece.player, targetPiece.type);
             trackCapture(attackerPlayer);
             if (options.logMessage) {
@@ -17210,7 +17227,14 @@
                                     if (success) {
                                         nextRoundModifier['B'] += MORAL_BOOST_BONUS;
                                         moralBoostSuccesses['B']++;
+                                        const justUnlockedBarrage = moralBoostSuccesses['B'] === BARRAGE_REQUIRED_MORAL_BOOSTS;
                                         gameLog.push(`${aiLabel} succeeded with Moral Boost! +2 moves next round.`);
+                                        // If this was the 3rd moral boost, show BARRAGE READY popup
+                                        if (justUnlockedBarrage) {
+                                            setTimeout(() => {
+                                                showWarcryAchievementPopup('B', { title: 'BARRAGE READY', subtitle: 'Artillery Unlocked' });
+                                            }, 1800); // Show after coin flip popup closes
+                                        }
                                     } else {
                                         gameLog.push(`${aiLabel} failed to inspire a Moral Boost.`);
                                     }
@@ -18324,6 +18348,7 @@
             elephantryExtendedRangeShotsRemaining = {};
             capturedSquares = [];
             roundScoreGain = { 'W': 0, 'B': 0 };
+            roundCaptureValue = { 'W': 0, 'B': 0 };
             roundLosses = { 'W': {}, 'B': {} };
             nextRoundModifier = { 'W': 0, 'B': 0 };
             reinforcementTotals = { 'W': 0, 'B': 0 };
