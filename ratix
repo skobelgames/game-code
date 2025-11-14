@@ -2187,7 +2187,8 @@
             coinFlip: 0,
             zombieFlip: 0,
             barrage: 0,
-            energyBlast: 0
+            energyBlast: 0,
+            elephantryTripleShot: 0
         };
         let barragePauseState = null;
 
@@ -3239,8 +3240,12 @@
             updateEndTurnButton();
             updateGameLog();
             checkGameOver();
+            endBlockingAction('elephantryTripleShot');
+            // Add delay before turn transition to ensure action is visually complete
             if (movesLeft === 0 && !reinforcementPending) {
-                triggerAiTurn();
+                setTimeout(() => {
+                    triggerAiTurn();
+                }, 500);
             } else {
                 ensureAITurnIfNeeded();
             }
@@ -9150,6 +9155,8 @@
                     updateGameLog();
                     return;
                 }
+                // Block turn transition during entire triple shot sequence
+                beginBlockingAction('elephantryTripleShot');
                 setActiveControlButton(button || document.getElementById('elephantry-extended-button'));
                 movesLeft -= 2;
                 lastAction = { move: true };
@@ -9161,22 +9168,33 @@
                 elephantryTripleShotPieceKey = pieceKey;
                 validMoves = [];
                 renderBoard();
+                updateStatus();
+                updateEndTurnButton();
                 const elephantryRow = selectedPiece.row;
                 const elephantryCol = selectedPiece.col;
-                rollElephantryTripleShotFlips(() => {
-                    elephantryTripleShotAwaitingTargets = true;
-                    const nextMoves = getElephantryExtendedRangeMoves(elephantryRow, elephantryCol);
-                    if (!nextMoves.length) {
-                        gameLog.push('No valid targets for Elephantry Triple Shot.');
-                        finishElephantryTripleShot();
-                        return;
-                    }
-                    validMoves = nextMoves;
-                    renderBoard();
-                    updateStatus();
-                    updateEndTurnButton();
+
+                // Perform instant coin flips for all 3 shots
+                for (let i = 0; i < 3; i++) {
+                    const success = randomCoinFlip();
+                    elephantryTripleShotFlipResults.push(success);
+                }
+
+                const successCount = elephantryTripleShotFlipResults.filter(r => r).length;
+                gameLog.push(`Elephantry Triple Shot: ${successCount} of 3 coin flips successful.`);
+
+                elephantryTripleShotAwaitingTargets = true;
+                const nextMoves = getElephantryExtendedRangeMoves(elephantryRow, elephantryCol);
+                if (!nextMoves.length || successCount === 0) {
+                    gameLog.push('No valid targets for Elephantry Triple Shot.');
                     updateGameLog();
-                });
+                    finishElephantryTripleShot();
+                    return;
+                }
+                validMoves = nextMoves;
+                renderBoard();
+                updateStatus();
+                updateEndTurnButton();
+                updateGameLog();
             }
         }
 
