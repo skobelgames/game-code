@@ -10324,7 +10324,7 @@
                 if (move && movesLeft >= move.cost) {
                     const currentRow = selectedPiece.row;
                     const currentCol = selectedPiece.col;
-                    shootPiece(currentRow, currentCol, row, col);
+                    shootPiece(currentRow, currentCol, row, col, 'Skirmish');
                     movesLeft -= move.cost; // spend second point
                     lastAction = { move: true };
                     // Mark both original and current squares as moved if we have the original
@@ -10358,7 +10358,7 @@
                 if (move && movesLeft >= move.cost) {
                     const fromRow = selectedPiece.row;
                     const fromCol = selectedPiece.col;
-                    shootPiece(fromRow, fromCol, row, col);
+                    shootPiece(fromRow, fromCol, row, col, 'Longshot');
                     movesLeft -= move.cost; // cost 2
                     lastAction = { move: true };
                     movedPieces.add(`${fromRow},${fromCol}`);
@@ -10794,8 +10794,7 @@
                 const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.special === 'pistolierMoveShootFinal');
                 if (move) {
                     // Execute the shoot
-                    shootPiece(selectedPiece.row, selectedPiece.col, row, col);
-                    gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Pistolier shot at ${formatBoardCoordinates(row,col)}`);
+                    shootPiece(selectedPiece.row, selectedPiece.col, row, col, 'Move and Shot');
 
                     // Clean up
                     pistolierMoveShootMode = false;
@@ -10823,8 +10822,7 @@
                 const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.special === 'elephantryMoveShootFinal');
                 if (move) {
                     // Execute the shoot
-                    shootPiece(selectedPiece.row, selectedPiece.col, row, col);
-                    gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry shot at ${formatBoardCoordinates(row,col)}`);
+                    shootPiece(selectedPiece.row, selectedPiece.col, row, col, 'Move and Shot');
 
                     // Clean up
                     elephantryMoveShootMode = false;
@@ -10873,6 +10871,33 @@
                         const targetPiece = board[targetRow][targetCol];
                         if (targetPiece && targetPiece.type === 'Spectre') {
                             gameLog.push('Elephantry triple shot cannot target Spectres.');
+                        } else if (targetPiece && targetPiece.player !== currentPlayer && (isUndeadType(targetPiece) || isUndeadChampionType(targetPiece))) {
+                            // Handle undead pieces - deduct 1 life per hit
+                            const actorLabel = currentPlayer === 'W' ? 'Player' : 'AI';
+                            const undeadName = isUndeadChampionType(targetPiece) ? 'Undead Champion' : 'Undead';
+                            const currentLives = typeof targetPiece.lives === 'number' ? targetPiece.lives : (targetPiece.maxLives || 1);
+                            targetPiece.lives = currentLives - 1;
+
+                            if (targetPiece.lives <= 0) {
+                                // Undead destroyed
+                                capturedSquares.push([targetRow, targetCol]);
+                                capturedPieces[currentPlayer].push(targetPiece);
+                                const captureValue = pieceValues[targetPiece.type];
+                                scores[currentPlayer] += captureValue;
+                                registerScoreGain(currentPlayer, captureValue);
+                                registerPieceLoss(targetPiece.player, targetPiece.type);
+                                trackCapture(currentPlayer);
+                                gameLog.push(`${actorLabel} Elephantry triple shot shattered the ${undeadName}! (+${captureValue} points)`);
+                                cleanupNecromancerTracking(targetPiece);
+                                board[targetRow][targetCol] = null;
+                                updateCapturedPiecesDisplay();
+                                updateScoreDisplay();
+                                checkSupremacy(currentPlayer);
+                            } else {
+                                // Undead damaged but alive
+                                const livesText = targetPiece.lives === 1 ? '1 life' : `${targetPiece.lives} lives`;
+                                gameLog.push(`${actorLabel} Elephantry triple shot hit the ${undeadName}! (${livesText} remaining)`);
+                            }
                         } else if (targetPiece && targetPiece.player !== currentPlayer) {
                             capturedSquares.push([targetRow, targetCol]);
                             capturedPieces[currentPlayer].push(targetPiece);
@@ -13078,7 +13103,7 @@
                 if (move && movesLeft >= move.cost) {
                     const currentRow = selectedPiece.row;
                     const currentCol = selectedPiece.col;
-                    shootPiece(currentRow, currentCol, row, col);
+                    shootPiece(currentRow, currentCol, row, col, 'Skirmish');
                     movesLeft -= move.cost; // spend second point
                     lastAction = { move: true };
                     // Mark both original and current squares as moved if we have the original
@@ -13112,7 +13137,7 @@
                 if (move && movesLeft >= move.cost) {
                     const fromRow = selectedPiece.row;
                     const fromCol = selectedPiece.col;
-                    shootPiece(fromRow, fromCol, row, col);
+                    shootPiece(fromRow, fromCol, row, col, 'Longshot');
                     movesLeft -= move.cost; // cost 2
                     lastAction = { move: true };
                     movedPieces.add(`${fromRow},${fromCol}`);
@@ -13534,8 +13559,7 @@
                 const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.special === 'pistolierMoveShootFinal');
                 if (move) {
                     // Execute the shoot
-                    shootPiece(selectedPiece.row, selectedPiece.col, row, col);
-                    gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Pistolier shot at ${formatBoardCoordinates(row,col)}`);
+                    shootPiece(selectedPiece.row, selectedPiece.col, row, col, 'Move and Shot');
 
                     // Clean up
                     pistolierMoveShootMode = false;
@@ -13563,8 +13587,7 @@
                 const move = validMoves.find(m => m.pos[0] === row && m.pos[1] === col && m.special === 'elephantryMoveShootFinal');
                 if (move) {
                     // Execute the shoot
-                    shootPiece(selectedPiece.row, selectedPiece.col, row, col);
-                    gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Elephantry shot at ${formatBoardCoordinates(row,col)}`);
+                    shootPiece(selectedPiece.row, selectedPiece.col, row, col, 'Move and Shot');
 
                     // Clean up
                     elephantryMoveShootMode = false;
@@ -13613,6 +13636,33 @@
                         const targetPiece = board[targetRow][targetCol];
                         if (targetPiece && targetPiece.type === 'Spectre') {
                             gameLog.push('Elephantry triple shot cannot target Spectres.');
+                        } else if (targetPiece && targetPiece.player !== currentPlayer && (isUndeadType(targetPiece) || isUndeadChampionType(targetPiece))) {
+                            // Handle undead pieces - deduct 1 life per hit
+                            const actorLabel = currentPlayer === 'W' ? 'Player' : 'AI';
+                            const undeadName = isUndeadChampionType(targetPiece) ? 'Undead Champion' : 'Undead';
+                            const currentLives = typeof targetPiece.lives === 'number' ? targetPiece.lives : (targetPiece.maxLives || 1);
+                            targetPiece.lives = currentLives - 1;
+
+                            if (targetPiece.lives <= 0) {
+                                // Undead destroyed
+                                capturedSquares.push([targetRow, targetCol]);
+                                capturedPieces[currentPlayer].push(targetPiece);
+                                const captureValue = pieceValues[targetPiece.type];
+                                scores[currentPlayer] += captureValue;
+                                registerScoreGain(currentPlayer, captureValue);
+                                registerPieceLoss(targetPiece.player, targetPiece.type);
+                                trackCapture(currentPlayer);
+                                gameLog.push(`${actorLabel} Elephantry triple shot shattered the ${undeadName}! (+${captureValue} points)`);
+                                cleanupNecromancerTracking(targetPiece);
+                                board[targetRow][targetCol] = null;
+                                updateCapturedPiecesDisplay();
+                                updateScoreDisplay();
+                                checkSupremacy(currentPlayer);
+                            } else {
+                                // Undead damaged but alive
+                                const livesText = targetPiece.lives === 1 ? '1 life' : `${targetPiece.lives} lives`;
+                                gameLog.push(`${actorLabel} Elephantry triple shot hit the ${undeadName}! (${livesText} remaining)`);
+                            }
                         } else if (targetPiece && targetPiece.player !== currentPlayer) {
                             capturedSquares.push([targetRow, targetCol]);
                             capturedPieces[currentPlayer].push(targetPiece);
@@ -15110,11 +15160,22 @@
                 }
                 return { attackerRemoved: true };
             }
-            // Successful attack instant-kills undead
+            // Successful attack deducts 1 life from undead
             const currentLives = typeof undeadPiece.lives === 'number' ? undeadPiece.lives : (undeadPiece.maxLives || 1);
-            gameLog.push(`${actorLabel} shattered the ${undeadName}!`);
-            updateGameLog();
-            return { undeadDestroyed: true };
+            undeadPiece.lives = currentLives - 1;
+
+            if (undeadPiece.lives <= 0) {
+                // Undead destroyed - all lives lost
+                gameLog.push(`${actorLabel} shattered the ${undeadName}!`);
+                updateGameLog();
+                return { undeadDestroyed: true };
+            } else {
+                // Undead damaged but still has lives remaining
+                const livesText = undeadPiece.lives === 1 ? '1 life' : `${undeadPiece.lives} lives`;
+                gameLog.push(`${actorLabel} hit the ${undeadName}! (${livesText} remaining)`);
+                updateGameLog();
+                return { undeadDamaged: true };
+            }
         }
 
         function recordUndeadCapture(attackerPiece, owner, row, col, captureValue) {
@@ -15310,10 +15371,11 @@
             );
         }
 
-        function shootPiece(fromRow, fromCol, toRow, toCol) {
+        function shootPiece(fromRow, fromCol, toRow, toCol, abilityName = null) {
             const piece = board[fromRow][fromCol];
             if (!piece) return;
             let captureValue = 0; // Track capture value for emoji reactions
+            const abilityText = abilityName ? ` using ${abilityName}` : '';
             if (piece.type === 'Fusilier') {
                 fusilierShotThisTurn[piece.player].add(piece);
                 fusilierShotLastTurn[piece.player].delete(piece);
@@ -15326,6 +15388,62 @@
                 const actorLabel = piece.player === 'W' ? 'Player' : getOpponentDisplayName();
                 gameLog.push(`${actorLabel} cannot shoot Spectres. The attack fizzled.`);
                 updateGameLog();
+                return;
+            }
+            // Handle shooting undead pieces - requires coin flip
+            if (targetPiece && (isUndeadType(targetPiece) || isUndeadChampionType(targetPiece))) {
+                const actorLabel = piece.player === 'W' ? 'Player' : getOpponentDisplayName();
+                const undeadName = isUndeadChampionType(targetPiece) ? 'Undead Champion' : 'Undead';
+                const success = randomCoinFlip();
+
+                if (!success) {
+                    // Failed to hit undead - shooter is destroyed
+                    const captureValue = pieceValues[piece.type] || 0;
+                    recordUndeadCapture(piece, targetPiece.player, fromRow, fromCol, captureValue);
+                    cleanupNecromancerTracking(piece);
+                    board[fromRow][fromCol] = null;
+                    gameLog.push(`${actorLabel}'s ${piece.type} failed to hit the ${undeadName}${abilityText} and was destroyed (+${captureValue} points).`);
+                    updateGameLog();
+                    renderBoard();
+                    updateScoreDisplay();
+                    updateCapturedPiecesDisplay();
+
+                    if (piece.type === 'King') {
+                        gameOver = true;
+                        const endGameDelay = 3000 + Math.random() * 2000;
+                        setTimeout(() => {
+                            endGame(targetPiece.player);
+                        }, endGameDelay);
+                    }
+                    return;
+                }
+
+                // Successful hit - deduct 1 life from undead
+                const currentLives = typeof targetPiece.lives === 'number' ? targetPiece.lives : (targetPiece.maxLives || 1);
+                targetPiece.lives = currentLives - 1;
+
+                if (targetPiece.lives <= 0) {
+                    // Undead destroyed
+                    capturedSquares.push([toRow, toCol]);
+                    capturedPieces[piece.player].push(targetPiece);
+                    const captureValue = pieceValues[targetPiece.type];
+                    scores[piece.player] += captureValue;
+                    registerScoreGain(piece.player, captureValue);
+                    registerPieceLoss(getOpponent(piece.player), targetPiece.type);
+                    trackCapture(piece.player);
+                    gameLog.push(`${actorLabel} shattered the ${undeadName}${abilityText}! (+${captureValue} points)`);
+                    cleanupNecromancerTracking(targetPiece);
+                    board[toRow][toCol] = null;
+                    checkSupremacy(piece.player);
+                } else {
+                    // Undead damaged but alive
+                    const livesText = targetPiece.lives === 1 ? '1 life' : `${targetPiece.lives} lives`;
+                    gameLog.push(`${actorLabel} hit the ${undeadName}${abilityText}! (${livesText} remaining)`);
+                }
+
+                updateGameLog();
+                updateCapturedPiecesDisplay();
+                renderBoard();
                 return;
             }
             if (targetPiece && targetPiece.type === 'Zombie') {
@@ -15371,7 +15489,7 @@
                 registerScoreGain(piece.player, captureValue);
                 registerPieceLoss(getOpponent(piece.player), targetPiece.type);
                 trackCapture(piece.player); // Track capture for statistics
-                gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} shot ${targetPiece.type} (+${captureValue} points) with ${piece.type} at ${formatBoardCoordinates(toRow,toCol)}`);
+                gameLog.push(`${piece.player === 'W' ? 'Player' : 'AI'} shot ${targetPiece.type} (+${captureValue} points) with ${piece.type}${abilityText} at ${formatBoardCoordinates(toRow,toCol)}`);
                 if (targetPiece.type === 'Champion') {
                     championCaptured[targetPiece.player] = true;
                 }
