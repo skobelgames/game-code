@@ -2577,7 +2577,7 @@
 
                 <h3>Bonus Moves & Penalties</h3>
                 <ul>
-                    <li><strong>Honour (Warcry):</strong> Score 10+ points in a single round to gain +2 bonus moves next round. The board glows gold when active.</li>
+                    <li><strong>Warcry:</strong> Score 10+ points in a single round to gain +2 bonus moves next round. The board glows gold when active.</li>
                     <li><strong>Despair:</strong> Lose 2 or more non-Infantry pieces in a round to suffer -2 moves next round. Poor planning has consequences!</li>
                     <li><strong>Champion Pressure:</strong> If your Champion reaches the enemy's back row, your opponent loses 1 move point each round while it remains there.</li>
                 </ul>
@@ -3455,7 +3455,7 @@
             if (roundScoreGain[player] >= HONOUR_THRESHOLD) {
                 nextRoundModifier[player] += HONOUR_BONUS;
                 gameStats.warcryBonusCount[player]++;
-                gameLog.push(`${player === 'W' ? 'Player' : 'AI'} triggered Honour (Warcry) bonus (+${HONOUR_BONUS} moves next round).`);
+                gameLog.push(`${player === 'W' ? 'Player' : 'AI'} triggered Warcry bonus (+${HONOUR_BONUS} moves next round).`);
                 logUpdated = true;
             }
 
@@ -3563,7 +3563,7 @@
             let moves = Math.max(0, baseMoves + modifier);
 
             if (modifier > 0) {
-                gameLog.push(`${player === 'W' ? 'Player' : 'AI'} gains Honour (Warcry) bonus (+${modifier} moves).`);
+                gameLog.push(`${player === 'W' ? 'Player' : 'AI'} gains Warcry bonus (+${modifier} moves).`);
                 // Apply warcry active background
                 applyWarcryActiveBackground();
             } else if (modifier < 0) {
