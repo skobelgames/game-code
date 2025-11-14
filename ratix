@@ -9298,6 +9298,8 @@
                 return;
             }
             if (pendingEnergyBlast) return;
+            // Block turn transition during entire energy blast sequence
+            beginBlockingAction('energyBlast');
             const prepaid = Math.min(2, cost);
             pendingEnergyBlast = { row, col, prepaid, cost };
             const controlButton = button || document.getElementById('energy-blast-button');
@@ -9313,6 +9315,7 @@
                 'Attempting to channel spell energy...',
                 (success) => {
                     if (!pendingEnergyBlast || pendingEnergyBlast.row !== row || pendingEnergyBlast.col !== col) {
+                        endBlockingAction('energyBlast');
                         return;
                     }
                     const attemptData = pendingEnergyBlast;
@@ -9322,12 +9325,16 @@
                         updateGameLog();
                         removeEnergyBlastGlow();
                         clearActiveControlButton(controlButton);
+                        endBlockingAction('energyBlast');
+                        ensureAITurnIfNeeded();
                         return;
                     }
                     const currentPiece = board[row]?.[col];
                     if (!currentPiece || currentPiece.player !== currentPlayer) {
                         removeEnergyBlastGlow();
                         clearActiveControlButton(controlButton);
+                        endBlockingAction('energyBlast');
+                        ensureAITurnIfNeeded();
                         return;
                     }
                     selectedPiece = { row, col };
@@ -9405,7 +9412,6 @@
             energyBlastUsage.set(piece, uses + 1);
             lastAction = { move: true };
             movedPieces.add(`${row},${col}`);
-            beginBlockingAction('energyBlast');
             const context = { piece, row, col, direction };
             // Perform instant coin flips for both player and AI
             const flips = [];
