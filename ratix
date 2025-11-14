@@ -2082,6 +2082,7 @@
         let strafeMode = false; // New state for Wizard/Dragon Strafe
         let summonSpectreMode = false; // New state for Wizard Spectre summoning
         let elephantryChargeMode = false; // New state for Elephantry Charge
+        let voidBlastMode = false; // New state for Undead Champion Void Blast
         let elephantryExtendedRangeActive = false; // Active when player is in extended range shooting mode
         let elephantryMoveShootMode = false; // Active when Elephantry has moved and needs to select shoot target
         let elephantryMoveShootPosition = null; // Store the position Elephantry moved to
@@ -3202,7 +3203,7 @@
         }
 
         function isAnySpecialModeActive() {
-            return turnAndShootMode || turnAndMoveMode || guardOfHonourMode || teleportMode || teleportSwapMode || chargeMode || ogreRageMode || infernoMode || strafeMode || summonSpectreMode || archerMoveDiagMode || archerDiagShootSelectMode || archerDiag2ShootMode || elephantryChargeMode || elephantryExtendedRangeActive || elephantryMoveShootMode || pistolierMoveShootMode || fusilierCrackShotActive || fusilierStrafeActive || huntsmanBurstMode || pendingHuntsmanBurst || championSummonMode || necromancerSummonMode || kingShotMode || kingEvadeMode || lichSoulBlastMode || darkVoidMode;
+            return turnAndShootMode || turnAndMoveMode || guardOfHonourMode || teleportMode || teleportSwapMode || chargeMode || ogreRageMode || infernoMode || strafeMode || summonSpectreMode || archerMoveDiagMode || archerDiagShootSelectMode || archerDiag2ShootMode || elephantryChargeMode || elephantryExtendedRangeActive || elephantryMoveShootMode || pistolierMoveShootMode || fusilierCrackShotActive || fusilierStrafeActive || huntsmanBurstMode || pendingHuntsmanBurst || championSummonMode || necromancerSummonMode || kingShotMode || kingEvadeMode || lichSoulBlastMode || darkVoidMode || voidBlastMode;
         }
 
         function cancelSpecialModes(options = {}) {
@@ -3247,6 +3248,7 @@
             kingEvadeMode = null;
             pendingLichSoulBlast = null;
             lichSoulBlastMode = null;
+            voidBlastMode = false;
             clearSoulBlastPreview();
             lichSoulBlastResolving = false;
             lichSoulBlastPendingCompletion = false;
@@ -5450,6 +5452,10 @@
                 points: '1 point to move 1 square diagonally; 2 points to strafe horizontally or vertically.',
                 extra: 'Summoned by Necromancers or Liches adjacent to Dark Void tiles. Displays 2 lives (Necromancer summon) or 3 lives (Lich summon) as hearts in the info panel. Every capture attempt and every attack against it requires a coin flip; failed captures leave it rooted while failed attacks send the attacker to the graveyard.'
             },
+            'UndeadChampion': {
+                points: '1 point to move 1 square in any direction; 2 points for ranged attack up to 2 squares away (1-round cooldown); 2 points to teleport up to 3 squares (once per game).',
+                extra: 'Summoned by Liches adjacent to Dark Void tiles. Maximum 1 per player per game. Has 2 lives displayed as hearts. Ranged attack can target enemies 2 squares away in any direction. Every capture attempt and every attack against it requires a coin flip; failed captures leave it rooted while failed attacks send the attacker to the graveyard.'
+            },
             'Mercenary': {
                 points: '1 point to move 1 square in any direction; 2 points for 2 squares in any direction.',
                 extra: 'Can move or capture in any direction. Special Move: After a successful capture, triggers a coin flip - if successful, the mercenary continues its round instantly without move point costs (once per round).'
@@ -6228,19 +6234,6 @@
                     if (!isValid(nr, nc) || isDarkVoidSquare(nr, nc)) continue;
                     if (!board[nr][nc] || board[nr][nc].player !== player) {
                         moves.push({ type: 'move', pos: [nr, nc], cost: 1 });
-                    }
-                }
-                // Ranged attack: any direction, 2 squares away, costs 2 move points, has 1 round cooldown
-                const cooldown = undeadChampionRangedCooldown.get(piece) || 0;
-                if (movesLeft >= 2 && cooldown === 0) {
-                    for (let [dr, dc] of allDirs) {
-                        const nr = r + dr * 2;
-                        const nc = c + dc * 2;
-                        if (!isValid(nr, nc)) continue;
-                        const target = board[nr][nc];
-                        if (target && target.player !== player) {
-                            moves.push({ type: 'move', pos: [nr, nc], cost: 2, special: 'undeadChampionRanged' });
-                        }
                     }
                 }
                 return moves;
@@ -7298,6 +7291,24 @@
                 necromancerTeleportButton.onclick = () => activateTeleport(necromancerTeleportButton);
                 document.getElementById('controls').insertBefore(necromancerTeleportButton, document.getElementById('guard-honour-button'));
             }
+            let undeadChampionTeleportButton = document.getElementById('undead-champion-teleport-button');
+            if (!undeadChampionTeleportButton) {
+                undeadChampionTeleportButton = document.createElement('button');
+                undeadChampionTeleportButton.id = 'undead-champion-teleport-button';
+                undeadChampionTeleportButton.textContent = 'UC Teleport';
+                undeadChampionTeleportButton.style.display = 'none';
+                undeadChampionTeleportButton.onclick = () => activateTeleport(undeadChampionTeleportButton);
+                document.getElementById('controls').insertBefore(undeadChampionTeleportButton, document.getElementById('guard-honour-button'));
+            }
+            let voidBlastButton = document.getElementById('void-blast-button');
+            if (!voidBlastButton) {
+                voidBlastButton = document.createElement('button');
+                voidBlastButton.id = 'void-blast-button';
+                voidBlastButton.textContent = 'Void Blast';
+                voidBlastButton.style.display = 'none';
+                voidBlastButton.onclick = () => activateVoidBlast(voidBlastButton);
+                document.getElementById('controls').insertBefore(voidBlastButton, document.getElementById('guard-honour-button'));
+            }
             if (!darkVoidButton) {
                 darkVoidButton = document.createElement('button');
                 darkVoidButton.id = 'dark-void-button';
@@ -7392,6 +7403,8 @@
             if (necromancerUndeadButton) necromancerUndeadButton.style.display = 'none';
             if (lichUndeadChampionButton) lichUndeadChampionButton.style.display = 'none';
             if (necromancerTeleportButton) necromancerTeleportButton.style.display = 'none';
+            if (undeadChampionTeleportButton) undeadChampionTeleportButton.style.display = 'none';
+            if (voidBlastButton) voidBlastButton.style.display = 'none';
             if (darkVoidButton) {
                 darkVoidButton.style.display = 'none';
                 darkVoidButton.disabled = true;
@@ -7533,6 +7546,30 @@
                             if (teleportsUsed < 2) {
                                 necromancerTeleportButton.style.display = 'inline';
                                 necromancerTeleportButton.disabled = false;
+                            }
+                        }
+                    }
+                    if (piece.type === 'UndeadChampion') {
+                        const pieceObj = board[selectedPiece.row][selectedPiece.col];
+                        // Show teleport button
+                        if (undeadChampionTeleportButton && !undeadChampionTeleportUsed.has(pieceObj) && movesLeft >= 2) {
+                            undeadChampionTeleportButton.style.display = 'inline';
+                            undeadChampionTeleportButton.disabled = false;
+                        }
+                        // Show Void Blast button
+                        if (voidBlastButton) {
+                            const cooldown = undeadChampionRangedCooldown.get(pieceObj) || 0;
+                            voidBlastButton.style.display = 'inline';
+                            if (movesLeft >= 2 && cooldown === 0) {
+                                voidBlastButton.disabled = false;
+                                voidBlastButton.removeAttribute('title');
+                            } else {
+                                voidBlastButton.disabled = true;
+                                if (cooldown > 0) {
+                                    voidBlastButton.title = `Cooldown: ${cooldown} round${cooldown > 1 ? 's' : ''}`;
+                                } else {
+                                    voidBlastButton.title = 'Not enough move points';
+                                }
                             }
                         }
                     }
@@ -8801,6 +8838,34 @@
             performBarrageShots(piece, targets, controlButton);
         }
 
+        function activateVoidBlast(button = null) {
+            if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
+            const piece = board[selectedPiece.row][selectedPiece.col];
+            if (!piece || piece.type !== 'UndeadChampion') return;
+            const cooldown = undeadChampionRangedCooldown.get(piece) || 0;
+            if (cooldown > 0) return;
+
+            setActiveControlButton(button || document.getElementById('void-blast-button'));
+            voidBlastMode = true;
+
+            // Generate Void Blast shoot targets
+            const row = selectedPiece.row;
+            const col = selectedPiece.col;
+            const allDirs = [[1,1], [1,-1], [-1,1], [-1,-1], [0,1], [0,-1], [1,0], [-1,0]];
+            let shootMoves = [];
+            for (let [dr, dc] of allDirs) {
+                const nr = row + dr * 2;
+                const nc = col + dc * 2;
+                if (!isValid(nr, nc)) continue;
+                const target = board[nr][nc];
+                if (target && target.player !== piece.player) {
+                    shootMoves.push({ type: 'shoot', pos: [nr, nc], cost: 2, special: 'voidBlast' });
+                }
+            }
+            validMoves = shootMoves;
+            renderBoard();
+        }
+
         function activateTeleport(button = null) {
             if (!selectedPiece || currentPlayer !== 'W' || reinforcementPending || lastAction?.move || movesLeft < 2) return;
             const piece = board[selectedPiece.row][selectedPiece.col];
@@ -8812,11 +8877,38 @@
                 if (getNecromancerTeleportCount(piece) < 2) {
                     canTeleport = true;
                 }
+            } else if (piece.type === 'UndeadChampion') {
+                if (!undeadChampionTeleportUsed.has(piece)) {
+                    canTeleport = true;
+                }
             }
             if (canTeleport) {
                 setActiveControlButton(button || document.getElementById('teleport-button'));
                 teleportMode = true;
-                validMoves = getValidMoves(selectedPiece.row, selectedPiece.col);
+                // Generate teleport moves
+                const row = selectedPiece.row;
+                const col = selectedPiece.col;
+                let teleportMoves = [];
+
+                if (piece.type === 'UndeadChampion') {
+                    // UndeadChampion can only teleport to same color squares within 3 squares
+                    const currentColor = (row + col) % 2;
+                    for (let r = 0; r < ROWS; r++) {
+                        for (let c = 0; c < COLS; c++) {
+                            if (r === row && c === col) continue;
+                            if ((r + c) % 2 !== currentColor) continue;
+                            const distance = Math.max(Math.abs(r - row), Math.abs(c - col));
+                            if (distance > UNDEAD_CHAMPION_TELEPORT_RANGE) continue;
+                            if (isDarkVoidSquare(r, c)) continue;
+                            const occupant = board[r][c];
+                            if (occupant && (occupant.player === piece.player || occupant.type !== 'Spectre')) continue;
+                            teleportMoves.push({ type: 'teleport', pos: [r, c], cost: 2 });
+                        }
+                    }
+                    validMoves = teleportMoves;
+                } else {
+                    validMoves = getValidMoves(selectedPiece.row, selectedPiece.col);
+                }
                 renderBoard();
             }
         }
@@ -9744,10 +9836,7 @@
                 ogreRageUsed[currentPlayer] = true;
                 performOgreRageCapture(move.captureArea, currentPlayer);
             }
-            if (move.special === 'undeadChampionRanged') {
-                const undeadChampionPiece = board[row][col];
-                setUndeadChampionRangedCooldown(undeadChampionPiece, 2);
-            }
+            // UndeadChampion ranged attack is now handled as 'voidBlast' shoot type, not as a move
 
             if (moveResult?.mercenaryFlipNeeded) {
                 const mercPiece = moveResult.mercenaryPiece;
@@ -10380,6 +10469,9 @@
                     } else if (teleportPiece.type === 'Necromancer') {
                         incrementNecromancerTeleportCount(teleportPiece);
                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported Necromancer from ${formatBoardCoordinates(fromRow,fromCol)} to ${formatBoardCoordinates(move.pos[0],move.pos[1])}`);
+                    } else if (teleportPiece.type === 'UndeadChampion') {
+                        undeadChampionTeleportUsed.add(teleportPiece);
+                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported Undead Champion from ${formatBoardCoordinates(fromRow,fromCol)} to ${formatBoardCoordinates(move.pos[0],move.pos[1])}`);
                     } else {
                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported ${teleportPiece.type} from ${formatBoardCoordinates(fromRow,fromCol)} to ${formatBoardCoordinates(move.pos[0],move.pos[1])}`);
                     }
@@ -11327,6 +11419,14 @@
                                 false  // showOverlay
                             );
                             return;
+                        } else if (move.special === 'voidBlast') {
+                            // Void Blast - ranged attack for Undead Champion
+                            const fromRow = selectedPiece.row;
+                            const fromCol = selectedPiece.col;
+                            shootPiece(fromRow, fromCol, row, col);
+                            setUndeadChampionRangedCooldown(attackingPiece, 1);
+                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Undead Champion used Void Blast!`);
+                            voidBlastMode = false;
                         } else {
                             // Normal shoot
                             shootPiece(selectedPiece.row, selectedPiece.col, row, col);
@@ -13109,6 +13209,9 @@
                     } else if (teleportPiece.type === 'Necromancer') {
                         incrementNecromancerTeleportCount(teleportPiece);
                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported Necromancer from ${formatBoardCoordinates(fromRow,fromCol)} to ${formatBoardCoordinates(move.pos[0],move.pos[1])}`);
+                    } else if (teleportPiece.type === 'UndeadChampion') {
+                        undeadChampionTeleportUsed.add(teleportPiece);
+                        gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported Undead Champion from ${formatBoardCoordinates(fromRow,fromCol)} to ${formatBoardCoordinates(move.pos[0],move.pos[1])}`);
                     } else {
                         gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} teleported ${teleportPiece.type} from ${formatBoardCoordinates(fromRow,fromCol)} to ${formatBoardCoordinates(move.pos[0],move.pos[1])}`);
                     }
@@ -14047,6 +14150,14 @@
                                 false  // showOverlay
                             );
                             return;
+                        } else if (move.special === 'voidBlast') {
+                            // Void Blast - ranged attack for Undead Champion
+                            const fromRow = selectedPiece.row;
+                            const fromCol = selectedPiece.col;
+                            shootPiece(fromRow, fromCol, row, col);
+                            setUndeadChampionRangedCooldown(attackingPiece, 1);
+                            gameLog.push(`${currentPlayer === 'W' ? 'Player' : 'AI'} Undead Champion used Void Blast!`);
+                            voidBlastMode = false;
                         } else {
                             // Normal shoot
                             shootPiece(selectedPiece.row, selectedPiece.col, row, col);
@@ -14575,6 +14686,7 @@
                     }
                 }
             }
+            // UndeadChampion teleport is now handled by button activation only
             if (type === 'Wizard' && !wizardTeleportSwapUsed[player] && movesLeft >= 2 && opponentHasWizards(player)) {
                 const color = (row + col) % 2;
                 for (let r = 0; r < ROWS; r++) {
