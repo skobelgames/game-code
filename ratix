@@ -4691,7 +4691,7 @@
         pieceIcons['Zombie'] = 'Z';
         pieceIcons['Undead'] = 'U';
         pieceIcons['Undead3'] = 'U';
-        pieceIcons['UndeadChampion'] = 'ⓤ';
+        pieceIcons['UndeadChampion'] = 'Ʊ';
         pieceIcons['Huntsman'] = 'H';
         const facingIcons = {
             'U': '^', 'D': 'v', 'L': '<', 'R': '>'
@@ -16766,6 +16766,7 @@
 
                 const finishTripleShot = () => {
                     elephantryExtendedRangeShotsRemaining[pieceKey] = Math.max(0, remainingUses - 1);
+                    elephantryTripleShotFlipResults = [];
                     highlightSquares = [];
                     renderBoard();
                     completeAiMove(action);
@@ -16802,7 +16803,7 @@
                     const targetRow = bestMove.pos[0];
                     const targetCol = bestMove.pos[1];
                     const targetPiece = board[targetRow]?.[targetCol];
-                    const success = randomCoinFlip();
+                    const success = elephantryTripleShotFlipResults[shotsFired];
                     if (success && targetPiece && targetPiece.player !== 'B') {
                         const logMessage = `AI Elephantry triple shot hit ${targetPiece.type} at ${formatBoardCoordinates(targetRow,targetCol)}.`;
                         applySpellCapture('B', targetRow, targetCol, {
@@ -16822,7 +16823,11 @@
                     setTimeout(() => fireNextShot(), 600);
                 };
 
-                fireNextShot();
+                // Roll coin flips first, then start firing shots
+                elephantryTripleShotFlipResults = [];
+                rollElephantryTripleShotFlips(() => {
+                    fireNextShot();
+                });
             }
 
             function makeNextMove() {
