@@ -2186,7 +2186,9 @@
         const blockingActionCounters = {
             coinFlip: 0,
             zombieFlip: 0,
-            barrage: 0
+            barrage: 0,
+            energyBlast: 0,
+            elephantryTripleShot: 0
         };
         let barragePauseState = null;
 
@@ -3238,8 +3240,12 @@
             updateEndTurnButton();
             updateGameLog();
             checkGameOver();
+            endBlockingAction('elephantryTripleShot');
+            // Add delay before turn transition to ensure action is visually complete
             if (movesLeft === 0 && !reinforcementPending) {
-                triggerAiTurn();
+                setTimeout(() => {
+                    triggerAiTurn();
+                }, 500);
             } else {
                 ensureAITurnIfNeeded();
             }
@@ -9149,6 +9155,8 @@
                     updateGameLog();
                     return;
                 }
+                // Block turn transition during entire triple shot sequence
+                beginBlockingAction('elephantryTripleShot');
                 setActiveControlButton(button || document.getElementById('elephantry-extended-button'));
                 movesLeft -= 2;
                 lastAction = { move: true };
@@ -9160,22 +9168,33 @@
                 elephantryTripleShotPieceKey = pieceKey;
                 validMoves = [];
                 renderBoard();
+                updateStatus();
+                updateEndTurnButton();
                 const elephantryRow = selectedPiece.row;
                 const elephantryCol = selectedPiece.col;
-                rollElephantryTripleShotFlips(() => {
-                    elephantryTripleShotAwaitingTargets = true;
-                    const nextMoves = getElephantryExtendedRangeMoves(elephantryRow, elephantryCol);
-                    if (!nextMoves.length) {
-                        gameLog.push('No valid targets for Elephantry Triple Shot.');
-                        finishElephantryTripleShot();
-                        return;
-                    }
-                    validMoves = nextMoves;
-                    renderBoard();
-                    updateStatus();
-                    updateEndTurnButton();
+
+                // Perform instant coin flips for all 3 shots
+                for (let i = 0; i < 3; i++) {
+                    const success = randomCoinFlip();
+                    elephantryTripleShotFlipResults.push(success);
+                }
+
+                const successCount = elephantryTripleShotFlipResults.filter(r => r).length;
+                gameLog.push(`Elephantry Triple Shot: ${successCount} of 3 coin flips successful.`);
+
+                elephantryTripleShotAwaitingTargets = true;
+                const nextMoves = getElephantryExtendedRangeMoves(elephantryRow, elephantryCol);
+                if (!nextMoves.length || successCount === 0) {
+                    gameLog.push('No valid targets for Elephantry Triple Shot.');
                     updateGameLog();
-                });
+                    finishElephantryTripleShot();
+                    return;
+                }
+                validMoves = nextMoves;
+                renderBoard();
+                updateStatus();
+                updateEndTurnButton();
+                updateGameLog();
             }
         }
 
@@ -9297,6 +9316,8 @@
                 return;
             }
             if (pendingEnergyBlast) return;
+            // Block turn transition during entire energy blast sequence
+            beginBlockingAction('energyBlast');
             const prepaid = Math.min(2, cost);
             pendingEnergyBlast = { row, col, prepaid, cost };
             const controlButton = button || document.getElementById('energy-blast-button');
@@ -9312,6 +9333,7 @@
                 'Attempting to channel spell energy...',
                 (success) => {
                     if (!pendingEnergyBlast || pendingEnergyBlast.row !== row || pendingEnergyBlast.col !== col) {
+                        endBlockingAction('energyBlast');
                         return;
                     }
                     const attemptData = pendingEnergyBlast;
@@ -9321,12 +9343,16 @@
                         updateGameLog();
                         removeEnergyBlastGlow();
                         clearActiveControlButton(controlButton);
+                        endBlockingAction('energyBlast');
+                        ensureAITurnIfNeeded();
                         return;
                     }
                     const currentPiece = board[row]?.[col];
                     if (!currentPiece || currentPiece.player !== currentPlayer) {
                         removeEnergyBlastGlow();
                         clearActiveControlButton(controlButton);
+                        endBlockingAction('energyBlast');
+                        ensureAITurnIfNeeded();
                         return;
                     }
                     selectedPiece = { row, col };
@@ -9405,23 +9431,23 @@
             lastAction = { move: true };
             movedPieces.add(`${row},${col}`);
             const context = { piece, row, col, direction };
-            if (piece.player === 'W') {
-                startEnergyBlastFlipSequence(context);
-            } else {
-                const flips = [];
-                let successes = 0;
-                for (let i = 0; i < ENERGY_BLAST_FLIP_COUNT; i++) {
-                    const success = randomCoinFlip();
-                    flips.push(success);
-                    if (success) successes++;
-                }
-                completeEnergyBlastAfterRange(context, successes, flips);
+            // Perform instant coin flips for both player and AI
+            const flips = [];
+            let successes = 0;
+            for (let i = 0; i < ENERGY_BLAST_FLIP_COUNT; i++) {
+                const success = randomCoinFlip();
+                flips.push(success);
+                if (success) successes++;
             }
+            completeEnergyBlastAfterRange(context, successes, flips);
         }
 
         function completeEnergyBlastAfterRange(context, successes, flips) {
             const { piece, row, col, direction } = context;
-            if (!piece) return;
+            if (!piece) {
+                endBlockingAction('energyBlast');
+                return;
+            }
             const playerLabel = piece.player === 'W' ? 'Player' : getOpponentDisplayName();
             const flipSummary = flips.map(result => result ? 'Hit' : 'Miss').join(' ');
             gameLog.push(`${playerLabel} cast Energy Blast (${successes} range) [${flipSummary}]`);
@@ -9439,25 +9465,19 @@
                 checkGameOver();
                 removeEnergyBlastGlow();
                 clearActiveControlButton(document.getElementById('energy-blast-button'));
+                endBlockingAction('energyBlast');
+                // Add delay before turn transition to ensure blast is visually complete
                 if (movesLeft === 0 && !reinforcementPending) {
-                    triggerAiTurn();
+                    setTimeout(() => {
+                        triggerAiTurn();
+                    }, 800);
                 } else {
                     ensureAITurnIfNeeded();
                 }
             };
-            const finalizeEnergyBlast = () => {
-                finishEnergyBlast();
-                resumeGameForEnergyBlastFlips();
-                if (typeof pendingAiEnergyBlastResume === 'function') {
-                    const resume = pendingAiEnergyBlastResume;
-                    pendingAiEnergyBlastResume = null;
-                    resume();
-                }
-            };
-
             if (successes === 0) {
                 gameLog.push('The blast fizzled before leaving the caster.');
-                finalizeEnergyBlast();
+                finishEnergyBlast();
                 return;
             }
 
@@ -9489,7 +9509,7 @@
                 if (!targets.length) {
                     gameLog.push('Energy Blast hit no enemy pieces along its path.');
                     addEnergyBlastResidualSquares(pathSquares);
-                    finalizeEnergyBlast();
+                    finishEnergyBlast();
                     return;
                 }
                 resolveSpellTargetsSequentially(targets, piece.player, 'Energy Blast', (capturesHit) => {
@@ -9497,7 +9517,7 @@
                         gameLog.push('Energy Blast was negated or all targets were protected.');
                     }
                     addEnergyBlastResidualSquares(pathSquares);
-                    finalizeEnergyBlast();
+                    finishEnergyBlast();
                 });
             };
 
