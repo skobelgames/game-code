@@ -9325,9 +9325,12 @@
                     applyEnergyBlastGlow();
                     gameLog.push('Energy Blast: Coin flip successful - spell activated! Select target squares.');
                     updateGameLog();
-                    showEnergyBlastPopup(() => {
-                        openSpellDirectionModal({ type: 'energyBlast', row, col });
-                    });
+                    // Wait for coin flip popup to close before showing energy blast popup (800ms display + 300ms fade = 1100ms)
+                    setTimeout(() => {
+                        showEnergyBlastPopup(() => {
+                            openSpellDirectionModal({ type: 'energyBlast', row, col });
+                        });
+                    }, 1100);
                 },
                 false,
                 false
@@ -12152,7 +12155,10 @@
                         nextRoundModifier[boostPlayer] += MORAL_BOOST_BONUS;
                         moralBoostSuccesses[boostPlayer]++;
                         gameLog.push(`${actorLabel} succeeded with Moral Boost! +2 moves next round.`);
-                        showWarcryAchievementPopup(boostPlayer, { title: 'MORAL BOOST', subtitle: '+2 Next Round' });
+                        // Wait for coin flip popup to close before showing morale boost popup (1500ms display + 300ms fade = 1800ms)
+                        setTimeout(() => {
+                            showWarcryAchievementPopup(boostPlayer, { title: 'MORAL BOOST', subtitle: '+2 Next Round' });
+                        }, 1800);
                     } else {
                         gameLog.push(`${actorLabel} failed to inspire a Moral Boost.`);
                     }
@@ -12636,7 +12642,10 @@
                         renderBoard();
                     };
                     applyEnergyBlastGlow({ variant: 'soul-blast' });
-                    showEnergyBlastPopup(prepareSoulBlastTargeting, { title: 'SOUL BLAST', subtitle: 'Spell Unleashed', keepPaused: true });
+                    // Wait for coin flip popup to close before showing soul blast popup (800ms display + 300ms fade = 1100ms)
+                    setTimeout(() => {
+                        showEnergyBlastPopup(prepareSoulBlastTargeting, { title: 'SOUL BLAST', subtitle: 'Spell Unleashed', keepPaused: true });
+                    }, 1100);
                 },
                 false,
                 false
