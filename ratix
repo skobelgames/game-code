@@ -667,42 +667,57 @@
         }
         #game-log {
             width: 100%;
-            height: 180px;
-            min-height: 180px;
-            max-height: 180px;
-            padding: 15px;
+            height: 0;
+            min-height: 0;
+            max-height: 0;
+            padding: 0 15px;
             background-color: #fff;
             border: 1px solid #333;
             border-radius: 5px;
             font-size: 14px;
-            overflow-y: auto;
+            overflow-y: hidden;
             overflow-x: hidden;
             text-align: left;
             box-sizing: border-box;
             word-wrap: break-word;
             overflow-wrap: break-word;
+            transition: max-height 0.3s ease, padding 0.3s ease, min-height 0.3s ease;
+        }
+        #game-log.expanded {
+            height: 180px;
+            min-height: 180px;
+            max-height: 180px;
+            padding: 15px;
+            overflow-y: auto;
         }
         #captured-pieces {
             position: relative;
             width: 100%;
-            padding: 20px;
+            padding: 0 20px;
             background: radial-gradient(circle at top, #31213f 0%, #1a1323 55%, #0d0a12 100%);
             border: 1px solid #4c2b63;
             border-radius: 12px;
             font-size: 14px;
             text-align: left;
             box-sizing: border-box;
-            overflow-y: auto;
+            overflow-y: hidden;
             overflow-x: hidden;
-            max-height: var(--board-panel-max-height, 420px);
+            max-height: 0;
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 0;
             color: #f2e9ff;
             box-shadow: 0 18px 45px rgba(9, 0, 20, 0.65);
             isolation: isolate;
             word-wrap: break-word;
             overflow-wrap: break-word;
+            transition: max-height 0.3s ease, padding 0.3s ease, gap 0.3s ease;
+        }
+        #captured-pieces.expanded {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: var(--board-panel-max-height, 420px);
+            gap: 18px;
         }
         #captured-pieces::before {
             content: "";
@@ -851,6 +866,42 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        #control-buttons-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        #control-buttons-grid button {
+            width: 100%;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 12px;
+            padding: 8px 4px;
+        }
+        .toggle-button {
+            width: 100%;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 5px;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            border: 1px solid #333;
+            padding: 10px;
+            border-radius: 5px;
+            transition: background-color 0.2s ease;
+        }
+        .toggle-button:hover {
+            background-color: #e0e0e0;
+        }
+        .toggle-button.active {
+            background-color: #4CAF50;
+            color: white;
         }
         #reinforce-modal, #turn-modal, #turn-move-modal, #turn-shoot-modal, #truce-modal, #coin-toss-modal, #dice-roll-modal, #spell-direction-modal, #protection-modal {
             display: none;
@@ -1874,10 +1925,6 @@
         </div>
         <div id="game-layout">
             <aside id="left-panel">
-                <div id="left-controls">
-                    <button onclick="returnToMainMenu()">Main Menu</button>
-                    <button onclick="resetGame()">Reset Game</button>
-                </div>
                 <div id="game-log"></div>
                 <div id="info-box"></div>
             </aside>
@@ -1908,8 +1955,14 @@
             </div>
             <aside id="right-panel">
                 <div id="right-controls">
-                    <button class="how-to-button" onclick="openHowToPlay()">How to Play</button>
-                    <button id="RATIX-brand-button" type="button">RATIX</button>
+                    <div id="control-buttons-grid">
+                        <button class="how-to-button" onclick="openHowToPlay()">How to Play</button>
+                        <button id="RATIX-brand-button" type="button">RATIX</button>
+                        <button onclick="returnToMainMenu()">Main Menu</button>
+                        <button onclick="resetGame()">Reset Game</button>
+                    </div>
+                    <button class="toggle-button" id="game-log-toggle" onclick="toggleGameLog()">Game Log</button>
+                    <button class="toggle-button" id="graveyard-toggle" onclick="toggleGraveyard()">Graveyard</button>
                 </div>
                 <div id="status">Player's turn: 3 moves remaining</div>
                 <div id="captured-pieces" aria-label="Graveyard">
@@ -2536,6 +2589,52 @@
                 }
             }
             pausedTimers = { game: null, turn: null, turnPlayer: null };
+        }
+
+        function toggleGameLog() {
+            const gameLog = document.getElementById('game-log');
+            const gameLogToggle = document.getElementById('game-log-toggle');
+            const graveyard = document.getElementById('captured-pieces');
+            const graveyardToggle = document.getElementById('graveyard-toggle');
+
+            // If game log is already expanded, collapse it
+            if (gameLog.classList.contains('expanded')) {
+                gameLog.classList.remove('expanded');
+                gameLogToggle.classList.remove('active');
+            } else {
+                // Expand game log
+                gameLog.classList.add('expanded');
+                gameLogToggle.classList.add('active');
+
+                // Collapse graveyard if it's open (only one can be open at a time)
+                if (graveyard.classList.contains('expanded')) {
+                    graveyard.classList.remove('expanded');
+                    graveyardToggle.classList.remove('active');
+                }
+            }
+        }
+
+        function toggleGraveyard() {
+            const gameLog = document.getElementById('game-log');
+            const gameLogToggle = document.getElementById('game-log-toggle');
+            const graveyard = document.getElementById('captured-pieces');
+            const graveyardToggle = document.getElementById('graveyard-toggle');
+
+            // If graveyard is already expanded, collapse it
+            if (graveyard.classList.contains('expanded')) {
+                graveyard.classList.remove('expanded');
+                graveyardToggle.classList.remove('active');
+            } else {
+                // Expand graveyard
+                graveyard.classList.add('expanded');
+                graveyardToggle.classList.add('active');
+
+                // Collapse game log if it's open (only one can be open at a time)
+                if (gameLog.classList.contains('expanded')) {
+                    gameLog.classList.remove('expanded');
+                    gameLogToggle.classList.remove('active');
+                }
+            }
         }
 
         function generateRulesContent() {
