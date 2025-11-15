@@ -683,131 +683,53 @@
             overflow-wrap: break-word;
         }
         #captured-pieces {
-            position: relative;
             width: 100%;
-            padding: 20px;
-            background: radial-gradient(circle at top, #31213f 0%, #1a1323 55%, #0d0a12 100%);
-            border: 1px solid #4c2b63;
-            border-radius: 12px;
+            padding: 15px;
+            background-color: #fff;
+            border: 1px solid #333;
+            border-radius: 5px;
             font-size: 14px;
             text-align: left;
             box-sizing: border-box;
             overflow-y: auto;
             overflow-x: hidden;
             max-height: var(--board-panel-max-height, 420px);
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            color: #f2e9ff;
-            box-shadow: 0 18px 45px rgba(9, 0, 20, 0.65);
-            isolation: isolate;
+            color: #000;
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
-        #captured-pieces::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(103, 80, 138, 0.15));
-            pointer-events: none;
-            border-radius: 12px;
-            z-index: -1;
-        }
-        .graveyard-header {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
         .graveyard-title {
-            font-size: 18px;
-            letter-spacing: 1.2px;
-            text-transform: uppercase;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #000;
         }
-        .graveyard-subtitle {
-            font-size: 13px;
-            color: #c9b7dd;
-        }
-        .graveyard-columns {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            gap: 14px;
-        }
-        #captured-pieces h3 {
-            font-size: 13px;
-            font-weight: 600;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #d3c3ef;
-        }
-        .captured-column {
-            flex: 1 1 0;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: rgba(15, 10, 22, 0.45);
-            border: 1px solid rgba(126, 92, 168, 0.35);
-            border-radius: 10px;
-            padding: 14px;
-            box-shadow: inset 0 0 10px rgba(22, 8, 33, 0.6);
-        }
-        .captured-grid {
+        .graveyard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-        }
-        .captured-entry {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            background: rgba(28, 20, 35, 0.85);
-            border: 1px solid rgba(120, 85, 160, 0.45);
-            box-shadow: 0 6px 12px rgba(5, 0, 12, 0.6);
-            transition: transform 0.2s ease, border-color 0.2s ease;
-        }
-        .captured-entry:hover {
-            transform: translateY(-3px);
-            border-color: rgba(196, 160, 255, 0.8);
-        }
-        .captured-entry.empty {
-            font-weight: 500;
-            color: #8c7aa5;
-            justify-content: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .captured-entry .piece {
-            width: 38px;
-            height: 38px;
-            font-size: 22px;
-            flex: 0 0 38px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            width: 100%;
         }
         .grave-piece {
             display: flex;
             align-items: center;
             justify-content: center;
-            text-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+            width: 32px;
+            height: 32px;
+            font-size: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(0, 0, 0, 0.2);
         }
-        .grave-meta {
+        .grave-slot {
             display: flex;
-            flex-direction: column;
-            line-height: 1.2;
-            text-transform: uppercase;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            min-height: 40px;
         }
-        .grave-name {
-            font-size: 12px;
-            letter-spacing: 1px;
-        }
-        .grave-count {
-            font-size: 11px;
-            color: #bca4d3;
-            letter-spacing: 0.5px;
+        .grave-slot.empty {
+            background: transparent;
         }
         #game-layout {
             display: grid;
@@ -1913,20 +1835,8 @@
                 </div>
                 <div id="status">Player's turn: 3 moves remaining</div>
                 <div id="captured-pieces" aria-label="Graveyard">
-                    <div class="graveyard-header">
-                        <div class="graveyard-title">The Graveyard</div>
-                        <div class="graveyard-subtitle">Where claimed souls linger until recalled</div>
-                    </div>
-                    <div class="graveyard-columns">
-                        <div class="captured-column">
-                            <h3>Player's Graveyard</h3>
-                            <div id="player-captured" class="captured-grid"></div>
-                        </div>
-                        <div class="captured-column">
-                            <h3>AI's Graveyard</h3>
-                            <div id="ai-captured" class="captured-grid"></div>
-                        </div>
-                    </div>
+                    <div class="graveyard-title">Graveyard</div>
+                    <div id="graveyard-grid" class="graveyard-grid"></div>
                 </div>
             </aside>
         </div>
@@ -18823,38 +18733,79 @@
         }
 
         function updateCapturedPiecesDisplay() {
-            const playerCapturedDiv = document.getElementById('player-captured');
-            const aiCapturedDiv = document.getElementById('ai-captured');
-            playerCapturedDiv.innerHTML = getCapturedPiecesHTML('W');
-            aiCapturedDiv.innerHTML = getCapturedPiecesHTML('B');
+            const graveyardGrid = document.getElementById('graveyard-grid');
+            graveyardGrid.innerHTML = getCapturedPiecesHTML();
             const capturedContainer = document.getElementById('captured-pieces');
             constrainElementToBoardBounds(capturedContainer, getBoardAnchorRect());
         }
 
-        function getCapturedPiecesHTML(player) {
-            const pieces = capturedPieces[player];
-            const counts = {};
-            pieces.forEach(p => {
-                counts[p.type] = (counts[p.type] || 0) + 1;
+        function getCapturedPiecesHTML() {
+            // Get all captured pieces for both players
+            const playerPieces = capturedPieces['W'] || [];
+            const aiPieces = capturedPieces['B'] || [];
+
+            // Create arrays of individual pieces (for display in pairs)
+            const playerPieceList = [];
+            const aiPieceList = [];
+
+            playerPieces.forEach(p => {
+                playerPieceList.push(p);
             });
-            if (Object.keys(counts).length === 0) {
-                return '<div class="captured-entry empty">No souls claimed</div>';
+
+            aiPieces.forEach(p => {
+                aiPieceList.push(p);
+            });
+
+            // Determine the maximum number of rows needed
+            const maxRows = Math.max(
+                Math.ceil(playerPieceList.length / 2),
+                Math.ceil(aiPieceList.length / 2),
+                1
+            );
+
+            let html = '';
+
+            // Build rows with 4 columns each
+            for (let row = 0; row < maxRows; row++) {
+                const playerIndex1 = row * 2;
+                const playerIndex2 = row * 2 + 1;
+                const aiIndex1 = row * 2;
+                const aiIndex2 = row * 2 + 1;
+
+                // Column 1 - Player piece 1
+                if (playerIndex1 < playerPieceList.length) {
+                    const piece = playerPieceList[playerIndex1];
+                    html += `<div class="grave-slot"><span class="grave-piece white" style="color: black">${pieceIcons[piece.type]}</span></div>`;
+                } else {
+                    html += `<div class="grave-slot empty"></div>`;
+                }
+
+                // Column 2 - Player piece 2
+                if (playerIndex2 < playerPieceList.length) {
+                    const piece = playerPieceList[playerIndex2];
+                    html += `<div class="grave-slot"><span class="grave-piece white" style="color: black">${pieceIcons[piece.type]}</span></div>`;
+                } else {
+                    html += `<div class="grave-slot empty"></div>`;
+                }
+
+                // Column 3 - AI piece 1
+                if (aiIndex1 < aiPieceList.length) {
+                    const piece = aiPieceList[aiIndex1];
+                    html += `<div class="grave-slot"><span class="grave-piece black" style="color: white">${pieceIcons[piece.type]}</span></div>`;
+                } else {
+                    html += `<div class="grave-slot empty"></div>`;
+                }
+
+                // Column 4 - AI piece 2
+                if (aiIndex2 < aiPieceList.length) {
+                    const piece = aiPieceList[aiIndex2];
+                    html += `<div class="grave-slot"><span class="grave-piece black" style="color: white">${pieceIcons[piece.type]}</span></div>`;
+                } else {
+                    html += `<div class="grave-slot empty"></div>`;
+                }
             }
-            return Object.entries(counts)
-                .sort((a, b) => (pieceValues[b[0]] || 0) - (pieceValues[a[0]] || 0))
-                .map(([type, count]) => {
-                    const soulLabel = count === 1 ? 'soul' : 'souls';
-                    const textColor = player === 'W' ? 'black' : 'white';
-                    return `
-                        <div class="captured-entry grave-slot">
-                            <span class="piece grave-piece ${player === 'W' ? 'white' : 'black'}" style="color: ${textColor}">${pieceIcons[type]}</span>
-                            <div class="grave-meta">
-                                <span class="grave-name">${type}</span>
-                                <span class="grave-count">${count} ${soulLabel}</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+
+            return html || '<div class="grave-slot empty" style="grid-column: 1 / -1; text-align: center;">No pieces captured</div>';
         }
 
         // New function to add capture effects
